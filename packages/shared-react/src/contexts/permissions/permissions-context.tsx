@@ -1,15 +1,13 @@
-
-import type { AutoTaggingMode, RecipePermissionPolicy } from "@norish/config/zod/server-config";
-import type { PermissionsData } from "../../hooks/permissions/types";
-
 import { createContext, useCallback, useContext, useMemo } from "react";
 
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
+
+import type { PermissionsData } from "../../hooks/permissions/types";
 import {
   normalizePermissionsData,
   selectCanDeleteRecipe,
   selectCanEditRecipe,
   selectCanViewRecipe,
-  selectIsAutoTaggingEnabled,
 } from "../../hooks/permissions/selectors";
 
 export interface PermissionsContextValue {
@@ -17,14 +15,12 @@ export interface PermissionsContextValue {
   recipePolicy: RecipePermissionPolicy | null;
   /** Whether AI features are enabled */
   isAIEnabled: boolean;
+  /** Whether AI is on and an image provider can draw: Generate and Draw icons show only then */
+  canDrawImages: boolean;
   /** Household member user IDs (null if not in a household) */
   householdUserIds: string[] | null;
   /** Whether the current user is a server admin */
   isServerAdmin: boolean;
-  /** Auto-tagging mode setting */
-  autoTaggingMode: AutoTaggingMode;
-  /** Whether auto-tagging is enabled (not disabled) */
-  isAutoTaggingEnabled: boolean;
   /** Loading state */
   isLoading: boolean;
   /** Check if current user can view a recipe */
@@ -84,16 +80,15 @@ export function createPermissionsContext({
       () => ({
         recipePolicy: data?.recipePolicy ?? null,
         isAIEnabled: data?.isAIEnabled ?? false,
+        canDrawImages: data?.canDrawImages ?? false,
         householdUserIds: data?.householdUserIds ?? null,
         isServerAdmin: data?.isServerAdmin ?? false,
-        autoTaggingMode: data?.autoTaggingMode ?? "disabled",
-        isAutoTaggingEnabled: selectIsAutoTaggingEnabled(normalized),
         isLoading: isLoadingPermissions,
         canViewRecipe,
         canEditRecipe,
         canDeleteRecipe,
       }),
-      [data, normalized, isLoadingPermissions, canViewRecipe, canEditRecipe, canDeleteRecipe]
+      [data, isLoadingPermissions, canViewRecipe, canEditRecipe, canDeleteRecipe]
     );
 
     return <PermissionsContext.Provider value={value}>{children}</PermissionsContext.Provider>;

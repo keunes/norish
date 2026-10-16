@@ -1,11 +1,12 @@
-import { Uniwind } from 'uniwind';
-import React, { useCallback, useEffect, useSyncExternalStore } from 'react';
-
+import type { AppearanceMode } from "@/lib/preferences/appearance-preference-store";
+import React, { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
-  type AppearanceMode,
   loadAppearanceMode,
   saveAppearanceMode,
-} from '@/lib/preferences/appearance-preference-store';
+} from "@/lib/preferences/appearance-preference-store";
+import { Uniwind } from "uniwind";
+
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 export type { AppearanceMode };
 
@@ -14,10 +15,12 @@ type AppearanceSnapshot = {
   hydrated: boolean;
 };
 
+const log = createClientLogger("appearance-preference");
+
 const listeners = new Set<() => void>();
 
 let snapshot: AppearanceSnapshot = {
-  mode: 'system',
+  mode: "system",
   hydrated: false,
 };
 let initPromise: Promise<void> | null = null;
@@ -40,8 +43,8 @@ function getSnapshot(): AppearanceSnapshot {
 }
 
 function applyAppearanceMode(mode: AppearanceMode) {
-  if (mode === 'system') {
-    Uniwind.setTheme('system');
+  if (mode === "system") {
+    Uniwind.setTheme("system");
     return;
   }
 
@@ -51,13 +54,23 @@ function applyAppearanceMode(mode: AppearanceMode) {
 async function ensureInitialized() {
   if (!initPromise) {
     initPromise = (async () => {
-      const nextMode = await loadAppearanceMode();
-      snapshot = {
-        mode: nextMode,
-        hydrated: true,
-      };
-      applyAppearanceMode(nextMode);
-      emit();
+      // The appearance preference gates the whole app boot, so it always has to
+      // settle: falling back to "system" is a cosmetic loss, never rendering is
+      // not. See the boot gate in `src/app/_layout.tsx`.
+      let nextMode: AppearanceMode = "system";
+
+      try {
+        nextMode = await loadAppearanceMode();
+        applyAppearanceMode(nextMode);
+      } catch (error) {
+        log.warn({ error }, "Could not restore the appearance preference, using system");
+      } finally {
+        snapshot = {
+          mode: nextMode,
+          hydrated: true,
+        };
+        emit();
+      }
     })();
   }
 
@@ -74,11 +87,7 @@ function setAppearanceMode(nextMode: AppearanceMode) {
   emit();
 }
 
-export function AppearancePreferenceProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AppearancePreferenceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void ensureInitialized();
   }, []);

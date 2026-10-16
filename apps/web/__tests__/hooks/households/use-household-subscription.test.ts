@@ -1,7 +1,9 @@
-import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackedEvent } from "../realtime-test-utils";
 import {
+  createMockHouseholdAdminSettings,
   createMockHouseholdData,
   createMockHouseholdSettings,
   createMockHouseholdUser,
@@ -89,10 +91,22 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           return { enabled: true };
         }),
       },
+      onMemberProfileUpdated: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onMemberProfileUpdated = options?.onData;
+
+          return { enabled: true };
+        }),
+      },
     },
     calendar: {
       listRecipes: {
         queryKey: () => [["calendar", "listRecipes"], { type: "query" }],
+      },
+    },
+    user: {
+      get: {
+        queryKey: () => [["user", "get"], { type: "query" }],
       },
     },
   }),
@@ -110,15 +124,25 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 
 // Mock HeroUI toast
 vi.mock("@heroui/react", () => ({
-  addToast: vi.fn(),
+  toast: vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
+let useHouseholdSubscription: (typeof import("@/hooks/households/use-household-subscription"))["useHouseholdSubscription"];
+let useHouseholdQuery: (typeof import("@/hooks/households/use-household-query"))["useHouseholdQuery"];
+let useSubscription: (typeof import("@trpc/tanstack-react-query"))["useSubscription"];
+
 describe("useHouseholdSubscription", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
+
+  beforeAll(async () => {
+    ({ useHouseholdSubscription } = await import("@/hooks/households/use-household-subscription"));
+    ({ useHouseholdQuery } = await import("@/hooks/households/use-household-query"));
+    ({ useSubscription } = await import("@trpc/tanstack-react-query"));
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -135,16 +159,11 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       // The hook should call useSubscription for each event type
-      const { useSubscription } = await import("@trpc/tanstack-react-query");
-
       expect(useSubscription).toHaveBeenCalled();
     });
   });
@@ -154,10 +173,6 @@ describe("useHouseholdSubscription", () => {
       const initialData = createMockHouseholdData(null, "current-user");
 
       queryClient.setQueryData(householdQueryKey, initialData);
-
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
 
       // Render subscription hook to set up handlers
       renderHook(() => useHouseholdSubscription(), {
@@ -185,10 +200,6 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
-
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -214,10 +225,6 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
-
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -237,10 +244,6 @@ describe("useHouseholdSubscription", () => {
       const initialData = createMockHouseholdData(initialHousehold, "current-user");
 
       queryClient.setQueryData(householdQueryKey, initialData);
-
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
 
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
@@ -262,27 +265,144 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { addToast } = await import("@heroui/react");
+      const { toast } = await import("@heroui/react");
 
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
-        subscriptionCallbacks.onFailed?.({
-          reason: "Very long backend stack trace that should not be shown in toast",
-        });
+        subscriptionCallbacks.onFailed?.(
+          trackedEvent({
+            reason: "Very long backend stack trace that should not be shown in toast",
+          })
+        );
       });
 
-      expect(addToast).toHaveBeenCalledWith(
+      expect(toast).toHaveBeenCalledWith(
+        "operationFailed",
         expect.objectContaining({
-          title: "operationFailed",
           description: "technicalDetails",
-          color: "danger",
+          variant: "danger",
         })
       );
+    });
+  });
+
+  describe("onMemberProfileUpdated handler", () => {
+    it("refetches user settings and recipes when the current user's profile changed", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onMemberProfileUpdated?.(
+          trackedEvent({ userId: "user-1", image: "/avatars/user-1-1755000000000.png" })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: [["user", "get"], { type: "query" }],
+      });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
+    });
+
+    it("refetches only recipes when another member's profile changed", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onMemberProfileUpdated?.(
+          trackedEvent({ userId: "user-2", image: null })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
+      expect(invalidateSpy).not.toHaveBeenCalledWith({
+        queryKey: [["user", "get"], { type: "query" }],
+      });
+    });
+  });
+
+  describe("versioned household events", () => {
+    it("updates household version on join code regeneration", async () => {
+      const initialHousehold = createMockHouseholdAdminSettings({ version: 1 });
+      const initialData = createMockHouseholdData(initialHousehold, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onJoinCodeRegenerated?.(
+          trackedEvent({
+            joinCode: "654321",
+            joinCodeExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+            version: 2,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const data = queryClient.getQueryData<{ household: { version: number } }>(
+          householdQueryKey
+        );
+
+        expect(data?.household).toMatchObject({ version: 2 });
+      });
+    });
+
+    it("updates household version on admin transfer", async () => {
+      const initialHousehold = createMockHouseholdSettings({
+        version: 3,
+        users: [
+          createMockHouseholdUser({ id: "user-1", isAdmin: true, version: 1 }),
+          createMockHouseholdUser({ id: "user-2", isAdmin: false, version: 1 }),
+        ],
+      });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onAdminTransferred?.(
+          trackedEvent({
+            oldAdminId: "user-1",
+            newAdminId: "user-2",
+            version: 4,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const data = queryClient.getQueryData<{
+          household: { version: number; users: Array<{ id: string; isAdmin?: boolean }> };
+        }>(householdQueryKey);
+
+        expect(data?.household).toMatchObject({ version: 4 });
+        expect(data?.household.users.find((user) => user.id === "user-2")?.isAdmin).toBe(true);
+      });
     });
   });
 });

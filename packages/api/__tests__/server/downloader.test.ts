@@ -13,11 +13,11 @@ vi.mock("@norish/config/env-config-server", () => ({
   },
 }));
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getMaxVideoFileSize: vi.fn().mockResolvedValue(100 * 1024 * 1024), // 100MB - matches SERVER_CONFIG.MAX_VIDEO_FILE_SIZE
 }));
 
-vi.mock("@norish/api/logger", () => ({
+vi.mock("@norish/shared-server/logger", () => ({
   serverLogger: {
     info: vi.fn(),
     debug: vi.fn(),

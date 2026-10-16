@@ -1,44 +1,40 @@
 import type { Job } from "bullmq";
-
 import { Worker } from "bullmq";
-import { createLogger } from "@norish/api/logger";
-import {
-  cleanupOrphanedAvatars,
-  cleanupOrphanedImages,
-  cleanupOrphanedStepImages,
-} from "@norish/api/startup/media-cleanup";
-import { cleanupOldTempFiles } from "@norish/api/video/cleanup";
+
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
+import { sweepIngredientIcons } from "@norish/shared-server/ingredients/icon-drafts";
+import { refreshIngredientCatalogue } from "@norish/shared-server/ingredients/seed/catalogue-seed";
+import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredients/seed/recheck-mints";
+import { createLogger } from "@norish/shared-server/logger";
 
+import type { ScheduledTaskJobData } from "./queue";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { instrumentProcessor } from "../instrumented-processor";
+import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:scheduled-tasks");
 
-type ScheduledTaskType =
-  | "recurring-grocery-check"
-  | "media-cleanup"
-  | "calendar-cleanup"
-  | "groceries-cleanup"
-  | "video-temp-cleanup";
-
-interface ScheduledTaskJobData {
-  taskType: ScheduledTaskType;
-}
-
-// Use globalThis to survive HMR in development
+// Read on every access, never copied into a module-local — see the note on
+// `globalForRegistry` in ../registry.ts for why this module is evaluated more
+// than once per process. Here the cost of getting it wrong is a rival always-on
+// worker that the first instance's shutdown cannot reach.
 const globalForWorker = globalThis as unknown as {
   scheduledTasksWorker: Worker<ScheduledTaskJobData> | null;
 };
 
-let worker: Worker<ScheduledTaskJobData> | null = globalForWorker.scheduledTasksWorker ?? null;
-
 async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
+  const cleanupOrphanedImages = requireQueueApiHandler("cleanupOrphanedImages");
+  const cleanupOrphanedAvatars = requireQueueApiHandler("cleanupOrphanedAvatars");
+  const cleanupOrphanedStepImages = requireQueueApiHandler("cleanupOrphanedStepImages");
+  const cleanupOldTempFiles = requireQueueApiHandler("cleanupOldTempFiles");
   const { taskType } = job.data;
 
   log.info({ jobId: job.id, taskType }, "Processing scheduled task");
+  await reportStep(job, `running:${taskType}`);
 
   switch (taskType) {
     case "recurring-grocery-check": {
@@ -52,13 +48,16 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       const recipeResult = await cleanupOrphanedImages();
       const avatarResult = await cleanupOrphanedAvatars();
       const stepResult = await cleanupOrphanedStepImages();
+      // Ingredient Icons no food points at: a draft nobody saved, an icon removed or replaced.
+      const iconResult = await sweepIngredientIcons();
 
       log.info(
         {
           mediaDeleted: recipeResult.deleted,
           avatarsDeleted: avatarResult.deleted,
           stepImagesDeleted: stepResult.deleted,
-          errors: recipeResult.errors + avatarResult.errors + stepResult.errors,
+          ingredientIconsDeleted: iconResult.deleted,
+          errors: recipeResult.errors + avatarResult.errors + stepResult.errors + iconResult.errors,
         },
         "Media cleanup completed"
       );
@@ -90,24 +89,41 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       break;
     }
 
+    case "ingredient-catalogue-refresh": {
+      // A failed fetch or a malformed file throws before anything is
+      // applied: the last good seed stays, and the job monitor shows why.
+      const result = await refreshIngredientCatalogue();
+
+      log.info({ result }, "Ingredient catalogue refresh completed");
+
+      // A first seed that arrived after the upgrade (an offline first boot):
+      // what was minted without it is looked at again against it.
+      if (result === "applied") await recheckUndecidedMintsOnRungChange();
+      break;
+    }
+
     default:
       throw new Error(`Unknown scheduled task type: ${taskType}`);
   }
 }
 
 export function startScheduledTasksWorker(): void {
-  if (worker) {
+  if (globalForWorker.scheduledTasksWorker) {
     log.warn("Scheduled tasks worker already running");
 
     return;
   }
 
-  worker = new Worker<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, processScheduledTask, {
-    connection: getBullClient(),
-    ...baseWorkerOptions,
-    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.SCHEDULED_TASKS],
-    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.SCHEDULED_TASKS],
-  });
+  const worker = new Worker<ScheduledTaskJobData>(
+    QUEUE_NAMES.SCHEDULED_TASKS,
+    instrumentProcessor(processScheduledTask),
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.SCHEDULED_TASKS],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.SCHEDULED_TASKS],
+    }
+  );
 
   worker.on("completed", (job) => {
     log.debug({ jobId: job.id, taskType: job.data.taskType }, "Scheduled task completed");
@@ -129,10 +145,11 @@ export function startScheduledTasksWorker(): void {
 }
 
 export async function stopScheduledTasksWorker(): Promise<void> {
+  const worker = globalForWorker.scheduledTasksWorker;
+
   if (worker) {
     worker.removeAllListeners();
     await worker.close();
-    worker = null;
     globalForWorker.scheduledTasksWorker = null;
     log.info("Scheduled tasks worker stopped");
   }

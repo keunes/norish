@@ -2,8 +2,10 @@
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import type { Slot } from "@norish/shared/contracts";
-
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
 import {
   DndContext,
   DragOverlay,
@@ -16,16 +18,15 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type { Slot } from "@norish/shared/contracts";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
+import { hasReachedDay, landOnDay, settleLanding } from "../land-on-day";
+import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
 import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopDragOverlay } from "./desktop-drag-overlay";
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";
-
-import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
-import { SLOT_ORDER } from "@/components/calendar/mobile/types";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);
@@ -96,6 +97,11 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
     return result;
   }, [allDays, columnCount]);
+  const rowKeys = useMemo(
+    () => rows.map((row, index) => (row[0] ? dateKey(row[0]) : `row-${index}`)),
+    [rows]
+  );
+  const { captureAnchor, restoreAnchor } = usePrependAnchorRestore({ keys: rowKeys });
 
   // Date formatters
   const weekdayFormatter = useMemo(
@@ -131,13 +137,16 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   // Window virtualizer (like mobile/recipe grid)
   const virtualizer = useWindowVirtualizer({
     count: rows.length,
+    getItemKey: (index) => rowKeys[index] ?? index,
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     overscan: 2,
     scrollMargin,
+    onChange: settleLanding,
   });
 
   // Track if we've scrolled to today and if we've triggered expand
   const hasScrolledRef = useRef(false);
+  const hasLandedRef = useRef(false);
   const hasTriggeredExpandPastRef = useRef(false);
   const hasTriggeredExpandFutureRef = useRef(false);
 
@@ -146,7 +155,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     if (hasScrolledRef.current || isLoading || todayRowIndex < 0) return;
 
     requestAnimationFrame(() => {
-      virtualizer.scrollToIndex(todayRowIndex, { align: "start" });
+      landOnDay(virtualizer, todayRowIndex);
       hasScrolledRef.current = true;
     });
   }, [isLoading, todayRowIndex, virtualizer]);
@@ -193,9 +202,22 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   const virtualItems = virtualizer.getVirtualItems();
 
+  useLayoutEffect(() => {
+    restoreAnchor(
+      () => virtualizer.getVirtualItems(),
+      (offset) => {
+        virtualizer.scrollToOffset(offset, { behavior: "auto" });
+      }
+    );
+  }, [virtualizer, restoreAnchor]);
+
   // Infinite scroll: trigger expandRange when near the edges
   useEffect(() => {
     if (virtualItems.length === 0 || !hasScrolledRef.current) return;
+    if (!hasLandedRef.current) {
+      if (!hasReachedDay(virtualItems, todayRowIndex)) return;
+      hasLandedRef.current = true;
+    }
 
     const firstItem = virtualItems[0];
     const lastItem = virtualItems[virtualItems.length - 1];
@@ -206,6 +228,14 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     const isNearEnd = lastItem.index >= rows.length - 2;
 
     if (isNearStart && !isLoadingMore && !hasTriggeredExpandPastRef.current) {
+      const scrollOffset = virtualizer.scrollOffset ?? 0;
+
+      captureAnchor({
+        index: firstItem.index,
+        itemStart: firstItem.start,
+        scrollOffset,
+      });
+
       hasTriggeredExpandPastRef.current = true;
       expandRange("past");
     }
@@ -220,7 +250,15 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     if (!isNearEnd) {
       hasTriggeredExpandFutureRef.current = false;
     }
-  }, [virtualItems, rows.length, isLoadingMore, expandRange]);
+  }, [
+    virtualItems,
+    rows.length,
+    isLoadingMore,
+    expandRange,
+    virtualizer,
+    captureAnchor,
+    todayRowIndex,
+  ]);
 
   const handleScrollToToday = useCallback(() => {
     virtualizer.scrollToIndex(todayRowIndex, { align: "start", behavior: "smooth" });

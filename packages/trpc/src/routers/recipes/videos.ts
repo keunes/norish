@@ -1,7 +1,6 @@
 import path from "path";
-
 import { z } from "zod";
-import { getMaxVideoFileSize } from "@norish/config/server-config-loader";
+
 import {
   addRecipeVideos,
   countRecipeVideos,
@@ -9,25 +8,28 @@ import {
   getRecipeOwnerId,
   getRecipeVideoById,
 } from "@norish/db/repositories/recipes";
+import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteVideoByUrl, saveVideoBytes } from "@norish/shared-server/media/storage";
 import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
-import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
+import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
 
+import type { FormDataInput, UploadedFile } from "../../form-data";
+import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 
 // --- Shared Helpers ---
 
 type VideoValidationResult =
-  | { success: true; file: File; bytes: Buffer; ext: string }
+  | { success: true; file: UploadedFile; bytes: Buffer; ext: string }
   | { success: false; error: string };
 
 /**
  * Extract and validate video file from FormData.
  */
-async function extractAndValidateVideo(formData: FormData): Promise<VideoValidationResult> {
-  const file = formData.get("video") as File | null;
+async function extractAndValidateVideo(formData: FormDataInput): Promise<VideoValidationResult> {
+  const file = getUploadedFile(formData, "video");
 
   if (!file) {
     return { success: false, error: "No video file provided" };
@@ -62,7 +64,7 @@ async function extractAndValidateVideo(formData: FormData): Promise<VideoValidat
  * Also adds entry to recipe_videos table
  */
 const uploadGalleryVideo = authedProcedure
-  .input(z.instanceof(FormData))
+  .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
     const recipeId = input.get("recipeId") as string | null;
     const orderStr = input.get("order") as string | null;
@@ -114,6 +116,12 @@ const uploadGalleryVideo = authedProcedure
           },
         ]);
 
+        if (!videoRecord) {
+          return { success: false, error: "Failed to create video record" };
+        }
+
+        const versionedVideoRecord = videoRecord as typeof videoRecord & { version: number };
+
         log.info(
           { userId: ctx.user.id, recipeId, url: savedVideo.video, videoId: videoRecord.id },
           "Gallery video uploaded"
@@ -126,6 +134,7 @@ const uploadGalleryVideo = authedProcedure
           duration: videoRecord.duration,
           thumbnail: videoRecord.thumbnail,
           order: videoRecord.order,
+          version: versionedVideoRecord.version,
         };
       } else {
         // Recipe doesn't exist yet (new recipe form), just return the URL
@@ -156,7 +165,7 @@ const uploadGalleryVideo = authedProcedure
  * Removes from database and filesystem
  */
 const deleteGalleryVideo = authedProcedure
-  .input(z.object({ videoId: z.string().uuid() }))
+  .input(DeleteRecipeVideoInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, videoId: input.videoId }, "Deleting gallery video");
 
@@ -180,14 +189,23 @@ const deleteGalleryVideo = authedProcedure
       }
 
       // Delete from database
-      await deleteRecipeVideoById(input.videoId);
+      const result = await deleteRecipeVideoById(input.videoId, input.version);
+
+      if (result.stale) {
+        log.info(
+          { userId: ctx.user.id, videoId: input.videoId, version: input.version },
+          "Ignoring stale gallery video delete"
+        );
+
+        return { success: true, stale: true };
+      }
 
       log.info(
         { userId: ctx.user.id, videoId: input.videoId, url: videoRecord.video },
         "Gallery video deleted"
       );
 
-      return { success: true };
+      return { success: true, stale: false };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to delete gallery video";
 

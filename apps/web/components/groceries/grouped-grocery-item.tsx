@@ -1,35 +1,51 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
-import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
-
 import { memo, useCallback, useState } from "react";
-import { ChevronDownIcon } from "@heroicons/react/16/solid";
-import { Checkbox } from "@heroui/react";
+import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { useUnitFormatter } from "@/hooks/use-unit-formatter";
-import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
+import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
+import { GroceryCheckbox } from "./grocery-checkbox";
+import { GroceryPrice } from "./grocery-price";
+import { lineOfGroup } from "./store-total";
 
 /**
  * Format inline source breakdown showing recipe names and amounts.
- * e.g., "Recipe A (300g), Recipe B (200g)" or "Recipe A, Recipe B"
+ * e.g., "Recipe A (300g), Recipe B (200g)" or "Recipe A, Recipe B". The
+ * lines added by hand are named once, with their amounts together:
+ * "Recipe A (300g), Manual Items (2×, 1×)", where a line that states no
+ * amount is the one the group's total counts it as.
  */
-function formatInlineSourceBreakdown(
+export function formatInlineSourceBreakdown(
   sources: GroupedGrocerySource[],
-  formatFn: (amount: number | null | undefined, unit: string | null | undefined) => string
+  formatFn: (amount: number | null | undefined, unit: string | null | undefined) => string,
+  manualLabel: string
 ): string {
-  return sources
-    .map((source) => {
-      const name = source.recipeName ?? "Manual";
-      const amount = formatFn(source.grocery.amount, source.grocery.unit);
+  const named = (name: string, amounts: string[]) =>
+    amounts.length > 0 ? `${name} (${amounts.join(", ")})` : name;
+  const amountOf = (source: GroupedGrocerySource) =>
+    formatFn(shownAmount(source.grocery), source.grocery.unit);
+  const manual = sources.filter((source) => !source.recipeName);
+  const entries = sources.flatMap((source) =>
+    source.recipeName ? [named(source.recipeName, [amountOf(source)].filter(Boolean))] : []
+  );
 
-      return amount ? `${name} (${amount})` : name;
-    })
-    .join(", ");
+  if (manual.length > 0) {
+    const amounts = manual.map((source) =>
+      formatFn(shownAmount(source.grocery) ?? 1, source.grocery.unit)
+    );
+
+    entries.push(named(manualLabel, amounts.filter(Boolean)));
+  }
+
+  return entries.join(", ");
 }
 
 interface GroupedGroceryItemProps {
@@ -61,7 +77,9 @@ function GroupedGroceryItemComponent({
 }: GroupedGroceryItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const t = useTranslations("groceries.item");
+  const tEmpty = useTranslations("groceries.empty");
   const { formatAmountUnit } = useUnitFormatter();
+  const manualLabel = tEmpty("manual");
 
   const roundedClass =
     isFirst && isLast ? "rounded-lg" : isFirst ? "rounded-t-lg" : isLast ? "rounded-b-lg" : "";
@@ -79,17 +97,12 @@ function GroupedGroceryItemComponent({
     [group.sources, onToggleGroup]
   );
 
-  // Toggle expansion
-  const handleExpandClick = useCallback(() => {
-    if (!isSingleItem) {
-      setIsExpanded(!isExpanded);
-    }
-  }, [isSingleItem, isExpanded]);
-
   // Edit first item when clicking on single item, or expand when multiple
   const handleContentClick = useCallback(() => {
-    if (isSingleItem) {
-      onEdit(group.sources[0].grocery);
+    const only = isSingleItem ? group.sources[0] : undefined;
+
+    if (only) {
+      onEdit(only.grocery);
     } else {
       setIsExpanded(!isExpanded);
     }
@@ -105,83 +118,83 @@ function GroupedGroceryItemComponent({
     : null;
 
   return (
-    <div className={`bg-content1 ${roundedClass}`}>
+    <div
+      className={`bg-surface ${roundedClass}`}
+      data-grocery-name={group.displayName ?? ""}
+      data-testid="grocery-row"
+    >
       {/* Main row */}
-      <div
-        className={`flex items-center gap-3 px-4 py-3 ${
-          group.sources.length > 1 ? "min-h-[72px]" : "min-h-14"
-        }`}
-      >
-        <div className="flex h-8 w-8 items-center justify-center">{dragHandle}</div>
+      <div className="flex min-h-12 items-center gap-3 px-4 py-3">
+        <div className="flex h-8 w-8 items-center justify-center max-sm:hidden">{dragHandle}</div>
 
         {/* Group checkbox - toggles all items */}
-        <Checkbox
+        <GroceryCheckbox
+          delayChangeOnSelect
+          storeColored
+          aria-label={group.displayName || t("unnamedItem")}
           isIndeterminate={group.anyDone && !group.allDone}
           isSelected={group.allDone}
-          radius="full"
           size="lg"
-          onValueChange={handleGroupToggle}
+          onChange={handleGroupToggle}
         />
 
-        {/* Clickable content area */}
+        {/* One food's groceries, so the first that knows its food speaks for the group; not on a phone, whose row has no room for it. */}
+        <IngredientIcon
+          className={`max-sm:hidden ${group.allDone ? "opacity-50" : ""}`}
+          ingredientId={
+            group.sources.find((source) => source.grocery.ingredientId)?.grocery.ingredientId
+          }
+        />
+
+        {/* Clickable content area; on a group it is what folds the sources out. The name
+            and the price centre on each other, and the name wraps rather than give way to it. */}
         <button
-          className="flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-0.5 text-left"
+          aria-expanded={isSingleItem ? undefined : isExpanded}
+          className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left sm:gap-4"
           type="button"
           onClick={handleContentClick}
         >
-          {/* Main row: aggregated amount + name */}
-          <div className="flex w-full items-baseline gap-1.5">
-            {/* Highlighted aggregated amount */}
-            {aggregatedDisplay && (
+          <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+            {/* Main row: aggregated amount + name */}
+            <div className="flex w-full items-baseline gap-1.5">
+              {/* Highlighted aggregated amount */}
+              {aggregatedDisplay && (
+                <span
+                  className={`shrink-0 font-medium ${group.allDone ? "text-muted" : "text-accent"}`}
+                >
+                  {aggregatedDisplay}
+                </span>
+              )}
               <span
-                className={`shrink-0 font-medium ${
-                  group.allDone ? "text-default-400" : "text-primary"
+                className={`min-w-0 text-base break-words ${
+                  group.allDone ? "text-muted line-through" : "text-foreground"
                 }`}
               >
-                {aggregatedDisplay}
+                {group.displayName || t("unnamedItem")}
+              </span>
+            </div>
+
+            {/* Single item from a recipe: the recipe's name; a manual one has nothing to add */}
+            {isSingleItem && !singleRecurringGrocery && singleSource?.recipeName && (
+              <span className="text-muted mt-0.5 max-w-full truncate text-xs">
+                {singleSource.recipeName}
               </span>
             )}
-            <span
-              className={`truncate text-base ${
-                group.allDone ? "text-default-400 line-through" : "text-foreground"
-              }`}
-            >
-              {group.displayName || t("unnamedItem")}
-            </span>
-          </div>
 
-          {/* Single item: show recipe name or recurrence */}
-          {isSingleItem && singleSource?.recipeName && !singleRecurringGrocery && (
-            <span className="text-default-400 mt-0.5 truncate text-xs">
-              {singleSource.recipeName}
-            </span>
-          )}
+            {/* Single item: show recurring pill */}
+            {isSingleItem && singleRecurringGrocery && (
+              <RecurrencePill className="mt-0.5" recurringGrocery={singleRecurringGrocery} />
+            )}
 
-          {/* Single item: show recurring pill */}
-          {isSingleItem && singleRecurringGrocery && (
-            <RecurrencePill className="mt-0.5" recurringGrocery={singleRecurringGrocery} />
-          )}
-
-          {/* Multiple items: show inline recipe breakdown */}
-          {!isSingleItem && (
-            <span className="text-default-400 mt-0.5 truncate text-xs">
-              {formatInlineSourceBreakdown(group.sources, formatAmountUnit)}
-            </span>
-          )}
+            {/* Multiple items: show inline recipe breakdown */}
+            {!isSingleItem && (
+              <span className="text-muted mt-0.5 max-w-full truncate text-xs">
+                {formatInlineSourceBreakdown(group.sources, formatAmountUnit, manualLabel)}
+              </span>
+            )}
+          </span>
+          <GroceryPrice line={lineOfGroup(group)} />
         </button>
-
-        {/* Expand/collapse button for groups */}
-        {!isSingleItem && (
-          <button
-            className="text-default-400 hover:text-foreground shrink-0 p-1 transition-colors"
-            type="button"
-            onClick={handleExpandClick}
-          >
-            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDownIcon className="h-5 w-5" />
-            </motion.div>
-          </button>
-        )}
       </div>
 
       {/* Expanded source list */}
@@ -194,7 +207,7 @@ function GroupedGroceryItemComponent({
             initial={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="border-default-100 divide-default-100 ml-10 divide-y border-t">
+            <div className="border-border divide-border ml-10 divide-y border-t">
               {group.sources.map((source) => (
                 <SourceItem
                   key={source.grocery.id}
@@ -231,18 +244,17 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
     ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
     : null;
 
-  const amountDisplay = formatAmountUnit(grocery.amount, grocery.unit);
-  const hasSubtitle = Boolean(recurringGrocery || recipeName);
+  const amountDisplay = formatAmountUnit(shownAmount(grocery), grocery.unit);
 
   return (
-    <div
-      className={`flex items-center gap-3 px-4 py-2.5 ${hasSubtitle ? "min-h-[56px]" : "min-h-12"}`}
-    >
-      <Checkbox
+    <div className="flex min-h-11 items-center gap-3 px-4 py-2.5">
+      <GroceryCheckbox
+        delayChangeOnSelect
+        storeColored
+        aria-label={grocery.name || "Grocery item"}
         isSelected={grocery.isDone}
-        radius="full"
         size="md"
-        onValueChange={(checked) => onToggle(grocery.id, checked)}
+        onChange={(checked) => onToggle(grocery.id, checked)}
       />
 
       <button
@@ -255,7 +267,7 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
           {amountDisplay && (
             <span
               className={`shrink-0 text-sm font-medium ${
-                grocery.isDone ? "text-default-400" : "text-primary"
+                grocery.isDone ? "text-muted" : "text-accent"
               }`}
             >
               {amountDisplay}
@@ -263,7 +275,7 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
           )}
           <span
             className={`truncate text-sm ${
-              grocery.isDone ? "text-default-400 line-through" : "text-foreground"
+              grocery.isDone ? "text-muted line-through" : "text-foreground"
             }`}
           >
             {grocery.name || "Unknown item"}
@@ -272,23 +284,8 @@ function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItem
 
         {/* Recipe name as subtitle */}
         {recipeName && (
-          <span
-            className={`truncate text-xs ${
-              grocery.isDone ? "text-default-400" : "text-default-500"
-            }`}
-          >
+          <span className={`truncate text-xs ${grocery.isDone ? "text-muted" : "text-muted"}`}>
             {recipeName}
-          </span>
-        )}
-
-        {/* Manual indicator if no recipe */}
-        {!recipeName && !recurringGrocery && (
-          <span
-            className={`truncate text-xs ${
-              grocery.isDone ? "text-default-400" : "text-default-500"
-            }`}
-          >
-            Manual
           </span>
         )}
 

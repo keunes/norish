@@ -1,167 +1,155 @@
 "use client";
 
-import type { PermissionLevel } from "@norish/config/zod/server-config";
-
+import type { ReactNode } from "react";
 import { useState } from "react";
+import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { Note } from "@/components/shared/note";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { Card, CardBody, CardHeader, Select, SelectItem } from "@heroui/react";
+import { Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { PermissionLevel } from "@norish/config/zod/server-config";
 
+import type { PermissionLevelLabels } from "./permission-level-select";
 import { useAdminSettingsContext } from "../context";
+import { PermissionLevelSelect } from "./permission-level-select";
 
 type PolicyAction = "view" | "edit" | "delete";
 
+/**
+ * Who may do what with what others made: one card, a section per kind of
+ * thing. Recipes have a level for viewing, editing and deleting; Ingredients
+ * one for editing, since the catalogue is always visible and adding a
+ * translation is open to everyone. Each select saves as it changes.
+ */
 export default function PermissionPolicyCard() {
   const t = useTranslations("settings.admin.permissions");
-  const { recipePermissionPolicy, updateRecipePermissionPolicy } = useAdminSettingsContext();
-  const [saving, setSaving] = useState<PolicyAction | null>(null);
+  const tIngredients = useTranslations("settings.admin.ingredientPermissions");
+  const {
+    recipePermissionPolicy,
+    updateRecipePermissionPolicy,
+    ingredientPermissionPolicy,
+    updateIngredientPermissionPolicy,
+  } = useAdminSettingsContext();
+  const [saving, setSaving] = useState<PolicyAction | "ingredients" | null>(null);
 
-  const POLICY_OPTIONS: { value: PermissionLevel; labelKey: string; descriptionKey: string }[] = [
-    {
-      value: "everyone",
-      labelKey: "levels.everyone",
-      descriptionKey: "levels.everyoneDescription",
+  const recipeLabels: PermissionLevelLabels = {
+    everyone: { label: t("levels.everyone"), description: t("levels.everyoneDescription") },
+    household: { label: t("levels.household"), description: t("levels.householdDescription") },
+    owner: { label: t("levels.owner"), description: t("levels.ownerDescription") },
+  };
+  const ingredientLabels: PermissionLevelLabels = {
+    everyone: {
+      label: tIngredients("levels.everyone"),
+      description: tIngredients("levels.everyoneDescription"),
     },
-    {
-      value: "household",
-      labelKey: "levels.household",
-      descriptionKey: "levels.householdDescription",
+    household: {
+      label: tIngredients("levels.household"),
+      description: tIngredients("levels.householdDescription"),
     },
-    {
-      value: "owner",
-      labelKey: "levels.owner",
-      descriptionKey: "levels.ownerDescription",
+    owner: {
+      label: tIngredients("levels.owner"),
+      description: tIngredients("levels.ownerDescription"),
     },
-  ];
+  };
 
-  const handleChange = async (action: PolicyAction, value: PermissionLevel) => {
+  const handleRecipeChange = async (action: PolicyAction, value: PermissionLevel) => {
     if (!recipePermissionPolicy) return;
 
     setSaving(action);
     try {
-      await updateRecipePermissionPolicy({
-        ...recipePermissionPolicy,
-        [action]: value,
-      });
+      await updateRecipePermissionPolicy({ ...recipePermissionPolicy, [action]: value });
     } finally {
       setSaving(null);
     }
   };
 
+  const handleIngredientChange = async (edit: PermissionLevel) => {
+    setSaving("ingredients");
+    try {
+      await updateIngredientPermissionPolicy({ edit });
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const renderPolicySelect = (action: PolicyAction, ariaLabel: string) => (
+    <PermissionLevelSelect
+      ariaLabel={ariaLabel}
+      isDisabled={saving !== null}
+      labels={recipeLabels}
+      value={recipePermissionPolicy?.[action] ?? null}
+      onChange={(level) => void handleRecipeChange(action, level)}
+    />
+  );
+
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <ShieldCheckIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </CardHeader>
-      <CardBody className="gap-6">
-        <p className="text-default-500 text-base">{t("description")}</p>
+    <SettingsCard
+      contentClassName="gap-6"
+      description={t("description")}
+      icon={ShieldCheckIcon}
+      title={t("title")}
+    >
+      <Section id="recipes" note={t("note")} title={t("recipes")}>
+        <SettingRow description={t("viewDescription")} title={t("viewRecipes")}>
+          {renderPolicySelect("view", t("viewRecipes"))}
+        </SettingRow>
+        <SettingRow description={t("editDescription")} title={t("editRecipes")}>
+          {renderPolicySelect("edit", t("editRecipes"))}
+        </SettingRow>
+        <SettingRow description={t("deleteDescription")} title={t("deleteRecipes")}>
+          {renderPolicySelect("delete", t("deleteRecipes"))}
+        </SettingRow>
+      </Section>
 
-        <div className="flex flex-col gap-4">
-          {/* View Policy */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-0.5">
-              <span className="font-medium">{t("viewRecipes")}</span>
-              <span className="text-default-500 text-base">{t("viewDescription")}</span>
-            </div>
-            <Select
-              aria-label={t("viewRecipes")}
-              className="w-full sm:w-48"
-              classNames={{
-                trigger: "bg-content2",
-              }}
-              isDisabled={saving !== null}
-              selectedKeys={recipePermissionPolicy?.view ? [recipePermissionPolicy.view] : []}
-              size="sm"
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] as PermissionLevel;
+      <Separator />
 
-                if (value) handleChange("view", value);
-              }}
-            >
-              {POLICY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} textValue={t(option.labelKey)}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{t(option.labelKey)}</span>
-                    <span className="text-default-400 text-xs">{t(option.descriptionKey)}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
+      <Section
+        description={tIngredients("description")}
+        id="ingredients"
+        note={tIngredients("note")}
+        title={t("ingredients")}
+      >
+        <SettingRow
+          description={tIngredients("editDescription")}
+          title={tIngredients("editIngredients")}
+        >
+          <PermissionLevelSelect
+            ariaLabel={tIngredients("editIngredients")}
+            isDisabled={saving !== null}
+            labels={ingredientLabels}
+            value={ingredientPermissionPolicy?.edit ?? null}
+            onChange={(level) => void handleIngredientChange(level)}
+          />
+        </SettingRow>
+      </Section>
+    </SettingsCard>
+  );
+}
 
-          {/* Edit Policy */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-0.5">
-              <span className="font-medium">{t("editRecipes")}</span>
-              <span className="text-default-500 text-base">{t("editDescription")}</span>
-            </div>
-            <Select
-              aria-label={t("editRecipes")}
-              className="w-full sm:w-48"
-              classNames={{
-                trigger: "bg-content2",
-              }}
-              isDisabled={saving !== null}
-              selectedKeys={recipePermissionPolicy?.edit ? [recipePermissionPolicy.edit] : []}
-              size="sm"
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] as PermissionLevel;
-
-                if (value) handleChange("edit", value);
-              }}
-            >
-              {POLICY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} textValue={t(option.labelKey)}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{t(option.labelKey)}</span>
-                    <span className="text-default-400 text-xs">{t(option.descriptionKey)}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-
-          {/* Delete Policy */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-0.5">
-              <span className="font-medium">{t("deleteRecipes")}</span>
-              <span className="text-default-500 text-base">{t("deleteDescription")}</span>
-            </div>
-            <Select
-              aria-label={t("deleteRecipes")}
-              className="w-full sm:w-48"
-              classNames={{
-                trigger: "bg-content2",
-              }}
-              isDisabled={saving !== null}
-              selectedKeys={recipePermissionPolicy?.delete ? [recipePermissionPolicy.delete] : []}
-              size="sm"
-              onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] as PermissionLevel;
-
-                if (value) handleChange("delete", value);
-              }}
-            >
-              {POLICY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} textValue={t(option.labelKey)}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{t(option.labelKey)}</span>
-                    <span className="text-default-400 text-xs">{t(option.descriptionKey)}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-        </div>
-
-        <div className="bg-content2 text-default-600 mt-2 rounded-lg p-3 text-base">
-          <strong>Note:</strong> {t("note")}
-        </div>
-      </CardBody>
-    </Card>
+/** One kind of thing on the card: a heading, its rows, and the note that goes with them. */
+function Section({
+  id,
+  title,
+  description,
+  note,
+  children,
+}: {
+  id: string;
+  title: string;
+  description?: string;
+  note: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-4" data-testid={`permissions-${id}`}>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-base font-semibold">{title}</h3>
+        {description ? <p className="text-muted text-base">{description}</p> : null}
+      </div>
+      {children}
+      <Note>{note}</Note>
+    </section>
   );
 }

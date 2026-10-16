@@ -2,7 +2,11 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { getUserPreferences, updateUserPreferences } from "@norish/db/repositories/users";
+import {
+  getUserPreferences,
+  setUserDevicePreferences,
+  updateUserPreferences,
+} from "@norish/db/repositories/users";
 import { users } from "@norish/db/schema";
 
 import { getTestDb } from "../../../helpers/db-test-helpers";
@@ -26,8 +30,8 @@ describe("User preferences - DB integration", () => {
     await testBase.teardown();
   });
 
-  it("writes a simple preference key into the preferences JSONB column", async () => {
-    await updateUserPreferences(userId, { timersEnabled: false });
+  it("writes a list-valued preference key into the preferences JSONB column", async () => {
+    await updateUserPreferences(userId, { someList: ["one"] });
 
     const db = getTestDb();
 
@@ -38,7 +42,7 @@ describe("User preferences - DB integration", () => {
 
     expect(row).toBeDefined();
     expect(row!.preferences).toBeDefined();
-    expect((row!.preferences as any).timersEnabled).toBe(false);
+    expect((row!.preferences as any).someList).toEqual(["one"]);
   });
 
   it("merges subsequent updates into the existing preferences object", async () => {
@@ -62,13 +66,10 @@ describe("User preferences - DB integration", () => {
     expect(prefs.b).toBe(2);
   });
 
-  it("getUserPreferences returns an object reflecting the stored JSONB", async () => {
-    await updateUserPreferences(userId, { showConversionButton: true });
+  it("getUserPreferences reads the stored document, each choice on its own", async () => {
+    await updateUserPreferences(userId, { afterPlanning: "nothing", locale: 42, stray: true });
 
-    const prefs = await getUserPreferences(userId);
-
-    expect(prefs).toBeDefined();
-    expect((prefs as any).showConversionButton).toBe(true);
+    expect(await getUserPreferences(userId)).toEqual({ afterPlanning: "nothing" });
   });
 
   it("stores and retrieves locale in JSONB preferences", async () => {
@@ -77,16 +78,85 @@ describe("User preferences - DB integration", () => {
     const prefs = await getUserPreferences(userId);
 
     expect(prefs).toBeDefined();
-    expect((prefs as any).locale).toBe("de-informal");
+    expect(prefs.locale).toBe("de-informal");
   });
 
   it("updates locale without affecting other preferences", async () => {
-    await updateUserPreferences(userId, { timersEnabled: true, locale: "en" });
+    await updateUserPreferences(userId, { afterPlanning: "nothing", locale: "en" });
     await updateUserPreferences(userId, { locale: "fr" });
 
     const prefs = await getUserPreferences(userId);
 
-    expect((prefs as any).timersEnabled).toBe(true);
-    expect((prefs as any).locale).toBe("fr");
+    expect(prefs.afterPlanning).toBe("nothing");
+    expect(prefs.locale).toBe("fr");
+  });
+
+  async function readRow() {
+    const row = await getTestDb().query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { preferences: true, version: true },
+    });
+
+    return row!;
+  }
+
+  it("merges a Device Preference into its kind's block, per choice", async () => {
+    await setUserDevicePreferences(userId, "phone", { groceryViewMode: "recipe" });
+    await setUserDevicePreferences(userId, "phone", { groceryGroupSimilar: false });
+
+    const { preferences } = await readRow();
+
+    expect(preferences).toEqual({
+      phone: { groceryViewMode: "recipe", groceryGroupSimilar: false },
+    });
+  });
+
+  it("leaves the other kind, the language and after-planning untouched", async () => {
+    await updateUserPreferences(userId, { locale: "nl", afterPlanning: "nothing" });
+    await setUserDevicePreferences(userId, "desktop", { groceryViewMode: "store" });
+    await setUserDevicePreferences(userId, "phone", { groceryViewMode: "recipe" });
+
+    const { preferences } = await readRow();
+
+    expect(preferences).toEqual({
+      locale: "nl",
+      afterPlanning: "nothing",
+      desktop: { groceryViewMode: "store" },
+      phone: { groceryViewMode: "recipe" },
+    });
+  });
+
+  it("never goes through the profile's version, so it neither goes stale nor makes others stale", async () => {
+    const before = (await readRow()).version;
+
+    await setUserDevicePreferences(userId, "phone", { groceryViewMode: "recipe" });
+
+    expect((await readRow()).version).toBe(before);
+  });
+
+  it("a language update leaves Device Preferences untouched", async () => {
+    await setUserDevicePreferences(userId, "phone", { groceryViewMode: "recipe" });
+    await updateUserPreferences(userId, { locale: "fr" });
+
+    expect((await readRow()).preferences).toEqual({
+      locale: "fr",
+      phone: { groceryViewMode: "recipe" },
+    });
+  });
+
+  it("replaying the same write is harmless", async () => {
+    await setUserDevicePreferences(userId, "phone", { groceryViewMode: "recipe" });
+    const once = (await readRow()).preferences;
+
+    await setUserDevicePreferences(userId, "phone", { groceryViewMode: "recipe" });
+
+    expect((await readRow()).preferences).toEqual(once);
+  });
+
+  it("starts a fresh block over a broken one", async () => {
+    await updateUserPreferences(userId, { phone: "broken" });
+    await setUserDevicePreferences(userId, "phone", { groceryViewMode: "recipe" });
+
+    expect((await readRow()).preferences).toEqual({ phone: { groceryViewMode: "recipe" } });
   });
 });

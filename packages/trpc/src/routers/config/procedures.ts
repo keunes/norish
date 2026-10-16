@@ -1,18 +1,94 @@
+import { TRPCError } from "@trpc/server";
+
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
+import { getDatabaseHealth } from "@norish/db/drizzle";
+import { listCuisines } from "@norish/db/repositories/cuisines";
+import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
+import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
 import {
+  getIngredientWords,
   getLocaleConfig,
+  getRecipePermissionPolicy,
   getRecurrenceConfig,
   getTimerKeywords,
   getUnits,
   isRegistrationEnabled,
   isTimersEnabled,
-} from "@norish/config/server-config-loader";
-import { listAllTagNames } from "@norish/db/repositories/tags";
-import { trpcLogger as log } from "@norish/shared-server/logger";
+} from "@norish/shared-server/config/server-config-loader";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
+import { healthyResponseSchema, parserHealthSchema } from "./config-openapi-types";
+
+export async function getServiceHealth() {
+  const parserHealthUrl = buildInternalParserApiUrl("/health");
+  const [databaseHealth, parserHealth, appVersions] = await Promise.all([
+    getDatabaseHealth(),
+    (async () => {
+      try {
+        const response = await fetch(parserHealthUrl, {
+          signal: AbortSignal.timeout(SERVER_CONFIG.PARSER_API_TIMEOUT_MS),
+        });
+
+        if (!response.ok) {
+          return {
+            status: "error" as const,
+            statusCode: response.status,
+          };
+        }
+
+        const parsedHealth = parserHealthSchema.parse(await response.json());
+
+        if (parsedHealth.status !== "ok") {
+          return {
+            status: parsedHealth.status ?? "unknown",
+            recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
+          };
+        }
+
+        return {
+          status: "ok" as const,
+          recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
+        };
+      } catch {
+        return {
+          status: "unreachable" as const,
+        };
+      }
+    })(),
+    getAppVersions(),
+  ]);
+
+  if (databaseHealth.status !== "ok") {
+    return {
+      status: "degraded" as const,
+      db: databaseHealth,
+      parser: parserHealth,
+    };
+  }
+
+  if (parserHealth.status !== "ok") {
+    return {
+      status: "degraded" as const,
+      db: databaseHealth,
+      parser: parserHealth,
+    };
+  }
+
+  return {
+    status: "ok" as const,
+    db: databaseHealth,
+    versions: {
+      ...appVersions,
+      scraper: parserHealth.recipeScrapersVersion,
+    },
+    parser: {
+      status: "ok" as const,
+      recipeScrapersVersion: parserHealth.recipeScrapersVersion,
+    },
+  };
+}
 
 /**
  * Get locale configuration (enabled locales and default locale)
@@ -35,14 +111,34 @@ const localeConfig = publicProcedure.query(async () => {
 });
 
 /**
- * Get all unique tag names for the authenticated user's household
+ * Get all unique tag names visible to the authenticated user. Scoped to the
+ * user's household unless the recipe view policy (or server admin role)
+ * grants access to all recipes.
  */
 const tags = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting tags");
 
-  const tagNames = await listAllTagNames();
+  const policy = await getRecipePermissionPolicy();
+  const tagNames =
+    policy.view === "everyone" || ctx.isServerAdmin
+      ? await listAllTagNames()
+      : await listTagNamesForUsers(ctx.userIds);
 
   return { tags: tagNames };
+});
+
+/**
+ * Get the deployment's Cuisine vocabulary.
+ *
+ * Unscoped on purpose: unlike Tags, which grow out of whichever recipes a user
+ * can see, the vocabulary is one administrator-owned list. An editor picks from
+ * exactly the same list AI does, which is what makes manual entries match
+ * inferred ones.
+ */
+const cuisines = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting the Cuisine vocabulary");
+
+  return { cuisines: await listCuisines() };
 });
 
 /**
@@ -56,6 +152,12 @@ const units = authedProcedure.query(async ({ ctx }) => {
 
   return unitsMap;
 });
+
+/**
+ * The ingredient words names are read by, which the browser matches text
+ * nothing has resolved yet on, as the resolver does (ADR-0037).
+ */
+const ingredientWords = authedProcedure.query(async () => await getIngredientWords());
 
 /**
  * Get recurrence configuration for natural language parsing
@@ -115,13 +217,49 @@ const authProviders = publicProcedure.query(async () => {
   return { providers, registrationEnabled, passwordAuthEnabled };
 });
 
+export const health = publicProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/health",
+      protect: false,
+      tags: ["Health"],
+      summary: "Check API health",
+      description:
+        "Reports API availability and verifies both the database connection and internal parser service are healthy.",
+      successDescription: "The API, database, and parser service are healthy.",
+      errorResponses: {
+        503: "The API is up but the database or parser service is unhealthy or unreachable",
+      },
+    },
+  })
+  .output(healthyResponseSchema)
+  .query(async () => {
+    const health = await getServiceHealth();
+
+    if (health.status !== "ok") {
+      throw new TRPCError({
+        code: "SERVICE_UNAVAILABLE",
+        message:
+          health.db.status !== "ok"
+            ? `Database is ${health.db.status}`
+            : `Parser service is ${health.parser.status}`,
+      });
+    }
+
+    return health;
+  });
+
 export const configProcedures = router({
   localeConfig,
   tags,
+  cuisines,
   units,
+  ingredientWords,
   recurrenceConfig,
   uploadLimits,
   timersEnabled,
   timerKeywords,
   authProviders,
+  health,
 });

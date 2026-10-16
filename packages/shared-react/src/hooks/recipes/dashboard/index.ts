@@ -1,5 +1,4 @@
 import type { CreateRecipeHooksOptions } from "../types";
-
 import { createUseFavoritesMutation } from "./use-favorites-mutation";
 import { createUseFavoritesQuery } from "./use-favorites-query";
 import { createUsePendingRecipesQuery } from "./use-pending-recipes-query";
@@ -18,7 +17,11 @@ export type {
   RecipesQueryDependencies,
 } from "./use-recipes-query";
 export type { RandomRecipeResult } from "./use-random-recipe";
-export type { RecipesMutationsResult, RecipesMutationErrorHandler } from "./use-recipes-mutations";
+export type {
+  RecipeCreatedAdapter,
+  RecipesMutationsResult,
+  RecipesMutationErrorHandler,
+} from "./use-recipes-mutations";
 export type { RecipesSubscriptionCallbacks } from "./use-recipes-subscription";
 export type { FavoritesQueryResult } from "./use-favorites-query";
 export type { FavoritesMutationResult } from "./use-favorites-mutation";
@@ -38,23 +41,15 @@ export {
   createUseRandomRecipe,
 };
 
-export function createDashboardRecipeHooks(
-  options: CreateRecipeHooksOptions,
-  dependencies: Pick<
-    import("./use-recipes-query").RecipesQueryDependencies,
-    "useAutoTaggingQuery" | "useAllergyDetectionQuery"
-  >
-) {
+export function createDashboardRecipeHooks(options: CreateRecipeHooksOptions) {
   const usePendingRecipesQuery = createUsePendingRecipesQuery(options);
   const useRecipesCacheHelpers = createUseRecipesCacheHelpers(options);
   const useRecipesQuery = createUseRecipesQuery(options, {
     usePendingRecipesQuery,
     useRecipesCacheHelpers,
-    useAutoTaggingQuery: dependencies.useAutoTaggingQuery,
-    useAllergyDetectionQuery: dependencies.useAllergyDetectionQuery,
   });
   const useRecipesMutations = createUseRecipesMutations(options, {
-    useRecipesQuery,
+    useRecipesCacheHelpers,
   });
   const useRecipesSubscription = createUseRecipesSubscription(options, {
     useRecipesCacheHelpers,

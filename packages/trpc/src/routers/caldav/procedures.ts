@@ -1,10 +1,10 @@
+import { TRPCError } from "@trpc/server";
+
 import type {
   CalDavCalendarInfo,
   ConnectionTestResult,
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
-
-import { TRPCError } from "@trpc/server";
 import {
   deleteCaldavConfig,
   getCaldavConfigDecrypted,
@@ -16,13 +16,12 @@ import {
   getSyncStatusSummary,
 } from "@norish/db/repositories/caldav-sync-status";
 import { CalDavClient, testCalDavConnection } from "@norish/shared-server/caldav/client";
-import { retryFailedSyncs, syncAllFutureItems } from "@norish/shared-server/caldav/sync";
 import { createLogger } from "@norish/shared-server/logger";
+import { caldav } from "@norish/shared-server/realtime/caldav";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
-import { caldavEmitter } from "./emitter";
+import { retryFailedSyncs, syncAllFutureItems } from "./sync-service";
 import {
   DeleteCaldavConfigInputSchema,
   FetchCalendarsInputSchema,
@@ -85,7 +84,8 @@ export const caldavRouter = router({
         password = existingConfig.password;
       }
 
-      await saveCaldavConfig(userId, {
+      const result = await saveCaldavConfig(userId, {
+        version: input.version,
         serverUrl: input.serverUrl,
         calendarUrl: input.calendarUrl ?? null,
         username: input.username,
@@ -96,6 +96,21 @@ export const caldavRouter = router({
         dinnerTime: input.dinnerTime,
         snackTime: input.snackTime,
       });
+
+      if (result.stale) {
+        log.info({ userId, version: input.version }, "Ignoring stale CalDAV config save");
+
+        const currentConfig = await getCaldavConfigWithoutPassword(userId);
+
+        if (!currentConfig) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "CalDAV configuration changed before this update was applied",
+          });
+        }
+
+        return currentConfig;
+      }
 
       // Get the saved config without password for response
       const configWithoutPassword = await getCaldavConfigWithoutPassword(userId);
@@ -108,7 +123,11 @@ export const caldavRouter = router({
       }
 
       // Emit config saved event
-      caldavEmitter.emitToUser(userId, "configSaved", { config: configWithoutPassword });
+      void caldav.publish(
+        "syncEvent",
+        { type: "configSaved", data: { config: configWithoutPassword } },
+        { userId }
+      );
 
       // If enabled, trigger initial sync of all future items
       if (input.enabled) {
@@ -118,11 +137,18 @@ export const caldavRouter = router({
         syncAllFutureItems(userId)
           .then((result) => {
             log.info({ userId, ...result }, "Initial CalDAV sync completed");
-            caldavEmitter.emitToUser(userId, "initialSyncComplete", {
-              timestamp: new Date().toISOString(),
-              totalSynced: result.totalSynced,
-              totalFailed: result.totalFailed,
-            });
+            void caldav.publish(
+              "syncEvent",
+              {
+                type: "initialSyncComplete",
+                data: {
+                  timestamp: new Date().toISOString(),
+                  totalSynced: result.totalSynced,
+                  totalFailed: result.totalFailed,
+                },
+              },
+              { userId }
+            );
           })
           .catch((err) => {
             log.error({ err, userId }, "Initial CalDAV sync failed");
@@ -197,10 +223,16 @@ export const caldavRouter = router({
 
       log.info({ userId, deleteEvents: input.deleteEvents }, "Deleting CalDAV configuration");
 
-      await deleteCaldavConfig(userId);
+      const result = await deleteCaldavConfig(userId, input.version);
+
+      if (result.stale) {
+        log.info({ userId, version: input.version }, "Ignoring stale CalDAV config delete");
+
+        return { success: true };
+      }
 
       // Emit config deleted event
-      caldavEmitter.emitToUser(userId, "configSaved", { config: null });
+      void caldav.publish("syncEvent", { type: "configSaved", data: { config: null } }, { userId });
 
       return { success: true };
     }),
@@ -240,19 +272,33 @@ export const caldavRouter = router({
     log.info({ userId }, "Manually triggering CalDAV sync");
 
     // Emit sync started event
-    caldavEmitter.emitToUser(userId, "syncStarted", {
-      timestamp: new Date().toISOString(),
-    });
+    void caldav.publish(
+      "syncEvent",
+      {
+        type: "syncStarted",
+        data: {
+          timestamp: new Date().toISOString(),
+        },
+      },
+      { userId }
+    );
 
     // Run retry in background
     retryFailedSyncs(userId)
       .then((result) => {
         log.info({ userId, ...result }, "Manual CalDAV sync completed");
-        caldavEmitter.emitToUser(userId, "initialSyncComplete", {
-          timestamp: new Date().toISOString(),
-          totalSynced: result.totalRetried,
-          totalFailed: result.totalFailed,
-        });
+        void caldav.publish(
+          "syncEvent",
+          {
+            type: "initialSyncComplete",
+            data: {
+              timestamp: new Date().toISOString(),
+              totalSynced: result.totalRetried,
+              totalFailed: result.totalFailed,
+            },
+          },
+          { userId }
+        );
       })
       .catch((err) => {
         log.error({ err, userId }, "Manual CalDAV sync failed");
@@ -267,19 +313,33 @@ export const caldavRouter = router({
     log.info({ userId }, "Starting full CalDAV sync");
 
     // Emit sync started event
-    caldavEmitter.emitToUser(userId, "syncStarted", {
-      timestamp: new Date().toISOString(),
-    });
+    void caldav.publish(
+      "syncEvent",
+      {
+        type: "syncStarted",
+        data: {
+          timestamp: new Date().toISOString(),
+        },
+      },
+      { userId }
+    );
 
     // Run sync in background
     syncAllFutureItems(userId)
       .then((result) => {
         log.info({ userId, ...result }, "Full CalDAV sync completed");
-        caldavEmitter.emitToUser(userId, "initialSyncComplete", {
-          timestamp: new Date().toISOString(),
-          totalSynced: result.totalSynced,
-          totalFailed: result.totalFailed,
-        });
+        void caldav.publish(
+          "syncEvent",
+          {
+            type: "initialSyncComplete",
+            data: {
+              timestamp: new Date().toISOString(),
+              totalSynced: result.totalSynced,
+              totalFailed: result.totalFailed,
+            },
+          },
+          { userId }
+        );
       })
       .catch((err) => {
         log.error({ err, userId }, "Full CalDAV sync failed");

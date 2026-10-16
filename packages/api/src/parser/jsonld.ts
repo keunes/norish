@@ -1,8 +1,9 @@
-/** JSON-LD helpers: scan HTML, collect structured data, and return Recipe nodes. */
+/**
+ * JSON-LD helpers: scan HTML, collect structured data, and return Recipe nodes.
+ */
 import * as cheerio from "cheerio";
-import { parserLogger as log } from "@norish/api/logger";
-import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
-import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+
+import { parserLogger as log } from "@norish/shared-server/logger";
 import { parseJsonWithRepair } from "@norish/shared/lib/helpers";
 
 function isRecipeNode(node: any): boolean {
@@ -57,6 +58,30 @@ function collectRecipeNodesFromJsonGraph(rootNode: any): any[] {
   return results;
 }
 
+export function extractRecipeNodesFromJsonValue(input: unknown): Record<string, unknown>[] {
+  const rootNodes = Array.isArray(input) ? input : [input];
+  const recipeNodes: Record<string, unknown>[] = [];
+
+  for (const root of rootNodes) {
+    recipeNodes.push(...collectRecipeNodesFromJsonGraph(root));
+  }
+
+  const seenKeys = new Set<string>();
+
+  return recipeNodes.filter((node) => {
+    const dedupeKey =
+      (typeof node["@id"] === "string" && node["@id"].trim()) ||
+      `${typeof node.name === "string" ? node.name : ""}|${typeof node.url === "string" ? node.url : ""}` ||
+      JSON.stringify(node).slice(0, 200);
+
+    if (seenKeys.has(dedupeKey)) return false;
+
+    seenKeys.add(dedupeKey);
+
+    return true;
+  });
+}
+
 export function extractRecipeNodesFromJsonLd(htmlContent: string) {
   const $ = cheerio.load(htmlContent);
 
@@ -67,44 +92,12 @@ export function extractRecipeNodesFromJsonLd(htmlContent: string) {
       const scriptContent = $(element).html() || "{}";
       const parsedJson = parseJsonWithRepair(scriptContent);
 
-      const rootNodes = Array.isArray(parsedJson) ? parsedJson : [parsedJson];
-
-      for (const root of rootNodes) {
-        recipeNodes.push(...collectRecipeNodesFromJsonGraph(root));
-      }
+      recipeNodes.push(...extractRecipeNodesFromJsonValue(parsedJson));
     } catch (parseErr) {
       // JSON-LD parsing can fail on malformed data, log but continue
       log.error({ err: parseErr }, "Failed to parse JSON-LD script");
     }
   });
 
-  const seenKeys = new Set<string>();
-  const uniqueRecipeNodes = recipeNodes.filter((node) => {
-    const dedupeKey =
-      node["@id"] || `${node.name || ""}|${node.url || ""}` || JSON.stringify(node).slice(0, 200);
-
-    if (seenKeys.has(dedupeKey)) return false;
-
-    seenKeys.add(dedupeKey);
-
-    return true;
-  });
-
-  return uniqueRecipeNodes;
-}
-
-export async function tryExtractRecipeFromJsonLd(
-  url: string,
-  htmlContent: string,
-  recipeId: string
-): Promise<FullRecipeInsertDTO | null> {
-  const nodes = extractRecipeNodesFromJsonLd(htmlContent);
-
-  if (!nodes || nodes.length === 0) return null;
-
-  const parsed = await normalizeRecipeFromJson(nodes[0], recipeId);
-
-  parsed && (parsed.url = url);
-
-  return parsed;
+  return recipeNodes;
 }

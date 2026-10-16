@@ -1,8 +1,6 @@
 import type { UnitsMap } from "@norish/config/zod/server-config";
-import type {
-  CreateGroceriesHooksOptions,
-} from "./types";
 
+import type { CreateGroceriesHooksOptions } from "./types";
 import { createUseGroceriesCache } from "./use-groceries-cache";
 import { createUseGroceriesMutations } from "./use-groceries-mutations";
 import { createUseGroceriesQuery } from "./use-groceries-query";
@@ -43,6 +41,7 @@ export function createGroceriesHooks({
     useTRPC,
     useGroceriesQuery,
     useUnitsQuery,
+    useErrorAdapter,
   });
   const useGroceriesSubscription = createUseGroceriesSubscription({
     useTRPC,

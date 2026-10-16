@@ -1,15 +1,15 @@
 import type { QueryKey } from "@tanstack/react-query";
-import type { FullRecipeDTO } from "@norish/shared/contracts";
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { FullRecipeDTO } from "@norish/shared/contracts";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export type RecipeQueryResult = {
   recipe: FullRecipeDTO | null;
   isLoading: boolean;
+  isFetching: boolean;
   error: unknown;
   queryKey: QueryKey;
   setRecipeData: (
@@ -25,7 +25,7 @@ export function createUseRecipeQuery({ useTRPC }: CreateRecipeHooksOptions) {
 
     const queryKey = trpc.recipes.get.queryKey({ id: id ?? "" });
 
-    const { data, error, isLoading } = useQuery({
+    const { data, error, isLoading, isFetching } = useQuery({
       ...trpc.recipes.get.queryOptions({ id: id ?? "" }),
       enabled: !!id,
     });
@@ -44,6 +44,7 @@ export function createUseRecipeQuery({ useTRPC }: CreateRecipeHooksOptions) {
     return {
       recipe: data ?? null,
       isLoading,
+      isFetching,
       error,
       queryKey,
       setRecipeData,

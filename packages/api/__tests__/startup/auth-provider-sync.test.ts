@@ -7,6 +7,7 @@ const mockGetConfig = vi.fn();
 const mockSetConfig = vi.fn();
 const mockDeleteConfig = vi.fn();
 const mockConfigExists = vi.fn();
+const mockNormalizeAndBackfillConfig = vi.fn();
 let mockServerConfig: Record<string, string | undefined> = {};
 
 vi.mock("@norish/db/repositories/server-config", () => ({
@@ -14,13 +15,14 @@ vi.mock("@norish/db/repositories/server-config", () => ({
   setConfig: mockSetConfig,
   deleteConfig: mockDeleteConfig,
   configExists: mockConfigExists,
+  normalizeAndBackfillConfig: mockNormalizeAndBackfillConfig,
 }));
 
 vi.mock("@norish/auth/provider-cache", () => ({
   setAuthProviderCache: vi.fn(),
 }));
 
-vi.mock("@norish/api/logger", () => ({
+vi.mock("@norish/shared-server/logger", () => ({
   serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
@@ -37,7 +39,7 @@ vi.mock("@norish/config/content-indicators.default.json", () => ({
 vi.mock("@norish/config/recurrence-config.default.json", () => ({
   default: { locales: {} },
 }));
-vi.mock("@norish/api/ai/prompts/loader", () => ({
+vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
   loadDefaultPrompts: vi.fn().mockReturnValue({
     recipeExtraction: "mock recipe extraction prompt",
     unitConversion: "mock unit conversion prompt",
@@ -49,6 +51,7 @@ describe("Auth Provider Sync Logic", () => {
     vi.clearAllMocks();
     mockServerConfig = {};
     mockDeleteConfig.mockResolvedValue(undefined);
+    mockNormalizeAndBackfillConfig.mockResolvedValue(false);
   });
 
   afterEach(() => {

@@ -1,17 +1,16 @@
 import type { ServerConfigKey } from "@norish/db/zodSchemas/server-config";
-
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
-import { DEFAULT_LOCALE_CONFIG } from "@norish/config/server-config-loader";
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
 import {
+  DEFAULT_JOB_RETENTION,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
 } from "@norish/db/zodSchemas/server-config";
-
-import { loadDefaultPrompts } from "../ai/prompts/loader";
+import { DEFAULT_LOCALE_CONFIG } from "@norish/shared-server/config/server-config-loader";
 
 export function getDefaultConfigValue(key: ServerConfigKey): unknown {
   switch (key) {
@@ -25,11 +24,13 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return defaultRecurrenceConfig;
     case ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS:
       return 3;
+    case ServerConfigKeys.JOB_RETENTION:
+      return DEFAULT_JOB_RETENTION;
     case ServerConfigKeys.AI_CONFIG:
       return {
         enabled: false,
         provider: "openai",
-        model: "gpt-5-mini",
+        model: "gpt-6-luna",
         temperature: 1.0,
         maxTokens: 10000,
       };
@@ -38,18 +39,21 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         enabled: false,
         maxLengthSeconds: 120,
         maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
-        ytDlpVersion: "2025.11.12",
+        ytDlpProxy: undefined,
         transcriptionProvider: "disabled",
         transcriptionModel: "whisper-1",
       };
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return DEFAULT_RECIPE_PERMISSION_POLICY;
     case ServerConfigKeys.PROMPTS:
-      return { ...loadDefaultPrompts(), isOverridden: false };
+      // No overrides: every prompt follows the shipped default again.
+      return {};
     case ServerConfigKeys.LOCALE_CONFIG:
       return DEFAULT_LOCALE_CONFIG;
     case ServerConfigKeys.TIMER_KEYWORDS:
       return { ...defaultTimerKeywords, isOverridden: false };
+    case ServerConfigKeys.INGREDIENT_WORDS:
+      return { words: defaultIngredientWords, isOverridden: false };
     default:
       return null;
   }

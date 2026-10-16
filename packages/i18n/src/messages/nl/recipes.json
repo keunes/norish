@@ -1,9 +1,11 @@
 {
   "dashboard": {
-    "title": "Alle recepten",
+    "libraryTitle": "Jouw bibliotheek",
+    "recipesTitle": "Jouw recepten",
+    "cookbooksTitle": "Jouw kookboeken",
     "searchPlaceholder": "Zoek of voeg een recept toe...",
     "searchRecipesPlaceholder": "Zoek recepten...",
-    "recipeCount": "{count, plural, one {# recept} other {# recepten}}",
+    "libraryCount": "{count, plural, one {# item} other {# items}}",
     "addRecipe": "Recept toevoegen",
     "importFromUrl": "URL",
     "importFromPaste": "Plakken",
@@ -14,24 +16,48 @@
       "ingredients": "Ingrediënten",
       "steps": "Stappen",
       "tags": "Tags"
+    },
+    "viewMode": {
+      "label": "Receptweergave",
+      "grid": "Raster",
+      "list": "Lijst"
+    },
+    "libraryType": {
+      "label": "Weergeven",
+      "all": "Alles",
+      "recipes": "Recepten",
+      "cookbooks": "Kookboeken"
     }
   },
+  "back": {
+    "all": "Terug naar bibliotheek",
+    "recipes": "Terug naar recepten",
+    "cookbooks": "Terug naar kookboeken",
+    "named": "Terug naar {name}",
+    "cookbook": "Terug naar kookboek",
+    "generic": "Terug"
+  },
   "empty": {
-    "title": "Begin je collectie met recepten",
+    "title": "Je bibliotheek wacht op je",
     "description": "Plak een link in het zoekveld en zie de magie gebeuren.",
     "noResults": "Geen recepten gevonden",
-    "noResultsHint": "Probeer je filters aan te passen of te wissen."
+    "noResultsHint": "Probeer je filters aan te passen of te wissen.",
+    "noCookbooks": "Nog geen kookboeken",
+    "noCookbooksHint": "Een kookboek is een set recepten met een titel. Maak je eerste om je bibliotheek te ordenen."
   },
   "card": {
     "noImage": "Geen afbeelding beschikbaar",
     "viewGroceries": "Bekijk boodschappen",
     "addToCalendar": "Toevoegen aan agenda",
-    "deleteRecipe": "Recept verwijderen"
+    "deleteRecipe": "Recept verwijderen",
+    "recipeOptions": "Receptopties"
   },
   "detail": {
-    "backToRecipes": "Terug naar recepten",
     "viewOriginal": "Bekijk origineel recept",
     "ingredients": "Ingrediënten",
+    "ingredientOptions": "Ingrediëntopties",
+    "showMore": "Meer tonen",
+    "showLess": "Minder tonen",
     "steps": "Stappen",
     "notes": "Notities",
     "addToGroceries": "Toevoegen aan boodschappen",
@@ -45,7 +71,12 @@
     "instructions": "Instructies",
     "cook": "Koken",
     "switchToDecimal": "Toon decimalen",
-    "switchToFraction": "Toon breuken"
+    "switchToFraction": "Toon breuken",
+    "servingsCount": "{count, plural, one {# portie} other {# porties}}",
+    "source": "Bron",
+    "addedBy": "Toegevoegd door {name}",
+    "decreaseServings": "Minder porties",
+    "increaseServings": "Meer porties"
   },
   "actions": {
     "plan": "Plan",
@@ -64,12 +95,69 @@
     "estimatingNutrition": "Voedingswaarde schatten...",
     "screenOn": "Scherm Aan",
     "keepScreenOn": "Scherm Aan Houden",
-    "actionsLabel": "Acties"
+    "actionsLabel": "Acties",
+    "autoCategorizing": "Automatisch categoriseren…",
+    "inferProvenance": "Herkomst bepalen",
+    "inferringProvenance": "Herkomst bepalen…",
+    "linkIngredients": "Ingrediënten aan stappen koppelen",
+    "linkingIngredients": "Ingrediënten koppelen…",
+    "enrichmentFailed": "Laatste poging mislukt",
+    "generateImage": "Afbeelding genereren",
+    "generatingImage": "Afbeelding genereren…",
+    "cookbooks": "Kookboeken"
+  },
+  "sharePanel": {
+    "title": "Recept delen",
+    "description": "Maak en beheer publieke links voor {recipeName}.",
+    "expiryLabel": "Linkverval",
+    "createLink": "Link aanmaken",
+    "latestLink": "Laatste link",
+    "currentLinks": "Huidige links",
+    "empty": "Nog geen deellinks.",
+    "createSuccess": "Deellink aangemaakt",
+    "copySuccess": "Link gekopieerd",
+    "copyLink": "Kopiëren",
+    "openLink": "Openen",
+    "createdAt": "Aangemaakt: {value}",
+    "expiresAt": "Verloopt: {value}",
+    "lastAccessedAt": "Laatst geopend: {value}",
+    "never": "Nooit",
+    "expiryOptions": {
+      "1day": "1 dag",
+      "1week": "1 week",
+      "1month": "1 maand",
+      "1year": "1 jaar",
+      "forever": "Nooit"
+    },
+    "status": {
+      "active": "Actief",
+      "expired": "Verlopen",
+      "revoked": "Ingetrokken"
+    },
+    "revokeModal": {
+      "title": "Link intrekken",
+      "message": "Deze link voor {recipeName} werkt niet meer totdat je hem opnieuw activeert.",
+      "confirm": "Intrekken"
+    },
+    "reactivateModal": {
+      "title": "Link opnieuw activeren",
+      "message": "Deze link voor {recipeName} wordt weer actief.",
+      "confirm": "Opnieuw activeren"
+    },
+    "deleteModal": {
+      "title": "Link verwijderen",
+      "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Link verwijderen"
+    }
   },
   "convert": {
     "ariaLabel": "Converteer meetsysteem",
     "toMetric": "Converteer naar metrisch",
-    "toUS": "Converteer naar US"
+    "toUS": "Converteer naar US",
+    "toMetricWithAI": "Converteer naar metrisch met AI",
+    "toUSWithAI": "Converteer naar US met AI",
+    "converting": "Bezig met omrekenen…",
+    "original": "Origineel"
   },
   "deleteModal": {
     "title": "Recept verwijderen",
@@ -99,7 +187,7 @@
     "notesPlaceholder": "Voeg tips voor de voorbereiding, aanpassingen of serveersuggesties toe voor dit recept...",
     "ingredientsHelp": "Typ ingrediënten zoals \"2 kopjes bloem\" - we verwerken automatisch hoeveelheden en eenheden.",
     "instructionsHelp": "Schrijf duidelijke stapsgewijze instructies. Druk op Enter om naar de volgende stap te gaan.",
-    "tagsHelp": "Typ tags en klik op suggesties om toe te voegen. Geselecteerde tags zijn blauw, nieuwe tags hebben een omstippelde rand.",
+    "tagsHelp": "Typ tags en klik op suggesties om toe te voegen. Tags op het recept zijn gevuld, nieuwe tags hebben een omstippelde rand.",
     "tagsAndCategories": "Tags & Categorieën",
     "categoriesHelp": "Selecteer maaltijdcategorieën voor dit recept.",
     "category": {
@@ -112,6 +200,16 @@
     "fat": "Vet (g)",
     "carbs": "Koolhydraten (g)",
     "protein": "Eiwit (g)",
+    "provenance": "Herkomst",
+    "provenanceHelp": "Waar dit recept vandaan komt.",
+    "originCountry": "Land",
+    "originCountryPlaceholder": "Geen land",
+    "originRegion": "Streek",
+    "originRegionPlaceholder": "bijv. Sicilië",
+    "cuisines": "Keukens",
+    "cuisinesHelp": "Kies uit de lijst van je installatie. Meerdere is logisch bij een fusiongerecht.",
+    "provenanceNote": "Toelichting",
+    "provenanceNotePlaceholder": "Een paar zinnen over waar dit gerecht vandaan komt…",
     "servings": "Porties",
     "cookingTimes": "Kooktijden",
     "optional": "(optioneel)",
@@ -124,7 +222,8 @@
     "uploading": "Bezig met uploaden...",
     "clickToUpload": "Klik om te uploaden of sleep en zet neer",
     "pasteToUpload": "om te plakken",
-    "imageFormats": "PNG, JPG, WEBP tot 5MB"
+    "imageFormats": "PNG, JPG, WEBP tot 5MB",
+    "discardChangesConfirm": "Je hebt niet-opgeslagen wijzigingen. Ze verwijderen en deze pagina verlaten?"
   },
   "gallery": {
     "addImage": "Afbeelding toevoegen",
@@ -159,7 +258,20 @@
     "protein": "Eiwitten",
     "showingPortions": "Waardes voor {count} {count, plural, one {portie} other {porties}}",
     "noInfo": "Geen voedingsinformatie beschikbaar",
-    "estimateWithAI": "Schatten met AI"
+    "estimateWithAI": "Schatten met AI",
+    "estimated": "Geschat",
+    "leftOut": "{count, plural, one {# regel niet meegeteld} other {# regels niet meegeteld}}",
+    "estimatedByAI": "geschat door AI",
+    "reasons": {
+      "seasoning": "smaakmaker",
+      "noAmount": "geen hoeveelheid",
+      "noSize": "geen gewicht voor deze maat",
+      "noNumbers": "nog geen voedingswaarden",
+      "noSpoonWeight": "nog geen lepelgewicht",
+      "noPieceWeight": "nog geen stukgewicht"
+    },
+    "workedOutFrom": "Berekend uit de ingrediënten, met {sources}.",
+    "householdNumbers": "de waarden van je huishouden"
   },
   "measurementSystem": {
     "label": "Meetsysteem",
@@ -176,6 +288,23 @@
     "stepPlaceholder": "Stap {number}: Beschrijf de stap...",
     "stepPlaceholderShort": "Stap {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Gekoppelde ingrediënten",
+    "addLabel": "Ingrediënt koppelen",
+    "pickerLabel": "Koppel een ingrediënt aan deze stap",
+    "shareLabel": "Deel van {name} aanpassen",
+    "share": {
+      "full": "Hele regel",
+      "half": "De helft",
+      "third": "Een derde",
+      "quarter": "Een kwart",
+      "custom": "Aangepast…",
+      "amount": "Hoeveelheid…"
+    },
+    "customShareLabel": "Aangepast deel",
+    "customAmountLabel": "Hoeveelheid",
+    "removeLabel": "{name} verwijderen"
+  },
   "ingredientInput": {
     "placeholder": "bijv. 2 kopjes bloem"
   },
@@ -187,15 +316,7 @@
     "ariaLabel": "Scherm wakker houden"
   },
   "toasts": {
-    "processingBoth": "Tags & allergieën verwerken",
-    "processingTags": "Tags genereren",
-    "processingAllergies": "Allergieën detecteren",
-    "bothComplete": "Tags & allergieën bijgewerkt",
-    "tagsComplete": "Tags gegenereerd",
-    "allergiesComplete": "Allergieën gedetecteerd",
     "imported": "Recept geïmporteerd",
-    "converted": "Maateenheden omgezet",
-    "convertedDescription": "Recept omgezet naar {system} eenheden",
     "failed": "Receptbewerking mislukt",
     "failedDescription": "Er ging iets mis tijdens het verwerken van je recept. Bekijk de browserconsole voor technische details.",
     "batchImported": "Recepten geïmporteerd",
@@ -210,7 +331,6 @@
       "duplicateTag": "Deze tag bestaat al"
     }
   },
-
   "cookMode": {
     "steps": "Stappen",
     "ingredients": "Ingrediënten",
@@ -219,6 +339,89 @@
     "stepCounter": "{current} / {total}",
     "swipeSteps": "Veeg om door stappen te navigeren",
     "swipeIngredients": "Veeg links voor ingrediënten",
-    "swipeBackToSteps": "Veeg rechts voor stappen"
+    "swipeBackToSteps": "Veeg rechts voor stappen",
+    "readyAt": "Rond {time} klaar",
+    "timers": "Timers",
+    "nextStep": "Volgende stap"
+  },
+  "enrichment": {
+    "failed": "Verrijking mislukt",
+    "states": {
+      "queued": "In de wachtrij",
+      "processing": "Bezig",
+      "succeeded": "Voltooid",
+      "failed": "Laatste poging mislukt"
+    },
+    "kinds": {
+      "auto-tagging": "Automatisch taggen",
+      "allergy-detection": "Allergiedetectie",
+      "auto-categorization": "Automatisch categoriseren",
+      "nutrition-estimation": "Voedingswaarde schatten",
+      "recipe-provenance": "Receptherkomst",
+      "ingredient-linking": "Ingrediëntkoppeling",
+      "image-generation": "Afbeeldingen genereren"
+    }
+  },
+  "provenance": {
+    "title": "Herkomst",
+    "region": "Streek",
+    "cuisines": "Keukens",
+    "inferring": "Bezig met bepalen waar dit recept vandaan komt…",
+    "noInfo": "Nog geen herkomstinformatie",
+    "inferWithAI": "Bepalen met AI"
+  },
+  "import": {
+    "alreadyExists": "Je hebt dit recept al",
+    "openExisting": "Openen"
+  },
+  "glanceBar": {
+    "totalTime": "Totale tijd",
+    "servings": "{count, plural, one {portie} other {porties}}"
+  },
+  "cookingTime": {
+    "title": "Kooktijd",
+    "prep": "Voorbereiden",
+    "cook": "Koken",
+    "other": "Overige tijd",
+    "total": "Totaal"
+  },
+  "cookbooks": {
+    "addCookbook": "Kookboek toevoegen",
+    "createTitle": "Nieuw kookboek",
+    "editTitle": "Kookboek bewerken",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "bv. Doordeweekse diners",
+    "options": "Kookboekopties",
+    "deleteTitle": "Kookboek verwijderen",
+    "deleteConfirm": "Weet je zeker dat je \"{title}\" wilt verwijderen?",
+    "deleteKeepsRecipes": "De recepten erin blijven in je bibliotheek.",
+    "recipeCount": "{count, plural, one {# recept} other {# recepten}}",
+    "empty": "Nog geen recepten",
+    "singular": "Kookboek",
+    "notFound": "Kookboek niet gevonden",
+    "notFoundHint": "Het is misschien verwijderd, of niet zichtbaar voor jou.",
+    "emptyHint": "Voeg recepten toe via het snelle-actiesmenu van een recept.",
+    "panelTitle": "Toevoegen aan kookboek",
+    "newWithRecipe": "Nieuw kookboek met dit recept",
+    "noneEditable": "Er zijn nog geen kookboeken die je kunt bewerken.",
+    "cardTitle": "In kookboeken",
+    "removeFromCookbook": "Uit kookboek verwijderen",
+    "noMatchingMembers": "Geen recepten in dit kookboek passen bij je filters.",
+    "membersLabel": "Recepten in dit kookboek",
+    "showMore": "Meer tonen",
+    "willBeCreated": "Wordt aangemaakt bij opslaan",
+    "manage": "Beheren",
+    "addRecipes": "Recepten toevoegen",
+    "addRecipesTitle": "Recepten toevoegen aan {title}",
+    "searchRecipes": "Recepten zoeken",
+    "noRecipesToAdd": "Geen recepten gevonden.",
+    "addCount": "{count, plural, one {# recept toevoegen} other {# recepten toevoegen}}",
+    "everythingAlreadyIn": "Alle recepten staan al in dit kookboek.",
+    "coverLabel": "Omslag",
+    "chooseImage": "Afbeelding kiezen",
+    "changeImage": "Afbeelding wijzigen",
+    "removeImage": "Afbeelding verwijderen",
+    "imageUploadFailed": "De afbeelding kon niet worden geüpload.",
+    "imageNeedsConnection": "Afbeeldingen kun je wijzigen zodra je weer online bent."
   }
 }

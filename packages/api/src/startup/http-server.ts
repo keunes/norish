@@ -1,11 +1,11 @@
 import http from "node:http";
 import { join } from "node:path";
 import { parse } from "node:url";
-
 import next from "next";
-import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
-import { serverLogger } from "@norish/api/logger";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
+import { serverLogger } from "@norish/shared-server/logger";
 import { initTrpcWebSocket } from "@norish/trpc/server";
 
 import { serveStaticFile } from "./static-files";

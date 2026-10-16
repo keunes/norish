@@ -1,25 +1,15 @@
 "use client";
 
-import type { Slot } from "@norish/shared/contracts";
-import type { PlannedItemDisplay } from "./types";
-
 import { memo, useMemo } from "react";
+import { SlotDropdown } from "@/components/shared/slot-dropdown";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import {
-  Button,
-  Card,
-  CardBody,
-  Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
+import { Button, Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { Slot } from "@norish/shared/contracts";
 
-
+import type { PlannedItemDisplay } from "./types";
 import { TimelineSlotContainer } from "./timeline-slot-container";
 import { SLOTS } from "./types";
 
@@ -29,24 +19,24 @@ type TimelineDaySectionProps = {
   isDragOver?: boolean;
   isToday: boolean;
   items: PlannedItemDisplay[];
-  weekdayFormatter: Intl.DateTimeFormat;
-  monthFormatter: Intl.DateTimeFormat;
+  dateFormatter: Intl.DateTimeFormat;
   onAddItem: (dateKey: string, slot: Slot) => void;
   onNoteClick?: (item: PlannedItemDisplay) => void;
   onRecipeClick?: (item: PlannedItemDisplay) => void;
+  /** On a panel the card takes the panel's secondary surface, flat, instead of the page's. */
+  inPanel?: boolean;
 };
-
 export const TimelineDaySection = memo(function TimelineDaySection({
   date,
   dateKey,
   isDragOver = false,
   isToday,
   items,
-  weekdayFormatter,
-  monthFormatter,
+  dateFormatter,
   onAddItem,
   onNoteClick,
   onRecipeClick,
+  inPanel = false,
 }: TimelineDaySectionProps) {
   const t = useTranslations("calendar.timeline");
   const tMobile = useTranslations("calendar.mobile");
@@ -60,7 +50,6 @@ export const TimelineDaySection = memo(function TimelineDaySection({
       dateKey,
     },
   });
-
   const slotLabels: Record<Slot, string> = useMemo(
     () => ({
       Breakfast: tSlots("breakfast"),
@@ -79,10 +68,8 @@ export const TimelineDaySection = memo(function TimelineDaySection({
       Dinner: [],
       Snack: [],
     };
-
     for (const item of items) {
       const slotItems = grouped[item.slot as Slot];
-
       if (slotItems) {
         slotItems.push(item);
       }
@@ -92,92 +79,70 @@ export const TimelineDaySection = memo(function TimelineDaySection({
     for (const slot of SLOTS) {
       grouped[slot]?.sort((a, b) => a.sortOrder - b.sortOrder);
     }
-
     return grouped;
   }, [items]);
-
   const hasItems = items.length > 0;
-
   const showDragHighlight = isDragOver || isOver;
-
   return (
     <Card
       ref={setNodeRef}
-      className={`transition-all duration-200 ${showDragHighlight ? "ring-primary ring-2" : ""} ${isToday ? "ring-primary/50 shadow-md ring-2" : ""}`}
-      shadow={isToday ? "md" : "sm"}
+      className={`p-3 transition-all duration-200 ${inPanel ? "shadow-none" : isToday ? "shadow-md" : "shadow-sm"} ${showDragHighlight ? "ring-accent ring-2" : ""} ${isToday ? "ring-accent/50 ring-2" : ""}`}
+      variant={inPanel ? "secondary" : "default"}
     >
-      <CardBody className="flex flex-col gap-2 px-4 py-3">
-        {/* Day header */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col">
+      <Card.Content className="flex flex-col gap-2 p-0">
+        {/* Day header: the date on one line, and an empty day is nothing more */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-baseline gap-2">
             {isToday ? (
               <>
-                <span className="text-primary text-lg font-bold">{tMobile("today")}</span>
-                <span className="text-default-500 text-sm">
-                  {weekdayFormatter.format(date)}, {monthFormatter.format(date)} {date.getDate()}
+                <span className="text-accent shrink-0 text-base font-semibold">
+                  {tMobile("today")}
                 </span>
+                <span className="text-muted truncate text-sm">{dateFormatter.format(date)}</span>
               </>
             ) : (
-              <>
-                <span className="text-foreground text-base font-semibold">
-                  {monthFormatter.format(date)} {date.getDate()}
-                </span>
-                <span className="text-default-400 text-sm">{weekdayFormatter.format(date)}</span>
-              </>
+              <span className="text-foreground truncate text-base font-semibold">
+                {dateFormatter.format(date)}
+              </span>
             )}
           </div>
 
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                isIconOnly
-                aria-label={t("addItem")}
-                className="bg-default-100 text-default-500 hover:text-primary h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95"
-                size="sm"
-                variant="flat"
-              >
-                <PlusIcon className="h-4 w-4" />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label={tSlots("chooseSlot")}
-              onAction={(slot) => onAddItem(dateKey, slot as Slot)}
+          <SlotDropdown onSelectSlot={(slot) => onAddItem(dateKey, slot)}>
+            <Button
+              isIconOnly
+              aria-label={t("addItem")}
+              className={`${inPanel ? "bg-surface" : "bg-surface-secondary"} text-muted hover:text-accent h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95`}
+              size="sm"
+              variant="tertiary"
             >
-              <DropdownItem key="Breakfast">{slotLabels.Breakfast}</DropdownItem>
-              <DropdownItem key="Lunch">{slotLabels.Lunch}</DropdownItem>
-              <DropdownItem key="Dinner">{slotLabels.Dinner}</DropdownItem>
-              <DropdownItem key="Snack">{slotLabels.Snack}</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+              <PlusIcon className="h-4 w-4" />
+            </Button>
+          </SlotDropdown>
         </div>
 
-        <Divider />
-
-        {/* Slot containers */}
-        {hasItems ? (
-          <div className="flex flex-col">
-            {SLOTS.map((slot) => {
-              const slotItems = itemsBySlot[slot];
-
-              if (!slotItems || slotItems.length === 0) return null;
-
-              return (
-                <TimelineSlotContainer
-                  key={slot}
-                  dateKey={dateKey}
-                  items={slotItems}
-                  slot={slot}
-                  slotLabel={slotLabels[slot] ?? slot}
-                  onNoteClick={onNoteClick}
-                  onRecipeClick={onRecipeClick}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <span className="text-default-400 py-1 text-xs italic">{t("noItems")}</span>
+        {hasItems && (
+          <>
+            <Separator className={inPanel ? "bg-surface-tertiary" : undefined} />
+            <div className="flex flex-col">
+              {SLOTS.map((slot) => {
+                const slotItems = itemsBySlot[slot];
+                if (!slotItems || slotItems.length === 0) return null;
+                return (
+                  <TimelineSlotContainer
+                    key={slot}
+                    dateKey={dateKey}
+                    items={slotItems}
+                    slot={slot}
+                    slotLabel={slotLabels[slot] ?? slot}
+                    onNoteClick={onNoteClick}
+                    onRecipeClick={onRecipeClick}
+                  />
+                );
+              })}
+            </div>
+          </>
         )}
-      </CardBody>
+      </Card.Content>
     </Card>
   );
 });

@@ -1,3 +1,5 @@
+import { and, eq, sql } from "drizzle-orm";
+
 import type {
   CreateSiteAuthTokenInputDto,
   SiteAuthTokenDecryptedDto,
@@ -5,9 +7,7 @@ import type {
   SiteAuthTokenSafeDto,
   UpdateSiteAuthTokenInputDto,
 } from "@norish/shared/contracts/dto/site-auth-tokens";
-
-import { and, eq } from "drizzle-orm";
-import { decrypt, encrypt } from "@norish/auth/crypto";
+import { decrypt, encrypt } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
 import { siteAuthTokens } from "@norish/db/schema";
 import {
@@ -16,14 +16,19 @@ import {
   UpdateSiteAuthTokenInputSchema,
 } from "@norish/shared/contracts/zod/site-auth-tokens";
 
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+
 function decryptToken(token: SiteAuthTokenDto): SiteAuthTokenDecryptedDto {
   return {
     id: token.id,
     userId: token.userId,
     domain: token.domain,
+    account: token.account,
     name: token.name,
     value: decrypt(token.valueEnc),
     type: token.type,
+    version: token.version,
     createdAt: token.createdAt,
     updatedAt: token.updatedAt,
   };
@@ -34,8 +39,10 @@ function toSafeToken(token: SiteAuthTokenDto): SiteAuthTokenSafeDto {
     id: token.id,
     userId: token.userId,
     domain: token.domain,
+    account: token.account,
     name: token.name,
     type: token.type,
+    version: token.version,
     createdAt: token.createdAt,
     updatedAt: token.updatedAt,
   };
@@ -52,6 +59,7 @@ export async function createSiteAuthToken(
     .values({
       userId,
       domain: validated.domain,
+      account: validated.account,
       name: validated.name,
       valueEnc: encrypt(validated.value),
       type: validated.type,
@@ -123,34 +131,53 @@ export async function getTokenById(
 export async function updateSiteAuthToken(
   userId: string,
   input: UpdateSiteAuthTokenInputDto
-): Promise<SiteAuthTokenSafeDto> {
+): Promise<MutationOutcome<SiteAuthTokenSafeDto>> {
   const validated = UpdateSiteAuthTokenInputSchema.parse(input);
 
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
   if (validated.domain !== undefined) updateData.domain = validated.domain;
+  if (validated.account !== undefined) updateData.account = validated.account || null;
   if (validated.name !== undefined) updateData.name = validated.name;
   if (validated.value !== undefined) updateData.valueEnc = encrypt(validated.value);
   if (validated.type !== undefined) updateData.type = validated.type;
 
+  const whereConditions = [eq(siteAuthTokens.id, validated.id), eq(siteAuthTokens.userId, userId)];
+
+  if (validated.version) {
+    whereConditions.push(eq(siteAuthTokens.version, validated.version));
+  }
+
   const [row] = await db
     .update(siteAuthTokens)
-    .set(updateData)
-    .where(and(eq(siteAuthTokens.id, validated.id), eq(siteAuthTokens.userId, userId)))
+    .set({ ...updateData, version: sql`${siteAuthTokens.version} + 1` })
+    .where(and(...whereConditions))
     .returning();
 
-  if (!row) throw new Error("Token not found or access denied");
+  if (!row) return staleOutcome();
 
   const parsed = SiteAuthTokenSelectSchema.parse(row);
 
-  return toSafeToken(parsed);
+  return appliedOutcome(toSafeToken(parsed));
 }
 
-export async function deleteSiteAuthToken(userId: string, tokenId: string): Promise<void> {
+export async function deleteSiteAuthToken(
+  userId: string,
+  tokenId: string,
+  version: number
+): Promise<MutationOutcome<void>> {
+  const whereConditions = [eq(siteAuthTokens.id, tokenId), eq(siteAuthTokens.userId, userId)];
+
+  if (version) {
+    whereConditions.push(eq(siteAuthTokens.version, version));
+  }
+
   const result = await db
     .delete(siteAuthTokens)
-    .where(and(eq(siteAuthTokens.id, tokenId), eq(siteAuthTokens.userId, userId)))
+    .where(and(...whereConditions))
     .returning({ id: siteAuthTokens.id });
 
-  if (result.length === 0) throw new Error("Token not found or access denied");
+  if (result.length === 0) return staleOutcome();
+
+  return appliedOutcome(undefined);
 }

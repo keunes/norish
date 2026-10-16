@@ -1,255 +1,277 @@
-import type { PermissionAction } from "@norish/auth/permissions";
-import type { RecipeListContext } from "@norish/db";
-
+import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
+import type { RecipeListContext } from "@norish/db";
+import type { FullRecipeDTO } from "@norish/shared/contracts";
+import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
-  addStepsAndIngredientsToRecipeByInput,
-  createRecipeWithRefs,
   dashboardRecipe,
   deleteRecipeById,
   FullRecipeInsertSchema,
   getRandomRecipeCandidates,
   getRecipeFull,
-  getRecipeOwnerId,
   listRecipes,
   RecipeConvertInputSchema,
   RecipeDeleteInputSchema,
   RecipeGetInputSchema,
   RecipeImportInputSchema,
+  RecipeImportResultSchema,
   RecipeListInputSchema,
   RecipeUpdateInputSchema,
   searchRecipesByName,
   setActiveSystemForRecipe,
   updateRecipeCategories,
-  updateRecipeWithRefs,
+  writeConvertedCopy,
 } from "@norish/db";
 import {
-  addAllergyDetectionJob,
-  addAutoCategorizationJob,
-  addAutoTaggingJob,
   addImageImportJob,
   addImportJob,
-  addNutritionEstimationJob,
   addPasteImportJob,
+  enrichRecipe,
+  preparePasteImport,
 } from "@norish/queue";
+import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
+import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
 import { getQueues } from "@norish/queue/registry";
+import {
+  getRecipePermissionPolicy,
+  isVideoParsingEnabled,
+} from "@norish/shared-server/config/server-config-loader";
+import {
+  createResolvedRecipe,
+  updateResolvedRecipe,
+  withResolvedIngredients,
+} from "@norish/shared-server/ingredients/recipe-lines";
+import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { recipes } from "@norish/shared-server/realtime/recipes";
+import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
-import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
+import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
+import { isVideoUrl } from "@norish/shared/lib/helpers";
+import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
-import { emitByPolicy } from "../../helpers";
+import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
-import { recipeEmitter } from "./emitter";
-
-interface UserContext {
-  user: { id: string };
-  householdUserIds: string[] | null;
-  householdKey: string;
-  isServerAdmin: boolean;
-}
-
-/**
- * Emit a failure event based on the view policy
- */
-async function emitFailure(
-  ctx: UserContext,
-  reason: string,
-  meta?: { recipeId?: string; url?: string }
-): Promise<void> {
-  const policy = await getRecipePermissionPolicy();
-
-  emitByPolicy(
-    recipeEmitter,
-    policy.view,
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "failed",
-    { reason, ...meta }
-  );
-}
-
-/**
- * Handle async operation errors with logging and household notification
- */
-function handleError(
-  ctx: UserContext,
-  err: unknown,
-  operation: string,
-  meta?: { recipeId?: string; url?: string }
-): void {
-  const error = err as Error;
-
-  log.error({ err: error, userId: ctx.user.id, ...meta }, `Failed to ${operation}`);
-  emitFailure(ctx, error.message || `Failed to ${operation}`, meta);
-}
-
-/**
- * Check if user can perform an action on a recipe.
- * Returns true if allowed, throws FORBIDDEN if not.
- * Orphaned recipes (no owner) allow any action.
- */
-async function assertRecipeAccess(
-  ctx: UserContext,
-  recipeId: string,
-  action: PermissionAction
-): Promise<void> {
-  const ownerId = await getRecipeOwnerId(recipeId);
-
-  if (ownerId === null) {
-    // Orphaned recipe - anyone can access
-    log.debug({ recipeId }, `${action} orphaned recipe`);
-
-    return;
-  }
-
-  const canAccess = await canAccessResource(
-    action,
-    ctx.user.id,
-    ownerId,
-    ctx.householdUserIds,
-    ctx.isServerAdmin
-  );
-
-  if (!canAccess) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You do not have permission to access this recipe",
-    });
-  }
-}
+import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  randomRecipeInputSchema,
+  recipeAutocompleteInputSchema,
+  recipeIdInputSchema,
+  recipeImportPasteInputSchema,
+  recipeImportPasteOutputSchema,
+} from "./recipes-openapi-types";
 
 // Procedures
-const list = authedProcedure.input(RecipeListInputSchema).query(async ({ ctx, input }) => {
-  const {
-    cursor,
-    limit,
-    search,
-    searchFields,
-    tags,
-    filterMode,
-    sortMode,
-    minRating,
-    maxCookingTime,
-    categories,
-  } = input;
+export const listProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/recipes/search",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "List recipes",
+      description:
+        "Returns a paginated list of recipes. All filter fields are optional, so you can omit them to fetch the default recipe list.",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .input(RecipeListInputSchema)
+  .output(RecipeListResultSchema)
+  .query(async ({ ctx, input }) => {
+    const {
+      cursor,
+      limit,
+      search,
+      searchFields,
+      tags,
+      filterMode,
+      sortMode,
+      minRating,
+      maxCookingTime,
+      categories,
+    } = input;
 
-  log.debug({ userId: ctx.user.id, cursor, limit }, "Listing recipes");
+    log.debug({ userId: ctx.user.id, cursor, limit }, "Listing recipes");
 
-  const listCtx: RecipeListContext = {
-    userId: ctx.user.id,
-    householdUserIds: ctx.householdUserIds,
-    isServerAdmin: ctx.isServerAdmin,
-  };
+    const listCtx: RecipeListContext = {
+      userId: ctx.user.id,
+      householdUserIds: ctx.householdUserIds,
+      isServerAdmin: ctx.isServerAdmin,
+    };
 
-  const result = await listRecipes(
-    listCtx,
-    limit,
-    cursor,
-    search,
-    searchFields,
-    tags,
-    filterMode as FilterMode,
-    sortMode as SortOrder,
-    minRating,
-    maxCookingTime,
-    categories
-  );
-
-  log.debug({ count: result.recipes.length, total: result.total }, "Listed recipes");
-
-  return {
-    recipes: result.recipes,
-    total: result.total,
-    nextCursor: cursor + limit < result.total ? cursor + limit : null,
-  };
-});
-
-const get = authedProcedure.input(RecipeGetInputSchema).query(async ({ ctx, input }) => {
-  log.debug({ userId: ctx.user.id, recipeId: input.id }, "Getting recipe");
-
-  const recipe = await getRecipeFull(input.id);
-
-  if (!recipe) {
-    return null;
-  }
-
-  // Check view permission if recipe has an owner
-  if (recipe.userId) {
-    const canView = await canAccessResource(
-      "view",
-      ctx.user.id,
-      recipe.userId,
-      ctx.householdUserIds,
-      ctx.isServerAdmin
+    const result = await listRecipes(
+      listCtx,
+      limit,
+      cursor,
+      search,
+      searchFields,
+      tags,
+      filterMode as FilterMode,
+      sortMode as SortOrder,
+      minRating,
+      maxCookingTime,
+      categories
     );
 
-    if (!canView) {
-      log.warn({ userId: ctx.user.id, recipeId: input.id }, "Access denied to recipe");
+    log.debug({ count: result.recipes.length, total: result.total }, "Listed recipes");
 
-      return null;
+    return {
+      recipes: result.recipes,
+      total: result.total,
+      nextCursor: cursor + limit < result.total ? cursor + limit : null,
+    };
+  });
+
+export const getProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/recipes/{id}",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "Get a recipe by ID",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        404: "Recipe not found",
+      },
+    },
+  })
+  .input(RecipeGetInputSchema)
+  .output(FullRecipeSchema)
+  .query(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id, recipeId: input.id }, "Getting recipe");
+
+    const recipe = await findRecipeForViewer(ctx, input.id);
+
+    if (!recipe) {
+      log.warn({ userId: ctx.user.id, recipeId: input.id }, "Recipe not found or not accessible");
+
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
     }
-  }
 
-  return recipe;
-});
+    return recipe;
+  });
 
-const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, input }) => {
-  const recipeId = input.id ?? crypto.randomUUID();
+export const getEditableProcedure = authedProcedure
+  .input(RecipeGetInputSchema)
+  .output(FullRecipeSchema)
+  .query(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id, recipeId: input.id }, "Getting editable recipe");
 
-  log.info(
-    { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
-    "Creating recipe"
-  );
-  log.debug({ recipe: input }, "Full recipe data");
+    const recipe = await getRecipeFull(input.id);
 
-  if (input.id && input.id !== recipeId) {
-    log.error({ inputId: input.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
-  }
+    if (!recipe) {
+      log.warn({ userId: ctx.user.id, recipeId: input.id }, "Editable recipe not found");
 
-  createRecipeWithRefs(recipeId, ctx.user.id, input)
-    .then(async (createdId) => {
-      if (!createdId) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create recipe",
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
+    }
+
+    await assertRecipeAccess(ctx, input.id, "edit");
+
+    return recipe;
+  });
+
+export const createRecipeProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/recipes",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "Create a recipe",
+      description:
+        "Creates a recipe directly from structured recipe data without parser transformation.",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .input(FullRecipeInsertSchema)
+  .output(z.uuid())
+  .mutation(({ ctx, input }) => {
+    const recipeId = input.id ?? randomUUID();
+
+    log.info(
+      { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
+      "Creating recipe"
+    );
+    log.debug({ recipe: input }, "Full recipe data");
+
+    if (input.id && input.id !== recipeId) {
+      log.error({ inputId: input.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
+    }
+
+    // The Dish Colour rides the payload from here: derived from the image
+    // the recipe is being stored with, overwriting anything the client sent.
+    withDishColor(input)
+      .then((dto) => createResolvedRecipe(recipeId, ctx.user.id, dto, { userId: ctx.user.id }))
+      .then(async (created) => {
+        if (!created) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create recipe",
+          });
+        }
+
+        const createdId = created.recipeId;
+        const dashboardDto = await dashboardRecipe(createdId);
+
+        if (dashboardDto) {
+          log.info({ userId: ctx.user.id, recipeId: createdId }, "Recipe created");
+          const policy = await getRecipePermissionPolicy();
+
+          void recipes.publish(
+            "created",
+            { recipe: dashboardDto },
+            { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+          );
+        }
+
+        // A manually created recipe enters the same automatic flow as an
+        // import: importing is not a prerequisite for automation.
+        await announceUsableRecipe(created, {
+          userId: ctx.user.id,
+          householdKey: ctx.householdKey,
+          householdUserIds: ctx.householdUserIds,
         });
-      }
+      })
+      .catch((err) => handleRecipeError(ctx, err, "create recipe", { recipeId }));
 
-      const dashboardDto = await dashboardRecipe(createdId);
-
-      if (dashboardDto) {
-        log.info({ userId: ctx.user.id, recipeId: createdId }, "Recipe created");
-        const policy = await getRecipePermissionPolicy();
-
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
-          "created",
-          { recipe: dashboardDto }
-        );
-      }
-    })
-    .catch((err) => handleError(ctx, err, "create recipe", { recipeId }));
-
-  return recipeId;
-});
+    return recipeId;
+  });
 
 const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, input }) => {
-  const { id, data } = input;
+  const { id, data, version } = input;
 
   log.info({ userId: ctx.user.id, recipeId: id }, "Updating recipe");
   log.debug({ recipe: input }, "Full recipe data");
 
   assertRecipeAccess(ctx, id, "edit")
     .then(async () => {
-      await updateRecipeWithRefs(id, ctx.user.id, data);
+      // An edit that touches the media recomputes the Dish Colour from what
+      // the recipe now shows; one that does not leaves the colour alone.
+      const result = await updateResolvedRecipe(
+        id,
+        ctx.user.id,
+        await withDishColorForUpdate(data),
+        { userId: ctx.user.id },
+        version
+      );
+
+      if (result.stale) {
+        log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
+
+        return;
+      }
 
       const updatedRecipe = await getRecipeFull(id);
 
@@ -257,16 +279,14 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
         log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
         const policy = await getRecipePermissionPolicy();
 
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
+        void recipes.publish(
           "updated",
-          { recipe: updatedRecipe }
+          { recipe: updatedRecipe },
+          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
         );
       }
     })
-    .catch((err) => handleError(ctx, err, "update recipe", { recipeId: id }));
+    .catch((err) => handleRecipeError(ctx, err, "update recipe", { recipeId: id }));
 
   return { success: true };
 });
@@ -274,26 +294,38 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
 const updateCategories = authedProcedure
   .input(
     z.object({
-      recipeId: z.string().uuid(),
+      recipeId: z.uuid(),
+      version: z.number().int().positive(),
       categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])),
     })
   )
   .mutation(async ({ ctx, input }) => {
     await assertRecipeAccess(ctx, input.recipeId, "edit");
 
-    await updateRecipeCategories(input.recipeId, input.categories as RecipeCategory[]);
+    const result = await updateRecipeCategories(
+      input.recipeId,
+      input.categories as RecipeCategory[],
+      input.version
+    );
+
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, recipeId: input.recipeId, version: input.version },
+        "Ignoring stale recipe category update"
+      );
+
+      return { success: true, stale: true };
+    }
 
     const updated = await getRecipeFull(input.recipeId);
 
     if (updated) {
       const policy = await getRecipePermissionPolicy();
 
-      emitByPolicy(
-        recipeEmitter,
-        policy.view,
-        { userId: ctx.user.id, householdKey: ctx.householdKey },
+      void recipes.publish(
         "updated",
-        { recipe: updated }
+        { recipe: updated },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
       );
     }
 
@@ -303,36 +335,76 @@ const updateCategories = authedProcedure
 const deleteProcedure = authedProcedure
   .input(RecipeDeleteInputSchema)
   .mutation(({ ctx, input }) => {
-    const { id } = input;
+    const { id, version } = input;
 
     log.info({ userId: ctx.user.id, recipeId: id }, "Deleting recipe");
 
     assertRecipeAccess(ctx, id, "delete")
       .then(async () => {
         await deleteRecipeImagesDir(id);
-        await deleteRecipeById(id);
+        const result = await deleteRecipeById(id, version);
+
+        if (result.stale) {
+          log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe delete");
+
+          return;
+        }
 
         log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
         const policy = await getRecipePermissionPolicy();
 
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
+        void recipes.publish(
           "deleted",
-          { id }
+          { id },
+          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
         );
       })
-      .catch((err) => handleError(ctx, err, "delete recipe", { recipeId: id }));
+      .catch((err) => handleRecipeError(ctx, err, "delete recipe", { recipeId: id }));
 
     return { success: true };
   });
 
-const importFromUrlProcedure = authedProcedure
+export const importFromUrlProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/recipes/import/url",
+      protect: true,
+      tags: ["Recipe Imports"],
+      summary: "Queue a recipe import from a URL",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        409: "An import of this recipe is already in flight",
+        412: "The URL is a video and AI or video parsing is not enabled",
+      },
+    },
+  })
   .input(RecipeImportInputSchema.extend({ forceAI: z.boolean().optional() }))
+  .output(RecipeImportResultSchema)
   .mutation(async ({ ctx, input }) => {
     const { url, forceAI } = input;
-    const recipeId = crypto.randomUUID();
+    const recipeId = randomUUID();
+
+    // A video recipe can only be extracted with AI, and the video pipeline
+    // downloads and may transcribe before extraction runs. Refuse before
+    // dispatching so a doomed import costs nothing and fails in the caller's
+    // hands rather than in a queued job the user watches time out.
+    if (isVideoUrl(url)) {
+      if (!(await checkAIEnabled())) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Video imports use AI to extract the recipe, and AI features are not enabled. Enable AI in the admin settings.",
+        });
+      }
+
+      if (!(await isVideoParsingEnabled())) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Video recipe parsing is not enabled. Enable it in the admin settings.",
+        });
+      }
+    }
 
     // Add job to queue - returns conflict status if duplicate in queue
     const queues = getQueues();
@@ -345,32 +417,45 @@ const importFromUrlProcedure = authedProcedure
       forceAI,
     });
 
-    if (result.status === "exists" || result.status === "duplicate") {
+    // Already holding the recipe is an answer, not a failure: return the one
+    // the caller was reaching for, so it can be opened rather than reported.
+    if (result.status === "exists") {
+      return { recipeId: result.existingRecipeId, status: "exists" as const };
+    }
+
+    // An import already in flight has no recipe to offer yet, so this stays a
+    // conflict — there is nothing for the caller to open.
+    if (result.status === "duplicate") {
       throw new TRPCError({
         code: "CONFLICT",
-        message: "This recipe already exists or is being imported",
+        message: "An import of this recipe is already in flight",
       });
     }
 
-    return recipeId;
+    return { recipeId, status: "queued" as const };
   });
-
-const reserveId = authedProcedure.query(() => {
-  const recipeId = crypto.randomUUID();
-
-  log.debug({ recipeId }, "Reserved recipe ID for step image uploads");
-
-  return { recipeId };
-});
 
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)
   .mutation(({ ctx, input }) => {
-    const { recipeId, targetSystem } = input;
+    const { recipeId, targetSystem, version, withAI } = input;
 
-    log.info({ userId: ctx.user.id, recipeId, targetSystem }, "Converting recipe measurements");
+    log.info(
+      { userId: ctx.user.id, recipeId, targetSystem, withAI },
+      "Converting recipe measurements"
+    );
 
-    checkAIEnabled()
+    const publishConverted = async (recipe: FullRecipeDTO) => {
+      const policy = await getRecipePermissionPolicy();
+
+      void recipes.publish(
+        "converted",
+        { recipe: { ...recipe, systemUsed: targetSystem } },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+      );
+    };
+
+    (withAI ? checkAIEnabled() : Promise.resolve(true))
       .then((aiEnabled) => {
         if (!aiEnabled) {
           throw new TRPCError({
@@ -418,47 +503,59 @@ const convertMeasurements = authedProcedure
           return recipe;
         });
       })
-      .then((recipe) => {
-        // Check if already converted (has ingredients with target system)
-        if (recipe.recipeIngredients.some((ri) => ri.systemUsed === targetSystem)) {
-          return setActiveSystemForRecipe(recipe.id, targetSystem).then(async () => {
-            const policy = await getRecipePermissionPolicy();
+      .then(async (recipe) => {
+        const original = recipe.originalSystem ?? recipe.systemUsed;
+        const hasCopy = recipe.recipeIngredients.some((ri) => ri.systemUsed === targetSystem);
 
-            emitByPolicy(
-              recipeEmitter,
-              policy.view,
-              { userId: ctx.user.id, householdKey: ctx.householdKey },
-              "converted",
-              { recipe: { ...recipe, systemUsed: targetSystem } }
+        // The original is only ever switched back to, and without AI a copy
+        // already there is kept as it is.
+        if (targetSystem === original || (hasCopy && !withAI)) {
+          const result = await setActiveSystemForRecipe(recipe.id, targetSystem, version);
+
+          if (result.stale) {
+            log.info(
+              { userId: ctx.user.id, recipeId, version },
+              "Ignoring stale recipe conversion"
             );
 
-            return null; // Signal to stop chain
+            return;
+          }
+
+          await publishConverted(recipe);
+
+          return;
+        }
+
+        // Every conversion starts from the original, never from a copy of it.
+        const source = {
+          ...recipe,
+          systemUsed: original,
+          recipeIngredients: recipe.recipeIngredients.filter((ri) => ri.systemUsed === original),
+          steps: recipe.steps.filter((s) => s.systemUsed === original),
+        };
+
+        // Lines stored under another system than the recipe says would leave
+        // nothing to convert, and writing nothing would delete them.
+        if (source.recipeIngredients.length === 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Recipe has no ingredients in its original system",
           });
         }
 
-        return recipe;
-      })
-      .then((recipe) => {
-        if (recipe === null) return null;
-
-        // Convert with AI
-        return import("@norish/shared-server/ai/unit-converter")
-          .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
-          .then((result) => {
-            if (!result.success) {
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: result.error ?? "Conversion failed, please try again.",
-              });
-            }
-
-            return { recipe, converted: result.data };
+        const converted = await (
+          withAI
+            ? import("@norish/shared-server/ai/enrichment/unit-converter").then(
+                ({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(source, targetSystem)
+              )
+            : convertRecipeMeasurements(source, targetSystem, { householdUserIds: ctx.userIds })
+        ).catch((error: unknown) => {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              error instanceof Error ? error.message : "Conversion failed, please try again.",
           });
-      })
-      .then((result) => {
-        if (result === null) return;
-
-        const { recipe, converted } = result;
+        });
 
         const steps = converted.steps.map((s) => ({
           ...s,
@@ -472,31 +569,34 @@ const convertMeasurements = authedProcedure
           systemUsed: targetSystem,
         }));
 
-        return addStepsAndIngredientsToRecipeByInput(steps, ingredients)
-          .then(() => setActiveSystemForRecipe(recipe.id, targetSystem))
-          .then(() => getRecipeFull(recipe.id))
-          .then(async (updatedRecipe) => {
-            if (updatedRecipe) {
-              log.info({ userId: ctx.user.id, recipeId }, "Recipe measurements converted");
-              const policy = await getRecipePermissionPolicy();
+        await writeResolved(
+          () =>
+            withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id }),
+          (resolved) =>
+            writeConvertedCopy(
+              recipe.id,
+              { from: original, to: targetSystem },
+              steps,
+              resolved.recipeIngredients,
+              resolved.ingredientResolutions
+            )
+        );
+        await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
-              emitByPolicy(
-                recipeEmitter,
-                policy.view,
-                { userId: ctx.user.id, householdKey: ctx.householdKey },
-                "converted",
-                { recipe: { ...updatedRecipe, systemUsed: targetSystem } }
-              );
-            }
-          });
+        const updatedRecipe = await getRecipeFull(recipe.id);
+
+        if (updatedRecipe) {
+          log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
+          await publishConverted(updatedRecipe);
+        }
       })
-      .catch((err) => handleError(ctx, err, "convert recipe measurements", { recipeId }));
+      .catch((err) => handleRecipeError(ctx, err, "convert recipe measurements", { recipeId }));
 
     return { success: true };
   });
 
 const autocomplete = authedProcedure
-  .input(z.object({ query: z.string().min(1).max(100) }))
+  .input(recipeAutocompleteInputSchema)
   .query(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, query: input.query }, "Searching recipes for autocomplete");
 
@@ -512,11 +612,7 @@ const autocomplete = authedProcedure
   });
 
 const getRandomRecipe = authedProcedure
-  .input(
-    z.object({
-      category: z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]).optional(),
-    })
-  )
+  .input(randomRecipeInputSchema)
   .query(async ({ ctx, input }) => {
     const listCtx: RecipeListContext = {
       userId: ctx.user.id,
@@ -540,23 +636,32 @@ const getRandomRecipe = authedProcedure
   });
 
 const importFromImagesProcedure = authedProcedure
-  .input(z.instanceof(FormData))
+  .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
     const files: Array<{ data: string; mimeType: string; filename: string }> = [];
 
     // Process files from FormData
-    for (const [key, value] of input.entries()) {
-      if (key.startsWith("file") && value instanceof File) {
-        const buffer = Buffer.from(await value.arrayBuffer());
-        const base64 = buffer.toString("base64");
+    const filePromises: Promise<void>[] = [];
 
-        files.push({
-          data: base64,
-          mimeType: value.type,
-          filename: value.name,
-        });
+    input.forEach((value, key) => {
+      if (!key.startsWith("file") || !isUploadedFile(value)) {
+        return;
       }
-    }
+
+      filePromises.push(
+        value.arrayBuffer().then((arrayBuffer) => {
+          const buffer = Buffer.from(arrayBuffer);
+
+          files.push({
+            data: buffer.toString("base64"),
+            mimeType: value.type,
+            filename: value.name,
+          });
+        })
+      );
+    });
+
+    await Promise.all(filePromises);
 
     if (files.length === 0) {
       throw new TRPCError({
@@ -565,7 +670,7 @@ const importFromImagesProcedure = authedProcedure
       });
     }
 
-    const recipeId = crypto.randomUUID();
+    const recipeId = randomUUID();
 
     log.info(
       { userId: ctx.user.id, fileCount: files.length, recipeId },
@@ -591,29 +696,36 @@ const importFromImagesProcedure = authedProcedure
     return recipeId;
   });
 
-const importFromPasteProcedure = authedProcedure
-  .input(
-    z.object({
-      text: z.string().min(1).max(MAX_RECIPE_PASTE_CHARS),
-      forceAI: z.boolean().optional(),
-    })
-  )
+export const importFromPasteProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/recipes/import/paste",
+      protect: true,
+      tags: ["Recipe Imports"],
+      summary: "Queue a recipe import from pasted text",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        409: "This import is already in progress",
+      },
+    },
+  })
+  .input(recipeImportPasteInputSchema)
+  .output(recipeImportPasteOutputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = crypto.randomUUID();
+    const preparedImport = await preparePasteImport(input.text, input.forceAI);
 
     log.info(
-      { userId: ctx.user.id, recipeId, textLength: input.text.length },
+      { userId: ctx.user.id, recipeIds: preparedImport.recipeIds, textLength: input.text.length },
       "Processing paste import request"
     );
 
     const queues = getQueues();
     const result = await addPasteImportJob(queues.pasteImport, {
-      recipeId,
+      ...preparedImport,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
       householdUserIds: ctx.householdUserIds,
-      text: input.text,
-      forceAI: input.forceAI,
     });
 
     if (result.status === "duplicate") {
@@ -623,280 +735,112 @@ const importFromPasteProcedure = authedProcedure
       });
     }
 
-    return recipeId;
+    return { recipeIds: preparedImport.recipeIds };
   });
 
-const estimateNutrition = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+/**
+ * Manual Recipe Enrichment.
+ *
+ * One mutation per kind — there is deliberately no "run all" action, because a
+ * recipe editor asking for categories should not also spend an AI request on
+ * tags. Availability depends on global AI enablement and edit permission only;
+ * the automatic switches are enrollment policy, not an availability check.
+ */
+const requestEnrichment = authedProcedure
+  .input(z.object({ recipeId: z.uuid(), kind: z.enum(ENRICHMENT_KINDS) }))
   .mutation(async ({ ctx, input }) => {
-    const { recipeId } = input;
+    const { recipeId, kind } = input;
 
-    log.info({ userId: ctx.user.id, recipeId }, "Queueing nutrition estimation for recipe");
+    log.info({ userId: ctx.user.id, recipeId, kind }, "Requesting Recipe Enrichment");
 
-    const aiEnabled = await checkAIEnabled();
-
-    if (!aiEnabled) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "AI features are disabled",
-      });
+    if (!(await checkAIEnabled())) {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "AI features are disabled" });
     }
 
     const recipe = await getRecipeFull(recipeId);
 
     if (!recipe) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Recipe not found",
-      });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
     }
 
-    if (recipe.recipeIngredients.length === 0) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Recipe has no ingredients to estimate from",
-      });
-    }
+    // Viewing a recipe never grants permission to change it through AI.
+    await assertRecipeAccess(ctx, recipeId, "edit");
 
-    // Add to queue for background processing
-    const queues = getQueues();
-    const result = await addNutritionEstimationJob(queues.nutritionEstimation, {
-      recipeId,
-      userId: ctx.user.id,
-      householdKey: ctx.householdKey,
-      householdUserIds: ctx.householdUserIds,
-    });
-
-    if (result.status === "duplicate") {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Nutrition estimation is already in progress for this recipe",
-      });
-    }
-
-    const policy = await getRecipePermissionPolicy();
-
-    emitByPolicy(
-      recipeEmitter,
-      policy.view,
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "nutritionStarted",
-      { recipeId }
+    const [result] = await enrichRecipe(
+      {
+        recipeId,
+        userId: ctx.user.id,
+        householdKey: ctx.householdKey,
+        householdUserIds: ctx.householdUserIds,
+      },
+      { origin: "manual", kind }
     );
 
-    return { success: true };
-  });
-
-const triggerAutoTag = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
-  .mutation(async ({ ctx, input }) => {
-    const { recipeId } = input;
-
-    log.info({ userId: ctx.user.id, recipeId }, "Queueing auto-tagging for recipe");
-
-    const aiEnabled = await checkAIEnabled();
-
-    if (!aiEnabled) {
+    if (!result || result.status === "failed-to-queue") {
+      // A manual request that could not be enrolled is reported immediately, so
+      // the requester knows the action did not start.
       throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "AI features are disabled",
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Could not start this enrichment. Please try again.",
       });
     }
-
-    const recipe = await getRecipeFull(recipeId);
-
-    if (!recipe) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Recipe not found",
-      });
-    }
-
-    if (recipe.recipeIngredients.length === 0) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Recipe has no ingredients to generate tags from",
-      });
-    }
-
-    // Add to queue for background processing
-    const queues = getQueues();
-    const result = await addAutoTaggingJob(queues.autoTagging, {
-      recipeId,
-      userId: ctx.user.id,
-      householdKey: ctx.householdKey,
-    });
 
     if (result.status === "duplicate") {
       throw new TRPCError({
         code: "CONFLICT",
-        message: "Auto-tagging is already in progress for this recipe",
+        message: "This enrichment is already running for this recipe",
       });
     }
 
     if (result.status === "skipped") {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
-        message: "Auto-tagging is disabled",
-      });
-    }
-
-    const policy = await getRecipePermissionPolicy();
-
-    emitByPolicy(
-      recipeEmitter,
-      policy.view,
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "autoTaggingStarted",
-      { recipeId }
-    );
-
-    return { success: true };
-  });
-
-const triggerAutoCategorize = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
-  .mutation(async ({ ctx, input }) => {
-    const { recipeId } = input;
-
-    log.info({ userId: ctx.user.id, recipeId }, "Queueing auto-categorization for recipe");
-
-    const aiEnabled = await checkAIEnabled();
-
-    if (!aiEnabled) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "AI features are disabled",
-      });
-    }
-
-    const recipe = await getRecipeFull(recipeId);
-
-    if (!recipe) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Recipe not found",
-      });
-    }
-
-    if (recipe.recipeIngredients.length === 0) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Recipe has no ingredients to generate categories from",
-      });
-    }
-
-    const queues = getQueues();
-    const result = await addAutoCategorizationJob(queues.autoCategorization, {
-      recipeId,
-      userId: ctx.user.id,
-      householdKey: ctx.householdKey,
-    });
-
-    if (result.status === "duplicate") {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Auto-categorization is already in progress for this recipe",
-      });
-    }
-
-    if (result.status === "skipped") {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Auto-categorization is disabled",
+        message: ENRICHMENT_SKIP_MESSAGES[result.reason],
       });
     }
 
     return { success: true };
   });
 
-const triggerAllergyDetection = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
-  .mutation(async ({ ctx, input }) => {
-    const { recipeId } = input;
+const ENRICHMENT_SKIP_MESSAGES: Record<RecipeEnrichmentSkipReason, string> = {
+  "ai-disabled": "AI features are disabled",
+  "recipe-unavailable": "Recipe not found",
+  // Never reached for a manual request; present so the mapping stays total.
+  "automatic-disabled": "This enrichment does not run automatically",
+  "insufficient-input": "This recipe does not have enough information for that enrichment",
+  "no-household-allergies": "No allergies configured for your household",
+  "supplied-data-present": "This recipe already has that information",
+  "no-image-provider": "No image provider is configured on this server",
+};
 
-    log.info({ userId: ctx.user.id, recipeId }, "Queueing allergy detection for recipe");
+/**
+ * Authoritative lifecycle read for every enrichment kind.
+ *
+ * Clients use this on mount, refocus, and reconnect to converge on current
+ * state, which is why no periodic enrichment polling is needed.
+ */
+const enrichmentStatus = authedProcedure
+  .input(recipeIdInputSchema)
+  .query(async ({ ctx, input }) => {
+    // Permission-aware: status must not disclose a recipe the caller cannot see.
+    await assertRecipeAccess(ctx, input.recipeId, "view");
 
-    const aiEnabled = await checkAIEnabled();
-
-    if (!aiEnabled) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "AI features are disabled",
-      });
-    }
-
-    const recipe = await getRecipeFull(recipeId);
-
-    if (!recipe) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Recipe not found",
-      });
-    }
-
-    if (recipe.recipeIngredients.length === 0) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Recipe has no ingredients to detect allergies from",
-      });
-    }
-
-    // Add to queue for background processing
-    const queues = getQueues();
-    const result = await addAllergyDetectionJob(queues.allergyDetection, {
-      recipeId,
-      userId: ctx.user.id,
-      householdKey: ctx.householdKey,
-    });
-
-    if (result.status === "duplicate") {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Allergy detection is already in progress for this recipe",
-      });
-    }
-
-    if (result.status === "skipped") {
-      const reasonMessage =
-        result.reason === "no_allergies"
-          ? "No allergies configured for your household"
-          : "Allergy detection is disabled";
-
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: reasonMessage,
-      });
-    }
-
-    const policy = await getRecipePermissionPolicy();
-
-    emitByPolicy(
-      recipeEmitter,
-      policy.view,
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "allergyDetectionStarted",
-      { recipeId }
-    );
-
-    return { success: true };
+    return await getRecipeEnrichmentStatus(input.recipeId);
   });
 
 export const recipesProcedures = router({
-  list,
-  get,
-  create,
+  list: listProcedure,
+  get: getProcedure,
+  getEditable: getEditableProcedure,
+  create: createRecipeProcedure,
   update,
   delete: deleteProcedure,
   importFromUrl: importFromUrlProcedure,
   importFromImages: importFromImagesProcedure,
   importFromPaste: importFromPasteProcedure,
   convertMeasurements,
-  estimateNutrition,
-  triggerAutoTag,
-  triggerAutoCategorize,
-  triggerAllergyDetection,
-  reserveId,
+  requestEnrichment,
+  enrichmentStatus,
   autocomplete,
   updateCategories,
   getRandomRecipe,

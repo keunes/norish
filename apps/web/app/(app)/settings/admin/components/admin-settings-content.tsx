@@ -1,16 +1,17 @@
 "use client";
 
+import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
 import { AdminSettingsProvider, useAdminSettingsContext } from "../context";
-
 import AIProcessingCard from "./ai-processing-card";
 import { AuthProvidersCard } from "./auth-providers";
 import ContentDetectionCard from "./content-detection-card";
 import GeneralCard from "./general-card";
+import JobQueueCard from "./job-queue-card";
 import PermissionPolicyCard from "./permission-policy-card";
+import AdminShareLinksCard from "./share-links-card";
 import SystemCard from "./system-card";
-
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+import UsersCard from "./users-card";
 
 function AdminSettingsContent() {
   const { isLoading } = useAdminSettingsContext();
@@ -22,10 +23,13 @@ function AdminSettingsContent() {
   return (
     <div className="flex w-full flex-col gap-6">
       <GeneralCard />
+      <UsersCard />
       <PermissionPolicyCard />
+      <AdminShareLinksCard />
       <AuthProvidersCard />
       <ContentDetectionCard />
       <AIProcessingCard />
+      <JobQueueCard />
       <SystemCard />
     </div>
   );

@@ -6,16 +6,27 @@
  */
 
 import { Queue } from "bullmq";
+
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import type { QueueRemovalOptions } from "../config";
 import { QUEUE_NAMES, scheduledTasksJobOptions } from "../config";
 
-export type ScheduledTaskType =
-  | "recurring-grocery-check"
-  | "media-cleanup"
-  | "calendar-cleanup"
-  | "groceries-cleanup"
-  | "video-temp-cleanup";
+/**
+ * Every scheduled task this build knows, and the one place that says so. The
+ * producer registers exactly these and clears out anything else it finds
+ * queued, so a task removed from the code cannot keep arriving.
+ */
+export const SCHEDULED_TASKS = [
+  "recurring-grocery-check",
+  "media-cleanup",
+  "calendar-cleanup",
+  "groceries-cleanup",
+  "video-temp-cleanup",
+  "ingredient-catalogue-refresh",
+] as const;
+
+export type ScheduledTaskType = (typeof SCHEDULED_TASKS)[number];
 
 export interface ScheduledTaskJobData {
   taskType: ScheduledTaskType;
@@ -25,9 +36,11 @@ export interface ScheduledTaskJobData {
  * Create a scheduled tasks queue instance.
  * One queue instance per process is expected.
  */
-export function createScheduledTasksQueue(): Queue<ScheduledTaskJobData> {
+export function createScheduledTasksQueue(
+  removalOptions?: QueueRemovalOptions
+): Queue<ScheduledTaskJobData> {
   return new Queue<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, {
     connection: getBullClient(),
-    defaultJobOptions: scheduledTasksJobOptions,
+    defaultJobOptions: { ...scheduledTasksJobOptions, ...removalOptions },
   });
 }

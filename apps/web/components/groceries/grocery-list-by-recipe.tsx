@@ -1,12 +1,13 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
-
 import { useMemo } from "react";
+import { IngredientIconsProvider } from "@/components/ingredients/ingredient-icon";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
 import { RecipeSection } from "./recipe-section";
 
@@ -34,7 +35,21 @@ interface RecipeGroup {
   groceries: GroceryDto[];
 }
 
-export function GroceryListByRecipe({
+/** The list by recipe, under one read of the icons of every food on it. */
+export function GroceryListByRecipe(props: GroceryListByRecipeProps) {
+  const foods = [
+    ...props.groceries.map((grocery) => grocery.ingredientId),
+    ...props.recurringGroceries.map((recurring) => recurring.ingredientId),
+  ];
+
+  return (
+    <IngredientIconsProvider ids={foods}>
+      <GroceryListByRecipeContent {...props} />
+    </IngredientIconsProvider>
+  );
+}
+
+function GroceryListByRecipeContent({
   groceries,
   stores,
   recurringGroceries,
@@ -112,18 +127,18 @@ export function GroceryListByRecipe({
   if (!hasGroceries) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-20">
-        <div className="bg-content1/90 shadow-large relative w-full max-w-xl rounded-xl backdrop-blur-xl">
+        <div className="border-border bg-surface shadow-surface relative w-full max-w-xl rounded-xl border">
           <div className="flex flex-col items-center gap-6 p-10 text-center">
             <div className="relative">
-              <div className="bg-primary-500/20 dark:bg-primary-400/15 absolute inset-0 scale-125 rounded-full blur-3xl" />
-              <div className="bg-primary-500/15 text-primary-500 relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
+              <div className={cssEmptyStateGlow} />
+              <div className="bg-accent/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
                 <ShoppingCartIcon className="h-7 w-7" />
               </div>
             </div>
 
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">{t("empty.title")}</h2>
-              <p className="text-default-500 text-base">{t("empty.description")}</p>
+              <p className="text-muted text-base">{t("empty.description")}</p>
             </div>
           </div>
         </div>
@@ -132,7 +147,7 @@ export function GroceryListByRecipe({
   }
 
   return (
-    <div className="flex flex-col gap-3 p-1">
+    <div className="flex flex-col gap-4 p-1">
       {recipeGroups.map((group) => (
         <motion.div
           key={group.recipeId ?? "manual"}

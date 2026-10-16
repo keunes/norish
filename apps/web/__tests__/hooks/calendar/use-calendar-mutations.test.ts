@@ -56,6 +56,7 @@ type PlannedItemFromQuery = {
   recipeImage: string | null;
   servings: number | null;
   calories: number | null;
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -74,6 +75,7 @@ function createMockItem(overrides: Partial<PlannedItemFromQuery> = {}): PlannedI
     recipeImage: null,
     servings: 4,
     calories: 500,
+    version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -109,6 +111,8 @@ describe("useCalendarMutations", () => {
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
         expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+          // Client-minted id (ADR-0003).
+          id: expect.any(String),
           date: "2025-01-15",
           slot: "Breakfast",
           itemType: "recipe",
@@ -132,6 +136,8 @@ describe("useCalendarMutations", () => {
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
         expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+          // Client-minted id (ADR-0003).
+          id: expect.any(String),
           date: "2025-01-15",
           slot: "Lunch",
           itemType: "note",
@@ -167,7 +173,7 @@ describe("useCalendarMutations", () => {
       });
 
       expect(mockDeleteItemMutate).toHaveBeenCalled();
-      expect(mockDeleteItemMutate.mock.calls[0][0]).toEqual({ itemId: "item-1" });
+      expect(mockDeleteItemMutate.mock.calls[0][0]).toEqual({ itemId: "item-1", version: 1 });
     });
 
     it("reverts optimistic update on error", async () => {
@@ -221,6 +227,7 @@ describe("useCalendarMutations", () => {
       expect(mockMoveItemMutate).toHaveBeenCalled();
       expect(mockMoveItemMutate.mock.calls[0][0]).toEqual({
         itemId: "item-2",
+        version: 1,
         targetDate: "2025-01-15",
         targetSlot: "Breakfast",
         targetIndex: 0,
@@ -302,6 +309,65 @@ describe("useCalendarMutations", () => {
 
         expect(item?.date).toBe("2025-01-15");
         expect(item?.slot).toBe("Breakfast");
+      });
+    });
+
+    it("keeps the optimistic move when the mutation is Queued (backend unreachable)", async () => {
+      const item = createMockItem({
+        id: "item-1",
+        date: "2025-01-15",
+        slot: "Breakfast",
+        sortOrder: 0,
+      });
+
+      queryClient.setQueryData(getQueryKey(), [item]);
+
+      // A backend-unreachable failure means the mutation was captured into the
+      // Outbox (Queued) — the optimistic move must be preserved, not rolled back.
+      mockMoveItemMutate.mockRejectedValue(new TypeError("Failed to fetch"));
+
+      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.moveItem("item-1", "2025-01-20", "Dinner", 0);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isMoving).toBe(false);
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+      const moved = data!.find((i) => i.id === "item-1");
+
+      expect(moved?.date).toBe("2025-01-20");
+      expect(moved?.slot).toBe("Dinner");
+    });
+  });
+
+  describe("updateItem", () => {
+    it("includes the current version in mutation input", async () => {
+      const item = createMockItem({ id: "item-1", title: "Old title", version: 4 });
+
+      queryClient.setQueryData(getQueryKey(), [item]);
+
+      mockUpdateItemMutate.mockResolvedValue({ success: true });
+
+      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.updateItem("item-1", "New title");
+      });
+
+      await waitFor(() => {
+        expect(mockUpdateItemMutate.mock.calls[0]?.[0]).toEqual({
+          itemId: "item-1",
+          version: 4,
+          title: "New title",
+        });
       });
     });
   });

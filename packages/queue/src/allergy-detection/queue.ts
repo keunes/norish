@@ -5,20 +5,24 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
+import type { Queue } from "bullmq";
 
-import { Queue } from "bullmq";
+import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import type { QueueRemovalOptions } from "../config";
 import { allergyDetectionJobOptions, QUEUE_NAMES } from "../config";
+import { createOperationAwareQueue } from "../operation-aware-queue";
 
 /**
  * Create an allergy detection queue instance.
  * One queue instance per process is expected.
  */
-export function createAllergyDetectionQueue(): Queue<AllergyDetectionJobData> {
-  return new Queue<AllergyDetectionJobData>(QUEUE_NAMES.ALLERGY_DETECTION, {
+export function createAllergyDetectionQueue(
+  removalOptions?: QueueRemovalOptions
+): Queue<RecipeEnrichmentJobData> {
+  return createOperationAwareQueue<RecipeEnrichmentJobData>(QUEUE_NAMES.ALLERGY_DETECTION, {
     connection: getBullClient(),
-    defaultJobOptions: allergyDetectionJobOptions,
+    defaultJobOptions: { ...allergyDetectionJobOptions, ...removalOptions },
   });
 }

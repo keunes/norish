@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-
 import { config } from "dotenv";
 import { z } from "zod";
+
+import { DEFAULT_YT_DLP_VERSION } from "./zod/server-config";
 
 // Import server-only to ensure this file is only used on the server
 // Using dynamic import wrapped in IIFE for compatibility
@@ -58,6 +59,22 @@ if (envPath) {
   config({ path: envPath, quiet: true });
 }
 
+// ---------------------------------------------------------------------------
+// Component-based DATABASE_URL fallback: if DATABASE_URL is not provided,
+// assemble it from optional DATABASE_PORT, DATABASE, DATABASE_USER,
+// DATABASE_PASSWORD values and sane defaults.
+// ---------------------------------------------------------------------------
+if (!process.env.DATABASE_URL) {
+  const host = process.env.DATABASE_HOST ?? "localhost";
+  const port = process.env.DATABASE_PORT ?? "5432";
+  const db = process.env.DATABASE ?? "norish";
+  const user = process.env.DATABASE_USER ?? "postgres";
+  const password = process.env.DATABASE_PASSWORD ?? "norish";
+  const credentials = `${encodeURIComponent(user)}:${encodeURIComponent(password)}`;
+
+  process.env.DATABASE_URL = `postgresql://${credentials}@${host}:${port}/${db}`;
+}
+
 const isBuild =
   process.env.SKIP_ENV_VALIDATION === "1" ||
   process.env.VITEST === "true" ||
@@ -86,6 +103,17 @@ const ServerConfigSchema = z.object({
     )
     .pipe(z.array(z.string())),
   UPLOADS_DIR: z.string().default(defaultUploadsDir),
+
+  // Auth endpoint rate limiting. Defaults are the production values; they are
+  // overridable so a harness driving many sessions against one server (the
+  // browser E2E stack reuses a single server across a whole project) is not
+  // throttled into failures that say nothing about the code under test.
+  AUTH_RATE_LIMIT_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
+  AUTH_RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
+  AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
 
   // During build, allow placeholder DB URL so server-only modules can be imported
   // without requiring runtime secrets. Runtime still enforces a real URL.
@@ -145,10 +173,11 @@ const ServerConfigSchema = z.object({
   // AI Provider Configuration
   AI_PROVIDER: z.enum(["openai", "ollama", "lm-studio", "generic-openai"]).default("openai"),
   AI_ENDPOINT: z.string().optional(),
-  AI_MODEL: z.string().default("gpt-5-mini"),
+  AI_MODEL: z.string().default("gpt-6-luna"),
   AI_API_KEY: z.string().optional(),
   AI_TEMPERATURE: z.coerce.number().min(0).max(2).default(1.0),
   AI_MAX_TOKENS: z.coerce.number().default(10000),
+  AI_TIMEOUT_MS: z.coerce.number().default(300000),
 
   // Video Processing Configuration
   VIDEO_PARSING_ENABLED: z
@@ -157,8 +186,22 @@ const ServerConfigSchema = z.object({
     .pipe(z.boolean())
     .default(false),
   VIDEO_MAX_LENGTH_SECONDS: z.coerce.number().default(120),
-  YT_DLP_VERSION: z.string().default("2025.11.12"),
+  YT_DLP_PROXY: z.string().optional(),
+  YT_DLP_VERSION: z.string().default(DEFAULT_YT_DLP_VERSION),
   YT_DLP_BIN_DIR: z.string().default(defaultYtDlpBinDir),
+
+  // Ingredient catalogue seed (ADR-0038): the Open Food Facts ingredients
+  // taxonomy, fetched nightly. Point it at a mirror on a server without
+  // internet; empty turns the fetch off, and Norish works with no seed.
+  INGREDIENT_CATALOGUE_URL: z
+    .union([z.url(), z.literal("")])
+    .default(
+      "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/taxonomies/food/ingredients.txt"
+    ),
+
+  // How many ingredients a round of Ask AI asks about at once. Higher is
+  // faster on a hosted model; lower spares a self-hosted one.
+  INGREDIENT_REVIEW_CONCURRENCY: z.coerce.number().int().min(1).max(50).default(10),
 
   // Transcription Configuration (separate from AI_PROVIDER)
   TRANSCRIPTION_PROVIDER: z
@@ -172,10 +215,20 @@ const ServerConfigSchema = z.object({
   CONTENT_INDICATORS: z.string().optional(),
   CONTENT_INGREDIENTS: z.string().optional(),
 
-  CHROME_WS_ENDPOINT: z
+  // The Obscura CDP server that renders pages for URL imports. Not necessarily
+  // a raw browser WebSocket URL — it is whatever Playwright's CDP connection
+  // accepts, which the shipped `obscura` service answers on its default port.
+  OBSCURA_ENDPOINT: z
     .string()
-    .min(1, "CHROME_WS_ENDPOINT is required for web scraping")
-    .default("ws://chrome-headless:3000"),
+    .min(1, "OBSCURA_ENDPOINT is required for web scraping")
+    .default("ws://obscura:9222"),
+  // Sent as a bearer token. Obscura refuses to listen beyond loopback without
+  // one, so the shipped `obscura` service sets the same value.
+  OBSCURA_CDP_TOKEN: z.string().optional(),
+  // How long a URL import waits for the page's `load` event in Obscura.
+  OBSCURA_NAVIGATION_TIMEOUT_MS: z.coerce.number().int().positive().default(45000),
+
+  PARSER_API_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
 
   // Scheduler Configuration
   SCHEDULER_CLEANUP_MONTHS: z.coerce.number().default(3),
@@ -208,6 +261,16 @@ const ServerConfigSchema = z.object({
 });
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;
+export const INTERNAL_PARSER_API_HOST = "127.0.0.1";
+// The browser E2E boots several servers side by side and gives each parser its
+// own port; the parser's dev script reads the same variable.
+export const INTERNAL_PARSER_API_PORT = Number(process.env.PARSER_API_PORT) || 8001;
+export const INTERNAL_PARSER_API_URL = `http://${INTERNAL_PARSER_API_HOST}:${INTERNAL_PARSER_API_PORT}`;
+
+export function buildInternalParserApiUrl(pathname: string): string {
+  return new URL(pathname, INTERNAL_PARSER_API_URL).toString();
+}
+
 let configInstance: ServerConfig | null = null;
 
 export function initializeServerConfig(): ServerConfig {

@@ -1,0 +1,63 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Ny opskrift",
+      "description": "Skriv din egen opskrift"
+    },
+    "importUrl": {
+      "title": "Importer fra URL",
+      "description": "Indsæt et opskriftlink"
+    },
+    "settings": {
+      "title": "Indstillinger",
+      "description": "Administrer din konto"
+    },
+    "logout": "Log ud",
+    "signOutConfirm": {
+      "title": "Kassér usynkroniserede ændringer?",
+      "description": "{count, plural, one {# ændring foretaget offline har endnu ikke nået serveren.} other {# ændringer foretaget offline har endnu ikke nået serveren.}} Logger du ud, kasseres dette ventende arbejde permanent, og din kontos offlinedata fjernes fra denne enhed."
+    },
+    "version": {
+      "updateAvailable": "v{version} tilgængelig"
+    }
+  },
+  "theme": {
+    "title": "Tema",
+    "loading": "Indlæser…",
+    "light": "Lyst tema",
+    "dark": "Mørkt tema",
+    "system": "Systemstandard"
+  },
+  "nav": {
+    "home": "Opskrifter",
+    "calendar": "Kalender",
+    "groceries": "Indkøbsliste"
+  },
+  "mobile": {
+    "searchPlaceholder": "Søg opskrifter...",
+    "toggleSearch": "Slå søgning til/fra",
+    "goBack": "Gå tilbage"
+  },
+  "archiveImporter": {
+    "uploading": "Uploader…",
+    "uploadFile": "Upload en fil",
+    "dragDrop": "eller træk og slip",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor/Recipe Keeper)",
+    "dropzoneLabel": "Upload en opskriftsarkivfil",
+    "uploadingFile": "Uploader fil…",
+    "processing": "Behandler: {details}",
+    "complete": "Færdig: {details}",
+    "imported": "{count} importeret",
+    "errors": "{count, plural, one {# fejl} other {# fejl}}",
+    "ofTotal": "{current} af {total}",
+    "progressLabel": "Importforløb",
+    "showNotes": "Vis {count, plural, one {# importnote} other {# importnoter}}",
+    "hideNotes": "Skjul {count, plural, one {# importnote} other {# importnoter}}",
+    "toasts": {
+      "startTitle": "Import af opskrifter startet",
+      "startDescription": "{count, plural, one {Importerer # opskrift…} other {Importerer # opskrifter…}}",
+      "completeTitle": "Import af opskrifter fuldført",
+      "completeDescription": "{imported, plural, one {Importerede # opskrift} other {Importerede # opskrifter}}{notes, plural, =0 {} one {, # med en note} other {, # med noter}}{errors, plural, =0 {} other {, # fejl}}"
+    }
+  }
+}

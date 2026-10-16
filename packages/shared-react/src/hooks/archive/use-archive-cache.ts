@@ -1,9 +1,9 @@
-import type { ArchiveImportCacheHelpers, ArchiveImportState } from "./types";
-
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
+import type { ArchiveImportCacheHelpers, ArchiveImportState } from "./types";
 
 const log = createClientLogger("ArchiveImportCache");
 
@@ -13,8 +13,7 @@ const defaultState: ArchiveImportState = {
   current: 0,
   total: 0,
   imported: 0,
-  skipped: 0,
-  skippedItems: [],
+  notes: [],
   isImporting: false,
   errors: [],
 };

@@ -1,10 +1,11 @@
 import type { InfiniteData, QueryKey } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+
 import type { RecipeCategory, RecipeDashboardDTO, SearchField } from "@norish/shared/contracts";
+
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipesCacheHelpers } from "./use-recipes-cache";
-
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
 
 export type RecipeFilters = {
   limit?: number;
@@ -33,15 +34,9 @@ export type RecipesQueryResult = {
   error: unknown;
   queryKey: QueryKey;
   pendingRecipeIds: Set<string>;
-  autoTaggingRecipeIds: Set<string>;
-  allergyDetectionRecipeIds: Set<string>;
   loadMore: () => void;
   addPendingRecipe: (id: string) => void;
   removePendingRecipe: (id: string) => void;
-  addAutoTaggingRecipe: (id: string) => void;
-  removeAutoTaggingRecipe: (id: string) => void;
-  addAllergyDetectionRecipe: (id: string) => void;
-  removeAllergyDetectionRecipe: (id: string) => void;
   setRecipesData: (
     updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
   ) => void;
@@ -53,21 +48,17 @@ export type RecipesQueryResult = {
 
 export interface RecipesQueryDependencies {
   usePendingRecipesQuery: () => { pendingRecipeIds: Set<string> };
-  useAutoTaggingQuery: () => { autoTaggingRecipeIds: Set<string> };
-  useAllergyDetectionQuery: () => { allergyDetectionRecipeIds: Set<string> };
   useRecipesCacheHelpers: () => RecipesCacheHelpers;
 }
 
 export function createUseRecipesQuery(
   { useTRPC }: CreateRecipeHooksOptions,
-  {
-    usePendingRecipesQuery,
-    useAutoTaggingQuery,
-    useAllergyDetectionQuery,
-    useRecipesCacheHelpers,
-  }: RecipesQueryDependencies
+  { usePendingRecipesQuery, useRecipesCacheHelpers }: RecipesQueryDependencies
 ) {
-  return function useRecipesQuery(filters: RecipeFilters = {}): RecipesQueryResult {
+  return function useRecipesQuery(
+    filters: RecipeFilters = {},
+    { enabled = true }: { enabled?: boolean } = {}
+  ): RecipesQueryResult {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
 
@@ -84,17 +75,8 @@ export function createUseRecipesQuery(
     } = filters;
 
     const { pendingRecipeIds } = usePendingRecipesQuery();
-    const { autoTaggingRecipeIds } = useAutoTaggingQuery();
-    const { allergyDetectionRecipeIds } = useAllergyDetectionQuery();
 
-    const {
-      addPendingRecipe,
-      removePendingRecipe,
-      addAutoTaggingRecipe,
-      removeAutoTaggingRecipe,
-      addAllergyDetectionRecipe,
-      removeAllergyDetectionRecipe,
-    } = useRecipesCacheHelpers();
+    const { addPendingRecipe, removePendingRecipe } = useRecipesCacheHelpers();
 
     const infiniteQueryOptions = trpc.recipes.list.infiniteQueryOptions(
       {
@@ -117,8 +99,10 @@ export function createUseRecipesQuery(
     const recipesBaseKey = trpc.recipes.list.queryKey({});
     const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
 
-    const { data, error, isLoading, isFetching, hasNextPage, fetchNextPage } =
-      useInfiniteQuery(infiniteQueryOptions);
+    const { data, error, isLoading, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({
+      ...infiniteQueryOptions,
+      enabled,
+    });
 
     const recipes = useMemo(() => {
       if (!data?.pages) return [];
@@ -168,15 +152,9 @@ export function createUseRecipesQuery(
       error,
       queryKey,
       pendingRecipeIds,
-      autoTaggingRecipeIds,
-      allergyDetectionRecipeIds,
       loadMore,
       addPendingRecipe,
       removePendingRecipe,
-      addAutoTaggingRecipe,
-      removeAutoTaggingRecipe,
-      addAllergyDetectionRecipe,
-      removeAllergyDetectionRecipe,
       setRecipesData,
       setAllRecipesData,
       invalidate,

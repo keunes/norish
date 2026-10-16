@@ -10,14 +10,12 @@
  * - Videos
  */
 
-
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-
-import { randomUUID } from "crypto";
-
-import { parserLogger } from "@norish/api/logger";
-import { getUnits } from "@norish/config/server-config-loader";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { parserLogger } from "@norish/shared-server/logger";
+import { isUrl } from "@norish/shared/lib/helpers";
+import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
 import {
   extractNutrition,
@@ -40,7 +38,7 @@ const log = parserLogger.child({ module: "normalize" });
  * @param keywords - The keywords field from JSON-LD
  * @returns Array of tag objects
  */
-function parseTags(keywords: unknown): { name: string }[] {
+export function parseTags(keywords: unknown): { name: string }[] {
   if (!Array.isArray(keywords)) return [];
 
   return keywords
@@ -48,7 +46,28 @@ function parseTags(keywords: unknown): { name: string }[] {
     .map((k) => ({ name: k.toLowerCase() }));
 }
 
-function parseCategories(recipeCategory: unknown): RecipeCategory[] {
+/** Preserve structured, explicitly supplied allergen fields without inferring from ingredients. */
+function parseAllergyIndications(json: Record<string, unknown>): string[] {
+  return [json.allergyIndications, json.allergens, json.allergen].flatMap((value) => {
+    if (typeof value === "string") {
+      return value
+        .split(/[,;]/)
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .filter((entry): entry is string => typeof entry === "string")
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    return [];
+  });
+}
+
+export function parseCategories(recipeCategory: unknown): RecipeCategory[] {
   const validCategories: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
   const categoryMap: Record<string, RecipeCategory> = {
     breakfast: "Breakfast",
@@ -92,6 +111,31 @@ function parseCategories(recipeCategory: unknown): RecipeCategory[] {
   return Array.from(mapped);
 }
 
+function getCandidateUrl(value: unknown): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+
+    return trimmed.length > 0 && isUrl(trimmed) ? trimmed : null;
+  }
+
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+
+    return getCandidateUrl(record.url ?? record["@id"] ?? record.id);
+  }
+
+  return null;
+}
+
+function getSourceUrl(json: Record<string, unknown>): string | null {
+  return (
+    getCandidateUrl(json.url) ??
+    getCandidateUrl(json.mainEntityOfPage) ??
+    getCandidateUrl(json["@id"]) ??
+    null
+  );
+}
+
 /**
  * Normalize a JSON-LD Recipe node into a FullRecipeInsertDTO.
  *
@@ -105,21 +149,18 @@ function parseCategories(recipeCategory: unknown): RecipeCategory[] {
  * 7. Assembles the final DTO
  *
  * @param json - The JSON-LD Recipe node
- * @param recipeId - Optional recipe ID (generates UUID if not provided)
+ * @param recipeId - Recipe ID allocated by the entry point
  * @returns The normalized recipe DTO, or null if json is falsy
  */
 export async function normalizeRecipeFromJson(
   json: unknown,
-  recipeId?: string
+  recipeId: string
 ): Promise<FullRecipeInsertDTO | null> {
   if (!json) return null;
 
   const jsonObj = json as Record<string, unknown>;
 
-  // Generate a recipe ID if not provided, needed for image storage paths
-  const effectiveRecipeId = recipeId ?? randomUUID();
-
-  log.debug({ recipeId: effectiveRecipeId }, "Normalizing recipe from JSON-LD");
+  log.debug({ recipeId }, "Normalizing recipe from JSON-LD");
   log.debug({ json: jsonObj }, "Recipe JSON-LD content");
   // Get unit configuration for ingredient parsing
   const units = await getUnits();
@@ -137,28 +178,31 @@ export async function normalizeRecipeFromJson(
   const nutrition = extractNutrition(jsonObj);
 
   // --- IMAGES ---
-  const { images, primaryImage } = await parseImages(jsonObj.image, effectiveRecipeId);
+  const { images, primaryImage } = await parseImages(jsonObj.image, recipeId);
 
   // --- VIDEOS (from VideoObject in JSON-LD) ---
-  const { videos } = await parseVideos(jsonObj.video, effectiveRecipeId);
+  const { videos } = await parseVideos(jsonObj.video, recipeId);
 
   if (videos.length > 0) {
     log.debug({ count: videos.length }, "Parsed videos from JSON-LD");
   }
 
   // --- TAGS ---
-  const tags = parseTags(jsonObj.keywords);
+  const tags = normalizeEnrichmentTagNames([
+    ...parseTags(jsonObj.keywords).map((tag) => tag.name),
+    ...parseAllergyIndications(jsonObj),
+  ]).map((name) => ({ name }));
 
   // --- CATEGORIES ---
   const categories = parseCategories(jsonObj.recipeCategory);
 
   // --- FINAL STRUCTURE ---
   return {
-    id: effectiveRecipeId,
+    id: recipeId,
     name: metadata.name,
     description: metadata.description,
     notes: metadata.notes,
-    url: "",
+    url: getSourceUrl(jsonObj),
     image: primaryImage,
     servings: metadata.servings,
     prepMinutes: metadata.prepMinutes,

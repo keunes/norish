@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackedEvent } from "../realtime-test-utils";
 import {
   createMockGroceriesData,
   createMockGrocery,
@@ -11,6 +12,10 @@ import {
 
 // Track subscription callbacks
 const subscriptionCallbacks: Record<string, (data: unknown) => void> = {};
+
+function emitPayload(payload: unknown) {
+  return trackedEvent(payload);
+}
 
 vi.mock("@trpc/tanstack-react-query", () => ({
   useSubscription: vi.fn((options) => {
@@ -31,7 +36,7 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  addToast: vi.fn(),
+  toast: vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({
@@ -100,12 +105,25 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           return { queryKey: ["onFailed"] };
         },
       },
+      onStale: {
+        subscriptionOptions: (input: unknown, options: { onData: (data: unknown) => void }) => {
+          subscriptionCallbacks.onStale = options.onData;
+
+          return { queryKey: ["onStale"] };
+        },
+      },
     },
   }),
 }));
 
+let useGroceriesSubscription: (typeof import("@/hooks/groceries/use-groceries-subscription"))["useGroceriesSubscription"];
+
 describe("useGroceriesSubscription", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
+
+  beforeAll(async () => {
+    ({ useGroceriesSubscription } = await import("@/hooks/groceries/use-groceries-subscription"));
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,9 +140,6 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -137,6 +152,7 @@ describe("useGroceriesSubscription", () => {
       expect(subscriptionCallbacks.onRecurringUpdated).toBeDefined();
       expect(subscriptionCallbacks.onRecurringDeleted).toBeDefined();
       expect(subscriptionCallbacks.onFailed).toBeDefined();
+      expect(subscriptionCallbacks.onStale).toBeDefined();
     });
   });
 
@@ -147,9 +163,6 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -158,7 +171,7 @@ describe("useGroceriesSubscription", () => {
 
       // Simulate WebSocket event
       act(() => {
-        subscriptionCallbacks.onCreated({ groceries: [newGrocery] });
+        subscriptionCallbacks.onCreated(emitPayload({ groceries: [newGrocery] }));
       });
 
       const cachedData =
@@ -174,22 +187,58 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       // Try to add the same grocery
       act(() => {
-        subscriptionCallbacks.onCreated({ groceries: [existingGrocery] });
+        subscriptionCallbacks.onCreated(emitPayload({ groceries: [existingGrocery] }));
       });
 
       const cachedData =
         queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
 
       expect(cachedData?.groceries).toHaveLength(1);
+    });
+
+    it("shifts existing groceries in the same store when a new grocery is created", async () => {
+      const existingGrocery = createMockGrocery({
+        id: "g1",
+        name: "Milk",
+        storeId: "store-1",
+        sortOrder: 0,
+      });
+      const otherStoreGrocery = createMockGrocery({
+        id: "g2",
+        name: "Bread",
+        storeId: "store-2",
+        sortOrder: 0,
+      });
+      const initialData = createMockGroceriesData([existingGrocery, otherStoreGrocery], []);
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const newGrocery = createMockGrocery({
+        id: "g3",
+        name: "Apples",
+        storeId: "store-1",
+        sortOrder: 0,
+      });
+
+      act(() => {
+        subscriptionCallbacks.onCreated(emitPayload({ groceries: [newGrocery] }));
+      });
+
+      const cachedData =
+        queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
+
+      expect(cachedData?.groceries.find((g) => g.id === "g1")?.sortOrder).toBe(1);
+      expect(cachedData?.groceries.find((g) => g.id === "g2")?.sortOrder).toBe(0);
     });
   });
 
@@ -200,9 +249,6 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -210,7 +256,7 @@ describe("useGroceriesSubscription", () => {
       const updatedGrocery = { ...existingGrocery, isDone: true };
 
       act(() => {
-        subscriptionCallbacks.onUpdated({ changedGroceries: [updatedGrocery] });
+        subscriptionCallbacks.onUpdated(emitPayload({ changedGroceries: [updatedGrocery] }));
       });
 
       const cachedData =
@@ -226,9 +272,6 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -236,7 +279,7 @@ describe("useGroceriesSubscription", () => {
       const updatedGrocery1 = { ...grocery1, name: "Whole Milk" };
 
       act(() => {
-        subscriptionCallbacks.onUpdated({ changedGroceries: [updatedGrocery1] });
+        subscriptionCallbacks.onUpdated(emitPayload({ changedGroceries: [updatedGrocery1] }));
       });
 
       const cachedData =
@@ -255,15 +298,12 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
-        subscriptionCallbacks.onDeleted({ groceryIds: ["g1"] });
+        subscriptionCallbacks.onDeleted(emitPayload({ groceryIds: ["g1"] }));
       });
 
       const cachedData =
@@ -281,15 +321,12 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
-        subscriptionCallbacks.onDeleted({ groceryIds: ["g1", "g3"] });
+        subscriptionCallbacks.onDeleted(emitPayload({ groceryIds: ["g1", "g3"] }));
       });
 
       const cachedData =
@@ -306,9 +343,6 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -317,10 +351,12 @@ describe("useGroceriesSubscription", () => {
       const newRecurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
 
       act(() => {
-        subscriptionCallbacks.onRecurringCreated({
-          grocery: newGrocery,
-          recurringGrocery: newRecurring,
-        });
+        subscriptionCallbacks.onRecurringCreated(
+          emitPayload({
+            grocery: newGrocery,
+            recurringGrocery: newRecurring,
+          })
+        );
       });
 
       const cachedData =
@@ -341,9 +377,6 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -352,10 +385,12 @@ describe("useGroceriesSubscription", () => {
       const updatedRecurring = { ...recurring, name: "Weekly Organic Eggs" };
 
       act(() => {
-        subscriptionCallbacks.onRecurringUpdated({
-          grocery: updatedGrocery,
-          recurringGrocery: updatedRecurring,
-        });
+        subscriptionCallbacks.onRecurringUpdated(
+          emitPayload({
+            grocery: updatedGrocery,
+            recurringGrocery: updatedRecurring,
+          })
+        );
       });
 
       const cachedData =
@@ -367,7 +402,7 @@ describe("useGroceriesSubscription", () => {
   });
 
   describe("onRecurringDeleted handler", () => {
-    it("removes recurring grocery and all linked groceries from cache", async () => {
+    it("removes only the recurring definition; linked groceries arrive via deleted/updated events", async () => {
       const grocery1 = createMockGrocery({ id: "g1", name: "Eggs", recurringGroceryId: "r1" });
       const grocery2 = createMockGrocery({ id: "g2", name: "Milk", recurringGroceryId: null });
       const recurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
@@ -375,49 +410,65 @@ describe("useGroceriesSubscription", () => {
 
       queryClient.setQueryData(mockQueryKey, initialData);
 
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
-
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
-        subscriptionCallbacks.onRecurringDeleted({ recurringGroceryId: "r1" });
+        subscriptionCallbacks.onRecurringDeleted(emitPayload({ recurringGroceryId: "r1" }));
       });
 
       const cachedData =
         queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey);
 
-      expect(cachedData?.groceries).toHaveLength(1);
-      expect(cachedData?.groceries[0].id).toBe("g2");
+      // Groceries stay: a detach keeps them (they arrive via "updated"), a
+      // full delete removes them via the separate "deleted" event.
+      expect(cachedData?.groceries).toHaveLength(2);
       expect(cachedData?.recurringGroceries).toHaveLength(0);
     });
   });
 
-  describe("onFailed handler", () => {
-    it("shows toast notification on failure", async () => {
-      const { addToast } = await import("@heroui/react");
+  describe("onStale handler", () => {
+    it("silently refetches without showing a toast", async () => {
+      const { toast } = await import("@heroui/react");
       const initialData = createMockGroceriesData();
 
       queryClient.setQueryData(mockQueryKey, initialData);
-
-      const { useGroceriesSubscription } =
-        await import("@/hooks/groceries/use-groceries-subscription");
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
       renderHook(() => useGroceriesSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
-        subscriptionCallbacks.onFailed({ reason: "Failed to save grocery" });
+        subscriptionCallbacks.onStale(emitPayload({ reason: "Grocery was updated elsewhere" }));
       });
 
-      expect(addToast).toHaveBeenCalledWith(
+      expect(invalidateSpy).toHaveBeenCalled();
+      expect(toast).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("onFailed handler", () => {
+    it("shows toast notification on failure", async () => {
+      const { toast } = await import("@heroui/react");
+      const initialData = createMockGroceriesData();
+
+      queryClient.setQueryData(mockQueryKey, initialData);
+
+      renderHook(() => useGroceriesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onFailed(emitPayload({ reason: "Failed to save grocery" }));
+      });
+
+      expect(toast).toHaveBeenCalledWith(
+        "operationFailed",
         expect.objectContaining({
-          severity: "danger",
-          title: "operationFailed",
           description: "technicalDetails",
+          variant: "danger",
         })
       );
     });

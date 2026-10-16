@@ -1,5 +1,6 @@
 import type { QueryKey } from "@tanstack/react-query";
 import type { createTRPCContext } from "@trpc/tanstack-react-query";
+
 import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
@@ -32,6 +33,8 @@ export type HouseholdCacheHelpers = {
   ) => void;
   invalidate: () => void;
   invalidateCalendar: () => void;
+  invalidateUserSettings: () => void;
+  invalidateRecipes: () => void;
 };
 
 export type HouseholdMutationsResult = {

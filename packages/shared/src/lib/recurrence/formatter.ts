@@ -1,7 +1,6 @@
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-
 import { differenceInDays, format, parseISO } from "date-fns";
 
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 /**
  * Translation function type for recurrence formatting.
@@ -64,15 +63,8 @@ export function formatRecurrenceSummary(
   const t = translations;
 
   // Build interval text
-  let intervalText = "";
-
-  if (interval === 1) {
-    intervalText = t.every;
-  } else if (interval === 2) {
-    intervalText = t.everyOther;
-  } else {
-    intervalText = `${t.every} ${interval}`;
-  }
+  const intervalText =
+    interval === 1 ? t.every : interval === 2 ? t.everyOther : `${t.every} ${interval}`;
 
   // Build unit text
   let unitText = "";

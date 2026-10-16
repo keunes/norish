@@ -1,4 +1,5 @@
 import type z from "zod";
+
 import type {
   PlannedRecipeCreateSchema,
   PlannedRecipeDeleteSchema,
@@ -10,6 +11,7 @@ import type {
   plannedRecipeViewSchema,
   slots,
 } from "@norish/shared/contracts/zod";
+
 import type { NoteViewDto } from "./notes";
 
 export type Slot = (typeof slots)[number];
@@ -26,5 +28,4 @@ export type PlannedRecipeDeleteInput = z.infer<typeof PlannedRecipeDeleteSchema>
 export type PlannedRecipeUpdateDateInput = z.infer<typeof PlannedRecipeUpdateDateSchema>;
 
 export type CalendarItemViewDto =
-  | (PlannedRecipeViewDto & { itemType: "recipe" })
-  | (NoteViewDto & { itemType: "note" });
+  (PlannedRecipeViewDto & { itemType: "recipe" }) | (NoteViewDto & { itemType: "note" });

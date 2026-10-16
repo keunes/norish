@@ -1,20 +1,9 @@
-import { createPolicyAwareSubscription } from "../../helpers";
+import { ratings } from "@norish/shared-server/realtime/ratings";
+
+import { realtimeSubscription } from "../../realtime-subscription";
 import { router } from "../../trpc";
 
-import { ratingsEmitter } from "./emitter";
-
-const onRatingUpdated = createPolicyAwareSubscription(
-  ratingsEmitter,
-  "ratingUpdated",
-  "rating updates"
-);
-const onRatingFailed = createPolicyAwareSubscription(
-  ratingsEmitter,
-  "ratingFailed",
-  "rating failures"
-);
-
 export const ratingsSubscriptions = router({
-  onRatingUpdated,
-  onRatingFailed,
+  onRatingUpdated: realtimeSubscription(ratings, "ratingUpdated"),
+  onRatingFailed: realtimeSubscription(ratings, "ratingFailed"),
 });

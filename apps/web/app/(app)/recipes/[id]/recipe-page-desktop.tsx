@@ -1,49 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ArrowLeftIcon,
-  ArrowTopRightOnSquareIcon,
-  CakeIcon,
-  ClockIcon,
-  FireIcon,
-  MoonIcon,
-  SunIcon,
-  WrenchScrewdriverIcon,
-} from "@heroicons/react/16/solid";
-import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
-import { useTranslations } from "next-intl";
-import {
-  formatMinutesHM,
-  isAllergenTag,
-  sortTagsWithAllergyPriority,
-} from "@norish/shared/lib/helpers";
-import {
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-} from "@norish/shared/lib/user-preferences";
-import StarRating from "@norish/ui/star-rating";
-
-import AmountDisplayToggle from "./components/amount-display-toggle";
-import AuthorChip from "./components/author-chip";
-import ServingsControl from "./components/servings-control";
-
-import { useRecipeContextRequired } from "./context";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
+import CookbooksCard from "@/app/(app)/recipes/[id]/components/cookbooks-card";
+import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import NotesCard from "@/app/(app)/recipes/[id]/components/notes-card";
+import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
-import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import NutritionCard from "@/components/recipes/nutrition-card";
+import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
+import AuthorChip from "@/components/recipes/author-chip";
+import {
+  ReadonlyRecipeMedia,
+  ReadonlyRecipeSummary,
+} from "@/components/recipes/readonly-recipe-sections";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { useUserContext } from "@/context/user-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { useBackDestination } from "@/hooks/use-back-destination";
+import { useHiddenItemVisibility } from "@/hooks/user/use-hidden-item-visibility";
+import { ArrowLeftIcon } from "@heroicons/react/16/solid";
+import { Card } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
+import StarRating from "@norish/ui/star-rating";
+
+import ServingsControl from "./components/servings-control";
+import { useRecipeContextRequired } from "./context";
 
 export default function RecipePageDesktop() {
   const {
@@ -56,29 +43,24 @@ export default function RecipePageDesktop() {
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
-  const { user } = useUserContext();
   const t = useTranslations("recipes.detail");
-  const tForm = useTranslations("recipes.form");
-  const showRatings = getShowRatingsPreference(user);
-  const showFavorites = getShowFavoritesPreference(user);
+  const back = useBackDestination();
+  const { showRatings, showFavorites } = useHiddenItemVisibility();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
   const handleRateRecipe = (rating: number) => rateRecipe(recipe.id, rating);
-
-  // Build media items for MediaCarousel (videos + images)
-  const mediaItems = buildMediaItems(recipe);
 
   return (
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
       {/* Back link */}
       <div className="w-fit">
         <Link
-          className="text-default-500 flex items-center gap-1 text-base hover:underline"
-          href="/"
+          className="text-muted hover:text-foreground flex items-center gap-1 text-base no-underline"
+          href={back.href}
         >
           <ArrowLeftIcon className="h-4 w-4" />
-          {t("backToRecipes")}
+          {back.label}
         </Link>
       </div>
 
@@ -87,111 +69,23 @@ export default function RecipePageDesktop() {
         {/* LEFT column: Info card + Ingredients card (stacked) */}
         <div className="flex flex-col gap-6 md:col-span-1 lg:col-span-2">
           {/* Info Card */}
-          <Card className="bg-content1 rounded-2xl shadow-md">
-            <CardBody className="space-y-4 p-6">
-              {/* Title and Actions */}
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h1 className="text-2xl leading-tight font-bold">
-                    {recipe.name}
-                    {recipe.url && (
-                      <a
-                        className="ml-2 inline-block align-middle"
-                        href={recipe.url}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                        title={t("viewOriginal")}
-                      >
-                        <ArrowTopRightOnSquareIcon className="text-default-400 hover:text-primary inline h-4 w-4" />
-                      </a>
-                    )}
-                  </h1>
-                </div>
-                <div className="ml-4 flex-shrink-0">
-                  <ActionsMenu id={recipe.id} />
-                </div>
+          <Card className="rounded-2xl">
+            <Card.Content className="space-y-5 p-6">
+              <ReadonlyRecipeSummary
+                actions={<ActionsMenu id={recipe.id} />}
+                allergies={allergies}
+                allergySet={allergySet}
+                recipe={recipe}
+              />
+              <div className="pt-2">
+                <CookingMode fullWidth />
               </div>
-
-              {/* Description */}
-              {recipe.description && (
-                <p className="text-base leading-relaxed">
-                  <SmartMarkdownRenderer text={recipe.description} />
-                </p>
-              )}
-
-              {/* Categories */}
-              {recipe.categories.length > 0 && (
-                <div className="text-default-500 flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
-                  {recipe.categories.map((category) => {
-                    const IconComponent =
-                      {
-                        Breakfast: FireIcon,
-                        Lunch: SunIcon,
-                        Dinner: MoonIcon,
-                        Snack: CakeIcon,
-                      }[category] || SunIcon;
-
-                    return (
-                      <span key={category} className="flex items-center gap-1">
-                        <IconComponent className="h-4 w-4" />
-                        {tForm(`category.${category.toLowerCase()}`)}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Meta info row */}
-              {(recipe.prepMinutes || recipe.cookMinutes || recipe.totalMinutes !== 0) && (
-                <div className="text-default-500 flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
-                  {recipe.prepMinutes && recipe.prepMinutes > 0 && (
-                    <span className="flex items-center gap-1">
-                      <WrenchScrewdriverIcon className="h-4 w-4" />
-                      {formatMinutesHM(recipe.prepMinutes)}
-                    </span>
-                  )}
-                  {recipe.cookMinutes && (
-                    <span className="flex items-center gap-1">
-                      <FireIcon className="h-4 w-4" />
-                      {formatMinutesHM(recipe.cookMinutes)}
-                    </span>
-                  )}
-                  {recipe.totalMinutes && recipe.totalMinutes !== 0 && (
-                    <span className="flex items-center gap-1">
-                      <ClockIcon className="h-4 w-4" />
-                      {formatMinutesHM(recipe.totalMinutes)}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Tags */}
-              {recipe.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {sortTagsWithAllergyPriority(recipe.tags, allergies).map(
-                    (tag: { name: string }) => {
-                      const isAllergen = isAllergenTag(tag.name, allergySet);
-
-                      return (
-                        <Chip
-                          key={tag.name}
-                          className={isAllergen ? "bg-warning text-warning-foreground" : ""}
-                          size="sm"
-                          variant="flat"
-                        >
-                          {tag.name}
-                        </Chip>
-                      );
-                    }
-                  )}
-                </div>
-              )}
-            </CardBody>
+            </Card.Content>
           </Card>
 
           {/* Ingredients Card (separate) */}
-          <Card className="bg-content1 rounded-2xl shadow-md">
-            <CardBody className="space-y-4 p-6">
+          <Card className="rounded-2xl">
+            <Card.Content className="space-y-4 p-6">
               <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
                 <h2 className="text-lg font-semibold">{t("ingredients")}</h2>
                 <div className="flex flex-wrap items-center gap-2">
@@ -205,7 +99,7 @@ export default function RecipePageDesktop() {
 
               {/* Add to groceries button */}
               <AddToGroceries recipeId={recipe.id} />
-            </CardBody>
+            </Card.Content>
           </Card>
 
           {/* Nutrition Card */}
@@ -214,67 +108,59 @@ export default function RecipePageDesktop() {
 
         {/* RIGHT column: Image + Steps (stacked) */}
         <div className="flex flex-col gap-6 md:col-span-1 lg:col-span-3">
-          {/* Hero image/video carousel - wrapped to match Card styling */}
-          <div className="relative overflow-hidden rounded-2xl shadow-md">
-            <DoubleTapContainer
-              doubleTapEnabled={showFavorites}
-              onDoubleTap={() => {
-                if (showFavorites) handleToggleFavorite();
-              }}
-            >
-              <MediaCarousel className="min-h-[400px]" items={mediaItems} rounded={false} />
-            </DoubleTapContainer>
+          <DoubleTapContainer
+            className="overflow-hidden rounded-2xl"
+            doubleTapEnabled={showFavorites}
+            onDoubleTap={() => {
+              if (showFavorites) handleToggleFavorite();
+            }}
+          >
+            <ReadonlyRecipeMedia
+              className="h-[clamp(360px,42vw,520px)] rounded-2xl"
+              mediaClassName="min-h-0"
+              recipe={recipe}
+              topLeftContent={
+                recipe.author ? (
+                  <AuthorChip
+                    image={recipe.author.image}
+                    name={recipe.author.name}
+                    userId={recipe.author.id}
+                  />
+                ) : null
+              }
+              topRightContent={
+                showFavorites ? (
+                  <HeartButton
+                    showBackground
+                    isFavorite={isFavorite}
+                    size="lg"
+                    onToggle={handleToggleFavorite}
+                  />
+                ) : null
+              }
+            />
+          </DoubleTapContainer>
 
-            {/* Heart button - top right (always visible) */}
-            {showFavorites && (
-              <div className="absolute top-4 right-4 z-50">
-                <HeartButton
-                  showBackground
-                  isFavorite={isFavorite}
-                  size="lg"
-                  onToggle={handleToggleFavorite}
-                />
-              </div>
-            )}
-
-            {/* Author badge */}
-            {recipe.author && (
-              <div className="absolute top-4 left-4 z-50">
-                <AuthorChip
-                  image={recipe.author.image}
-                  name={recipe.author.name}
-                  userId={recipe.author.id}
-                />
-              </div>
-            )}
-          </div>
+          {/* Recipe Provenance — above the notes, because where a dish comes
+              from frames the cook's own notes about it. */}
+          <ProvenanceCard />
 
           {/* Notes */}
-          {recipe.notes && (
-            <Card className="bg-content1 rounded-2xl shadow-md">
-              <CardHeader className="flex items-center justify-between px-6 pt-6">
-                <h2 className="text-lg font-semibold">{t("notes")}</h2>
-              </CardHeader>
-              <CardBody className="p-6 pt-0">
-                <SmartMarkdownRenderer text={recipe.notes} />
-              </CardBody>
-            </Card>
-          )}
+          <NotesCard />
 
           {/* Steps Card (below image in right column) */}
-          <Card className="bg-content1 rounded-2xl shadow-md">
-            <CardHeader className="flex items-center justify-between px-6 pt-6">
+          <Card className="rounded-2xl">
+            <Card.Header className="flex-row items-center justify-between px-6 pt-6 text-left">
               <h2 className="text-lg font-semibold">{t("steps")}</h2>
-              <WakeLockToggle />
-            </CardHeader>
-            <CardBody className="px-3 pt-2 pb-0">
+            </Card.Header>
+            <Card.Content className="px-3 pt-2 pb-0 text-left">
               <StepsList />
-            </CardBody>
+            </Card.Content>
 
             {/* Rating Section */}
             {showRatings && (
-              <div className="bg-default-100 mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
-                <p className="text-default-600 font-medium">{t("ratingPrompt")}</p>
+              <div className="bg-surface-secondary mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
+                <p className="text-muted font-medium">{t("ratingPrompt")}</p>
                 <StarRating
                   isLoading={isRating || isRatingLoading}
                   value={userRating ?? averageRating}
@@ -283,6 +169,9 @@ export default function RecipePageDesktop() {
               </div>
             )}
           </Card>
+
+          {/* The cookbooks this recipe is filed into, last on the page. */}
+          <CookbooksCard />
         </div>
       </div>
     </div>

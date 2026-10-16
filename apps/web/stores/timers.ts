@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("timers");
@@ -26,7 +27,7 @@ function showTimerNotification(timer: { label: string; recipeName?: string }) {
 
         registration.showNotification(title, {
           body: "Timer complete!",
-          icon: "/android-chrome-192x192.png",
+          icon: "/brand/icon-192.png",
           tag: "timer-complete",
           renotify: true,
           requireInteraction: true,

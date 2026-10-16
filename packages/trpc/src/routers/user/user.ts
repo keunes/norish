@@ -1,34 +1,66 @@
-import { mkdir, readdir, writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import path from "path";
-
 import { z } from "zod";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
-  deleteUser,
   getAllergiesForUsers,
   getApiKeysForUser,
   getHouseholdForUser,
   getUserAllergies,
   getUserById,
   getUserPreferences,
+  setUserDevicePreferences,
   updateUserAllergies,
   updateUserAvatar,
   updateUserName,
   updateUserPreferences,
 } from "@norish/db";
+import { deleteUserAccount } from "@norish/shared-server/accounts/deletion";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { deleteAvatarByFilename } from "@norish/shared-server/media/avatar-cleanup";
+import {
+  deleteAvatarByFilename,
+  sweepUserAvatars,
+} from "@norish/shared-server/media/avatar-cleanup";
+import { households } from "@norish/shared-server/realtime/households";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
+import {
+  DeleteUserAvatarInputSchema,
+  SetDevicePreferencesInputSchema,
+  UpdateUserNameInputSchema,
+  UpdateUserPreferencesInputSchema,
+} from "@norish/shared/contracts/zod";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
-import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
+import { avatarFilenameFromImagePath, buildAvatarFilename } from "@norish/shared/lib/helpers";
 
-import { emitConnectionInvalidation } from "../../connection-manager";
+import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { householdEmitter } from "../households/emitter";
 
-import { UpdateNameInputSchema, UpdatePreferencesInputSchema } from "./types";
+/**
+ * Tell every open household client (the actor's other tabs included — no echo
+ * suppression, ADR-0021) that a member's profile picture changed.
+ */
+function emitMemberProfileUpdated(
+  ctx: { user: { id: string }; household: { id: string } | null },
+  image: string | null
+) {
+  if (!ctx.household) {
+    log.debug({ userId: ctx.user.id }, "No household, skipping memberProfileUpdated emit");
+
+    return;
+  }
+
+  void households.publish(
+    "memberProfileUpdated",
+    {
+      userId: ctx.user.id,
+      image,
+    },
+    { householdKey: ctx.household.id }
+  );
+}
 
 /**
  * Get current user settings (user profile + API keys)
@@ -48,7 +80,8 @@ const get = authedProcedure.query(async ({ ctx }) => {
       email: freshUser?.email ?? ctx.user.email,
       name: freshUser?.name ?? ctx.user.name,
       image: freshUser?.image ?? ctx.user.image,
-      preferences: preferences as any,
+      version: freshUser?.version ?? 1,
+      preferences,
     },
     apiKeys: apiKeys.map((k) => ({
       id: k.id,
@@ -61,150 +94,224 @@ const get = authedProcedure.query(async ({ ctx }) => {
   };
 });
 /**
- * Update user preferences
+ * Update the person's own preferences (language, after-planning,
+ * measurements). Only the keys given are written, merged in the database:
+ * reading the document, merging in memory and writing it back would put back a
+ * stale copy of the Device Preferences a toggle wrote in between.
  */
-
 const updatePreferences = authedProcedure
-  .input(UpdatePreferencesInputSchema)
+  .input(UpdateUserPreferencesInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, updates: input.preferences }, "Updating user preferences");
 
-    const current = await getUserPreferences(ctx.user.id);
-    const merged = { ...(current ?? {}), ...(input.preferences ?? {}) };
+    const result = await updateUserPreferences(ctx.user.id, input.preferences, input.version);
 
-    await updateUserPreferences(ctx.user.id, merged);
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user preferences mutation"
+      );
 
-    return { success: true, preferences: merged };
+      // The stored person-level choices, so the client drops its
+      // optimistic copy; never the device blocks, which a toggle owns.
+      const { locale, afterPlanning, measurementSystem } = await getUserPreferences(ctx.user.id);
+
+      return {
+        success: true,
+        stale: true,
+        preferences: { locale, afterPlanning, measurementSystem },
+        version: input.version,
+      };
+    }
+
+    const updatedUser = await getUserById(ctx.user.id);
+
+    return {
+      success: true,
+      preferences: input.preferences,
+      version: updatedUser?.version ?? input.version,
+    };
+  });
+
+/**
+ * Set Device Preferences for the named Device Kind. The kind travels in the
+ * input so an Outbox Replay lands on the kind the change was made on; the
+ * last writer wins, outside the profile's version.
+ */
+const setDevicePreferences = authedProcedure
+  .input(SetDevicePreferencesInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    log.debug(
+      { userId: ctx.user.id, kind: input.kind, updates: input.preferences },
+      "Setting device preferences"
+    );
+
+    await setUserDevicePreferences(ctx.user.id, input.kind, input.preferences);
+
+    return { success: true };
   });
 
 /**
  * Update user name
  */
-const updateName = authedProcedure.input(UpdateNameInputSchema).mutation(async ({ ctx, input }) => {
-  log.debug({ userId: ctx.user.id }, "Updating user name");
-
-  const trimmedName = input.name.trim();
-
-  if (!trimmedName) {
-    return { success: false, error: "Name cannot be empty" };
-  }
-
-  await updateUserName(ctx.user.id, trimmedName);
-
-  return {
-    success: true,
-    user: {
-      ...ctx.user,
-      name: trimmedName,
-    },
-  };
-});
-
-/**
- * Upload user avatar (FormData input)
- */
-const uploadAvatar = authedProcedure
-  .input(z.instanceof(FormData))
+const updateName = authedProcedure
+  .input(UpdateUserNameInputSchema)
   .mutation(async ({ ctx, input }) => {
-    log.debug({ userId: ctx.user.id }, "Uploading avatar");
+    log.debug({ userId: ctx.user.id }, "Updating user name");
 
-    const file = input.get("file") as File | null;
+    const trimmedName = input.name.trim();
 
-    if (!file) {
-      return { success: false, error: "No file provided" };
+    if (!trimmedName) {
+      return { success: false, error: "Name cannot be empty" };
     }
 
-    // Validate mime type
-    const ext = IMAGE_MIME_TO_EXTENSION[file.type];
+    const result = await updateUserName(ctx.user.id, trimmedName, input.version);
 
-    if (!ext) {
-      return {
-        success: false,
-        error: "Invalid file type. Only JPEG, PNG, and WebP images are allowed.",
-      };
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user name mutation"
+      );
+
+      return { success: true, stale: true };
     }
 
-    // Get file buffer
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const updatedUser = await getUserById(ctx.user.id);
 
-    // Validate file size
-    if (buffer.length > SERVER_CONFIG.MAX_AVATAR_FILE_SIZE) {
-      return { success: false, error: "File too large. Maximum size is 5MB." };
+    if (!updatedUser) {
+      return { success: false, error: "User not found" };
     }
-
-    // Create avatars directory
-    const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
-
-    await mkdir(avatarDir, { recursive: true });
-
-    // Delete all previous avatars for this user (they might have different extensions)
-    try {
-      const existingFiles = await readdir(avatarDir);
-      const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
-
-      for (const oldAvatar of userAvatars) {
-        await deleteAvatarByFilename(oldAvatar);
-      }
-    } catch {
-      // Ignore errors if directory doesn't exist or files can't be read
-    }
-
-    // Use user ID as filename
-    const filename = buildAvatarFilename(ctx.user.id, ext);
-    const filepath = path.join(avatarDir, filename);
-
-    await writeFile(filepath, buffer);
-
-    // Use auth-protected URL pattern
-    const protectedPath = `/avatars/${filename}`;
-
-    // Update database
-    await updateUserAvatar(ctx.user.id, protectedPath);
-
-    log.info({ userId: ctx.user.id, path: protectedPath }, "Avatar uploaded");
 
     return {
       success: true,
-      user: {
-        ...ctx.user,
-        image: protectedPath,
-      },
+      user: updatedUser,
     };
   });
 
 /**
- * Delete user avatar
+ * Upload user avatar (FormData input)
  */
-const deleteAvatar = authedProcedure.mutation(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Deleting avatar");
+const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
+  log.debug({ userId: ctx.user.id }, "Uploading avatar");
 
-  const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
+  const file = getUploadedFile(input, "file");
+  const version = Number(input.get("version"));
 
-  // Delete all avatars for this user
-  try {
-    const existingFiles = await readdir(avatarDir);
-    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
-
-    for (const avatar of userAvatars) {
-      await deleteAvatarByFilename(avatar);
-    }
-  } catch {
-    // Ignore errors
+  if (!file) {
+    return { success: false, error: "No file provided" };
   }
 
-  // Clear from database
-  await clearUserAvatar(ctx.user.id);
+  if (!Number.isInteger(version) || version < 1) {
+    return { success: false, error: "Current user version is required" };
+  }
 
-  log.info({ userId: ctx.user.id }, "Avatar deleted");
+  // Validate mime type
+  const ext = IMAGE_MIME_TO_EXTENSION[file.type];
+
+  if (!ext) {
+    return {
+      success: false,
+      error: "Invalid file type. Only JPEG, PNG, and WebP images are allowed.",
+    };
+  }
+
+  // Get file buffer
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Validate file size
+  if (buffer.length > SERVER_CONFIG.MAX_AVATAR_FILE_SIZE) {
+    return { success: false, error: "File too large. Maximum size is 5MB." };
+  }
+
+  // Create avatars directory
+  const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
+
+  await mkdir(avatarDir, { recursive: true });
+
+  // The DB-referenced file becomes the retained predecessor (ADR-0021), so
+  // read it fresh rather than trusting the session snapshot.
+  const currentUser = await getUserById(ctx.user.id);
+  const predecessorFilename = avatarFilenameFromImagePath(currentUser?.image);
+
+  // Every upload mints a new versioned filename (ADR-0021)
+  const filename = buildAvatarFilename(ctx.user.id, ext);
+  const filepath = path.join(avatarDir, filename);
+
+  await writeFile(filepath, buffer);
+
+  // Use auth-protected URL pattern
+  const protectedPath = `/avatars/${filename}`;
+
+  // Update database
+  const result = await updateUserAvatar(ctx.user.id, protectedPath, version);
+
+  if (result.stale) {
+    await deleteAvatarByFilename(filename);
+    log.info({ userId: ctx.user.id, version }, "Ignoring stale user avatar upload");
+
+    return { success: true, stale: true };
+  }
+
+  // Sweep only after the DB points at the new file: keep it and its immediate
+  // predecessor so payloads still holding the old URL keep rendering.
+  await sweepUserAvatars(
+    ctx.user.id,
+    predecessorFilename ? [filename, predecessorFilename] : [filename]
+  );
+
+  const updatedUser = await getUserById(ctx.user.id);
+
+  if (!updatedUser) {
+    return { success: false, error: "User not found" };
+  }
+
+  emitMemberProfileUpdated(ctx, protectedPath);
+
+  log.info({ userId: ctx.user.id, path: protectedPath }, "Avatar uploaded");
 
   return {
     success: true,
-    user: {
-      ...ctx.user,
-      image: null,
-    },
+    user: updatedUser,
   };
 });
+
+/**
+ * Delete user avatar
+ */
+const deleteAvatar = authedProcedure
+  .input(DeleteUserAvatarInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id }, "Deleting avatar");
+
+    const clearResult = await clearUserAvatar(ctx.user.id, input.version);
+
+    if (clearResult.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user avatar delete"
+      );
+
+      return { success: true, stale: true };
+    }
+
+    // Delete keeps nothing — no payload should render a removed picture
+    await sweepUserAvatars(ctx.user.id);
+
+    const updatedUser = await getUserById(ctx.user.id);
+
+    if (!updatedUser) {
+      return { success: false, error: "User not found" };
+    }
+
+    emitMemberProfileUpdated(ctx, null);
+
+    log.info({ userId: ctx.user.id }, "Avatar deleted");
+
+    return {
+      success: true,
+      user: updatedUser,
+    };
+  });
 
 /**
  * Delete user account
@@ -227,24 +334,7 @@ const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
     }
   }
 
-  // Delete user avatars
-  const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
-
-  try {
-    const existingFiles = await readdir(avatarDir);
-    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
-
-    for (const avatar of userAvatars) {
-      await deleteAvatarByFilename(avatar);
-    }
-  } catch {
-    // Ignore errors
-  }
-
-  await deleteUser(ctx.user.id);
-
-  // Terminate WebSocket connections so client doesn't stay connected
-  await emitConnectionInvalidation(ctx.user.id, "account-deleted");
+  await deleteUserAccount(ctx.user.id);
 
   log.info({ userId: ctx.user.id }, "Account deleted");
 
@@ -259,7 +349,7 @@ const getAllergies = authedProcedure.query(async ({ ctx }) => {
 
   const allergies = await getUserAllergies(ctx.user.id);
 
-  return { allergies };
+  return allergies;
 });
 
 /**
@@ -270,7 +360,24 @@ const setAllergies = authedProcedure
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, count: input.allergies.length }, "Updating user allergies");
 
-    await updateUserAllergies(ctx.user.id, input.allergies);
+    const result = await updateUserAllergies(ctx.user.id, input.allergies, input.version);
+
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user allergies mutation"
+      );
+      const currentAllergies = await getUserAllergies(ctx.user.id);
+
+      return {
+        success: true,
+        stale: true,
+        allergies: currentAllergies.allergies,
+        version: currentAllergies.version,
+      };
+    }
+
+    const updatedAllergies = await getUserAllergies(ctx.user.id);
 
     if (ctx.household) {
       const userIds = ctx.household.users.map((u) => u.id);
@@ -281,14 +388,22 @@ const setAllergies = authedProcedure
         { householdId: ctx.household.id, allergies },
         "Emitting allergiesUpdated to household"
       );
-      householdEmitter.emitToHousehold(ctx.household.id, "allergiesUpdated", { allergies });
+      void households.publish(
+        "allergiesUpdated",
+        { allergies },
+        { householdKey: ctx.household.id }
+      );
     } else {
       log.info({ userId: ctx.user.id }, "No household, skipping allergiesUpdated emit");
     }
 
     log.info({ userId: ctx.user.id, allergies: input.allergies }, "User allergies updated");
 
-    return { success: true, allergies: input.allergies };
+    return {
+      success: true,
+      allergies: updatedAllergies.allergies,
+      version: updatedAllergies.version,
+    };
   });
 
 export const userProcedures = router({
@@ -300,4 +415,5 @@ export const userProcedures = router({
   getAllergies,
   setAllergies,
   updatePreferences,
+  setDevicePreferences,
 });

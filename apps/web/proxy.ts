@@ -1,6 +1,7 @@
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@norish/auth/auth";
+import { shouldBypassAuthProxy } from "@/lib/recipe-share-access";
+
+import { getVerifiedSession } from "@norish/auth/session";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 export async function proxy(request: NextRequest) {
@@ -13,15 +14,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (session?.user) {
+  if (shouldBypassAuthProxy(request)) {
     return NextResponse.next();
   }
 
-  // Invalid or no session - redirect to login
+  const identity = await getVerifiedSession(request.headers);
+
+  if (identity) {
+    return NextResponse.next();
+  }
+
+  // Invalid, expired, or orphaned session - redirect to login
   // Use X-Forwarded headers when behind a reverse proxy
   const forwardedOrigin = getPublicOrigin(request);
   let loginUrl: URL;
@@ -51,6 +54,6 @@ function getPublicOrigin(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|api/health|api/trpc|trpc|_next|favicon|icons|images/splash|manifest|robots|login|signup|auth-error|sw.js|.*\\.png|.*\\.ico|.*\\.json|.*\\.webp|.*\\.svg).*)",
+    "/((?!api/auth|api/trpc|api/v1|trpc|_next|icons|ingredient-icons/|brand/|login|signup|auth-error|~offline|serwist/|manifest\\.webmanifest|sw\\.js|logo\\.svg|logo-small\\.svg|404\\.jpg|nora\\.jpg|robots|sounds/).*)",
   ],
 };

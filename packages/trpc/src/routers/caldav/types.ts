@@ -1,36 +1,33 @@
-import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
-
 import { z } from "zod";
 
+import type { SaveCaldavConfigInputDto } from "@norish/shared/contracts";
+import {
+  DeleteCaldavConfigInputSchema as SharedDeleteCaldavConfigInputSchema,
+  SaveCaldavConfigInputSchema as SharedSaveCaldavConfigInputSchema,
+} from "@norish/shared/contracts/zod";
 
 export type CaldavItemType = "recipe" | "note";
 export type CaldavSyncStatus = "pending" | "synced" | "failed" | "removed";
 
-export type CaldavSubscriptionEvents = {
-  configSaved: { config: UserCaldavConfigWithoutPasswordDto | null };
-  syncStarted: { timestamp: string };
-  syncCompleted: { itemId: string; caldavEventUid: string };
-  syncFailed: { itemId: string; errorMessage: string; retryCount: number };
-  itemStatusUpdated: {
-    itemId: string;
-    itemType: CaldavItemType;
-    syncStatus: CaldavSyncStatus;
-    errorMessage: string | null;
-    caldavEventUid: string | null;
-  };
-  initialSyncComplete: { timestamp: string; totalSynced: number; totalFailed: number };
+type SaveCaldavConfigInputValue = Omit<SaveCaldavConfigInputDto, "password"> & {
+  password?: string;
 };
 
-export const SaveCaldavConfigInputSchema = z.object({
-  serverUrl: z.url(),
-  calendarUrl: z.url().optional().nullable(),
-  username: z.string().min(1),
+type DeleteCaldavConfigInputValue = {
+  version?: number;
+  deleteEvents?: boolean;
+};
+
+type DeleteCaldavConfigOutputValue = {
+  version?: number;
+  deleteEvents: boolean;
+};
+
+export const SaveCaldavConfigInputSchema: z.ZodType<
+  SaveCaldavConfigInputValue,
+  SaveCaldavConfigInputValue
+> = SharedSaveCaldavConfigInputSchema.extend({
   password: z.string().optional(),
-  enabled: z.boolean(),
-  breakfastTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  lunchTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  dinnerTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  snackTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
 });
 
 export const TestCaldavConnectionInputSchema = z.object({
@@ -39,9 +36,10 @@ export const TestCaldavConnectionInputSchema = z.object({
   password: z.string().min(1),
 });
 
-export const DeleteCaldavConfigInputSchema = z.object({
-  deleteEvents: z.boolean().default(false),
-});
+export const DeleteCaldavConfigInputSchema: z.ZodType<
+  DeleteCaldavConfigOutputValue,
+  DeleteCaldavConfigInputValue
+> = SharedDeleteCaldavConfigInputSchema;
 
 export const GetSyncStatusInputSchema = z.object({
   page: z.number().int().min(1).default(1),

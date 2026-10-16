@@ -1,19 +1,28 @@
-import { and, desc, eq, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import z from "zod";
-import { dbLogger } from "@norish/api/logger";
+
+import type { GroceryDto } from "@norish/shared/contracts/dto/groceries";
 import { db } from "@norish/db/drizzle";
+import { dbLogger } from "@norish/db/logger";
 import { groceries, recurringGroceries } from "@norish/db/schema";
 import {
   GrocerySelectBaseSchema,
+  GroceryUpdateBaseSchema,
   RecurringGroceryInsertBaseSchema,
   RecurringGrocerySelectBaseSchema,
   RecurringGroceryUpdateBaseSchema,
 } from "@norish/shared/contracts/zod";
 import { getTodayString, shouldBeActive } from "@norish/shared/lib/recurrence/calculator";
 
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+
 export type RecurringGroceryDto = z.output<typeof RecurringGrocerySelectBaseSchema>;
 export type RecurringGroceryInsertDto = z.input<typeof RecurringGroceryInsertBaseSchema>;
 export type RecurringGroceryUpdateDto = z.input<typeof RecurringGroceryUpdateBaseSchema>;
+
+/** Thrown inside a transaction to roll back a version-guarded write that matched zero rows. */
+class StaleWriteError extends Error {}
 
 export async function getRecurringGroceryById(id: string): Promise<RecurringGroceryDto | null> {
   const [row] = await db
@@ -120,20 +129,26 @@ export async function createRecurringGrocery(
 
 export async function updateRecurringGrocery(
   data: RecurringGroceryUpdateDto
-): Promise<RecurringGroceryDto> {
+): Promise<RecurringGroceryDto | null> {
   const updateData = {
     ...data,
     amount: data.amount != null ? String(data.amount) : undefined,
     updatedAt: new Date(),
   };
 
+  const whereConditions = [eq(recurringGroceries.id, data.id!)];
+
+  if (data.version) {
+    whereConditions.push(eq(recurringGroceries.version, data.version));
+  }
+
   const [row] = await db
     .update(recurringGroceries)
-    .set(updateData)
-    .where(eq(recurringGroceries.id, data.id!))
+    .set({ ...updateData, version: sql`${recurringGroceries.version} + 1` })
+    .where(and(...whereConditions))
     .returning();
 
-  if (!row) throw new Error("Recurring grocery not found");
+  if (!row) return null;
 
   const parsed = RecurringGrocerySelectBaseSchema.safeParse(row);
 
@@ -150,14 +165,245 @@ export async function updateRecurringGroceries(
   for (const data of dataList) {
     const result = await updateRecurringGrocery(data);
 
-    results.push(result);
+    if (result) {
+      results.push(result);
+    }
   }
 
   return results;
 }
 
-export async function deleteRecurringGroceryById(id: string): Promise<void> {
-  await db.delete(recurringGroceries).where(eq(recurringGroceries.id, id));
+export async function updateRecurringGroceryWithGrocery(
+  recurringData: RecurringGroceryUpdateDto,
+  groceryRef: {
+    id: string;
+    version: number;
+    storeId?: string | null;
+    purchaseAmount?: number | null;
+  }
+): Promise<MutationOutcome<{ recurringGrocery: RecurringGroceryDto; grocery: GroceryDto }>> {
+  const updateData = {
+    ...recurringData,
+    amount: recurringData.amount != null ? String(recurringData.amount) : undefined,
+    updatedAt: new Date(),
+  };
+
+  try {
+    const result = await db.transaction(async (trx) => {
+      const recurringWhere = [eq(recurringGroceries.id, recurringData.id!)];
+
+      if (recurringData.version) {
+        recurringWhere.push(eq(recurringGroceries.version, recurringData.version));
+      }
+
+      const [recurringRow] = await trx
+        .update(recurringGroceries)
+        .set({ ...updateData, version: sql`${recurringGroceries.version} + 1` })
+        .where(and(...recurringWhere))
+        .returning();
+
+      if (!recurringRow) throw new StaleWriteError();
+
+      const recurringParsed = RecurringGrocerySelectBaseSchema.safeParse(recurringRow);
+
+      if (!recurringParsed.success) throw new Error("Failed to parse updated recurring grocery");
+
+      const groceryUpdate = GroceryUpdateBaseSchema.safeParse({
+        id: groceryRef.id,
+        version: groceryRef.version,
+        name: recurringParsed.data.name,
+        // The grocery names what its recurring grocery names, and so the same food.
+        ingredientAliasId: recurringRow.ingredientAliasId,
+        ingredientId: recurringRow.ingredientId,
+        unit: recurringParsed.data.unit || null,
+        amount: recurringParsed.data.amount,
+        purchaseAmount: groceryRef.purchaseAmount,
+        ...(groceryRef.storeId !== undefined ? { storeId: groceryRef.storeId } : {}),
+      });
+
+      if (!groceryUpdate.success) throw new Error("Invalid grocery update for recurring grocery");
+
+      const [groceryRow] = await trx
+        .update(groceries)
+        .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
+        .where(and(eq(groceries.id, groceryRef.id), eq(groceries.version, groceryRef.version)))
+        .returning();
+
+      if (!groceryRow) throw new StaleWriteError();
+
+      const groceryParsed = GrocerySelectBaseSchema.safeParse(groceryRow);
+
+      if (!groceryParsed.success) throw new Error("Failed to parse updated grocery");
+
+      return { recurringGrocery: recurringParsed.data, grocery: groceryParsed.data };
+    });
+
+    return appliedOutcome(result);
+  } catch (err) {
+    if (err instanceof StaleWriteError) return staleOutcome();
+    throw err;
+  }
+}
+
+export async function detachRecurringGrocery(input: {
+  recurringGroceryId: string;
+  recurringVersion: number;
+  grocery: {
+    id: string;
+    version: number;
+    name: string | null;
+    ingredientAliasId?: string | null;
+    ingredientId?: string | null;
+    unit: string | null;
+    amount: number | null;
+    storeId?: string | null;
+    purchaseAmount?: number | null;
+  };
+}): Promise<MutationOutcome<GroceryDto>> {
+  const groceryUpdate = GroceryUpdateBaseSchema.safeParse(input.grocery);
+
+  if (!groceryUpdate.success) throw new Error("Invalid grocery update for detach");
+
+  try {
+    const grocery = await db.transaction(async (trx) => {
+      const deleted = await trx
+        .delete(recurringGroceries)
+        .where(
+          and(
+            eq(recurringGroceries.id, input.recurringGroceryId),
+            eq(recurringGroceries.version, input.recurringVersion)
+          )
+        )
+        .returning({ id: recurringGroceries.id });
+
+      if (deleted.length === 0) throw new StaleWriteError();
+
+      // The FK ON DELETE SET NULL detaches the grocery without bumping its
+      // version, so the guard below still matches the client-supplied version.
+      const [row] = await trx
+        .update(groceries)
+        .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
+        .where(
+          and(eq(groceries.id, input.grocery.id), eq(groceries.version, input.grocery.version))
+        )
+        .returning();
+
+      if (!row) throw new StaleWriteError();
+
+      const validated = GrocerySelectBaseSchema.safeParse(row);
+
+      if (!validated.success) throw new Error("Failed to parse detached grocery");
+
+      return validated.data;
+    });
+
+    return appliedOutcome(grocery);
+  } catch (err) {
+    if (err instanceof StaleWriteError) return staleOutcome();
+    throw err;
+  }
+}
+
+export async function checkRecurringGrocery(input: {
+  groceryId: string;
+  groceryVersion: number;
+  isDone: boolean;
+  recurringUpdate: {
+    id: string;
+    version: number;
+    lastCheckedDate: string;
+    nextPlannedFor: string;
+  } | null;
+}): Promise<
+  MutationOutcome<{ grocery: GroceryDto; recurringGrocery: RecurringGroceryDto | null }>
+> {
+  try {
+    const result = await db.transaction(async (trx) => {
+      const [groceryRow] = await trx
+        .update(groceries)
+        .set({ isDone: input.isDone, version: sql`${groceries.version} + 1` })
+        .where(and(eq(groceries.id, input.groceryId), eq(groceries.version, input.groceryVersion)))
+        .returning();
+
+      if (!groceryRow) throw new StaleWriteError();
+
+      const groceryParsed = GrocerySelectBaseSchema.safeParse(groceryRow);
+
+      if (!groceryParsed.success) throw new Error("Failed to parse checked grocery");
+
+      let recurringGrocery: RecurringGroceryDto | null = null;
+
+      if (input.recurringUpdate) {
+        const [recurringRow] = await trx
+          .update(recurringGroceries)
+          .set({
+            lastCheckedDate: input.recurringUpdate.lastCheckedDate,
+            nextPlannedFor: input.recurringUpdate.nextPlannedFor,
+            updatedAt: new Date(),
+            version: sql`${recurringGroceries.version} + 1`,
+          })
+          .where(
+            and(
+              eq(recurringGroceries.id, input.recurringUpdate.id),
+              eq(recurringGroceries.version, input.recurringUpdate.version)
+            )
+          )
+          .returning();
+
+        if (!recurringRow) throw new StaleWriteError();
+
+        const recurringParsed = RecurringGrocerySelectBaseSchema.safeParse(recurringRow);
+
+        if (!recurringParsed.success) throw new Error("Failed to parse checked recurring grocery");
+
+        recurringGrocery = recurringParsed.data;
+      }
+
+      return { grocery: groceryParsed.data, recurringGrocery };
+    });
+
+    return appliedOutcome(result);
+  } catch (err) {
+    if (err instanceof StaleWriteError) return staleOutcome();
+    throw err;
+  }
+}
+
+export async function deleteRecurringGroceryById(
+  id: string,
+  version?: number
+): Promise<{ stale: boolean; deletedGroceryIds: string[] }> {
+  return await db.transaction(async (trx) => {
+    // Capture linked grocery ids before the delete: the FK ON DELETE SET NULL
+    // would clear recurringGroceryId, making them unfindable afterwards.
+    const linked = await trx
+      .select({ id: groceries.id })
+      .from(groceries)
+      .where(eq(groceries.recurringGroceryId, id));
+
+    const whereConditions = [eq(recurringGroceries.id, id)];
+
+    if (version) {
+      whereConditions.push(eq(recurringGroceries.version, version));
+    }
+
+    const deletedRows = await trx
+      .delete(recurringGroceries)
+      .where(and(...whereConditions))
+      .returning({ id: recurringGroceries.id });
+
+    if (deletedRows.length === 0) {
+      return { stale: Boolean(version), deletedGroceryIds: [] };
+    }
+
+    const linkedIds = linked.map((g) => g.id);
+
+    if (linkedIds.length > 0) {
+      await trx.delete(groceries).where(inArray(groceries.id, linkedIds));
+    }
+
+    return { stale: false, deletedGroceryIds: linkedIds };
+  });
 }
 
 export async function deleteRecurringGroceryByIds(ids: string[]): Promise<void> {
@@ -168,6 +414,7 @@ export async function deleteRecurringGroceryByIds(ids: string[]): Promise<void> 
 export type DueRecurringGrocery = {
   recurringGrocery: {
     id: string;
+    version: number;
     userId: string;
     name: string;
     unit: string | null;
@@ -180,6 +427,7 @@ export type DueRecurringGrocery = {
   };
   grocery: {
     id: string;
+    version: number;
     name: string | null;
     unit: string | null;
     isDone: boolean;
@@ -247,9 +495,13 @@ export async function getDueRecurringGroceries(): Promise<DueRecurringGrocery[]>
       results.push({
         recurringGrocery: {
           ...recurringParsed.data,
+          version: recurringParsed.data.version,
           userId: recurringRow.userId, // Include userId from raw row
         },
-        grocery: groceryParsed.data,
+        grocery: {
+          ...groceryParsed.data,
+          version: groceryParsed.data.version,
+        },
       });
     }
   }
@@ -261,7 +513,10 @@ export async function getDueRecurringGroceries(): Promise<DueRecurringGrocery[]>
  * Uncheck a grocery item by setting isDone to false.
  */
 export async function uncheckGrocery(groceryId: string): Promise<void> {
-  await db.update(groceries).set({ isDone: false }).where(eq(groceries.id, groceryId));
+  await db
+    .update(groceries)
+    .set({ isDone: false, version: sql`${groceries.version} + 1` })
+    .where(eq(groceries.id, groceryId));
 }
 
 /**

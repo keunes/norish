@@ -1,9 +1,10 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
-
 import React, { useRef, useState } from "react";
 import NextImage from "next/image";
+import { useRecipeImages } from "@/hooks/recipes";
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import {
   closestCenter,
   DndContext,
@@ -23,11 +24,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Bars2Icon, PhotoIcon, StarIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { createClientLogger } from "@norish/shared/lib/logger";
-
-import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { useRecipeImages } from "@/hooks/recipes";
 
 const log = createClientLogger("ImageGalleryInput");
 
@@ -35,6 +34,7 @@ export interface RecipeGalleryImage {
   id?: string;
   image: string;
   order: number;
+  version?: number;
 }
 
 export interface ImageGalleryInputProps {
@@ -47,7 +47,7 @@ export interface ImageGalleryInputProps {
 interface SortableImageItemProps {
   item: RecipeGalleryImage;
   index: number;
-  onDelete: (id: string | undefined, imageUrl: string) => void;
+  onDelete: (id: string | undefined, imageUrl: string, version?: number) => void;
 }
 
 function SortableImageItem({ item, index, onDelete }: SortableImageItemProps) {
@@ -74,13 +74,13 @@ function SortableImageItem({ item, index, onDelete }: SortableImageItemProps) {
   return (
     <div
       ref={setNodeRef}
-      className="bg-default-100 relative aspect-square w-28 shrink-0 overflow-hidden rounded-xl shadow-sm sm:w-32"
+      className="bg-surface-secondary relative aspect-square w-28 shrink-0 overflow-hidden rounded-xl shadow-sm sm:w-32"
       style={style}
     >
       {/* Drag handle - always visible */}
       <button
         ref={setActivatorNodeRef}
-        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-black/60 text-white active:cursor-grabbing"
+        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-neutral-900 text-white active:cursor-grabbing"
         type="button"
         {...attributes}
         {...listeners}
@@ -99,7 +99,7 @@ function SortableImageItem({ item, index, onDelete }: SortableImageItemProps) {
       <button
         className="bg-danger absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white shadow"
         type="button"
-        onClick={() => onDelete(item.id, item.image)}
+        onClick={() => onDelete(item.id, item.image, item.version)}
       >
         <XMarkIcon className="h-3.5 w-3.5" />
       </button>
@@ -114,7 +114,7 @@ function SortableImageItem({ item, index, onDelete }: SortableImageItemProps) {
       />
 
       {/* Order badge */}
-      <div className="absolute right-2 bottom-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+      <div className="absolute right-2 bottom-2 z-10 rounded bg-neutral-900 px-1.5 py-0.5 text-xs text-white">
         {index + 1}
       </div>
     </div>
@@ -187,6 +187,7 @@ export default function ImageGalleryInput({
           id: result.id,
           image: result.url,
           order: result.order ?? nextOrder,
+          version: result.version,
         };
 
         onChange([...images, newImage]);
@@ -202,7 +203,7 @@ export default function ImageGalleryInput({
     }
   };
 
-  const handleDelete = async (id: string | undefined, imageUrl: string) => {
+  const handleDelete = async (id: string | undefined, imageUrl: string, version?: number) => {
     const newImages = images.filter((img) => img.image !== imageUrl);
     const reordered = newImages.map((img, idx) => ({ ...img, order: idx }));
 
@@ -210,7 +211,7 @@ export default function ImageGalleryInput({
 
     try {
       if (id) {
-        await deleteGalleryImage(id);
+        await deleteGalleryImage(id, version ?? 1);
       }
     } catch (err) {
       log.error({ err }, "Failed to delete gallery image");
@@ -289,8 +290,8 @@ export default function ImageGalleryInput({
                   className={[
                     "relative flex aspect-square w-28 shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed sm:w-32",
                     dragActive
-                      ? "border-primary bg-primary-50 dark:bg-primary-900/20"
-                      : "border-default-300 hover:border-primary",
+                      ? "border-accent bg-accent-soft dark:bg-accent/20"
+                      : "border-border-secondary hover:border-accent",
                     isUploading ? "pointer-events-none opacity-50" : "",
                   ].join(" ")}
                   type="button"
@@ -303,18 +304,18 @@ export default function ImageGalleryInput({
                 >
                   {isUploading ? (
                     <div className="flex flex-col items-center gap-1">
-                      <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-                      <span className="text-primary text-xs">{t("uploading")}</span>
+                      <div className="border-accent h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+                      <span className="text-accent text-xs">{t("uploading")}</span>
                     </div>
                   ) : (
-                    <div className="text-default-400 flex flex-col items-center gap-1">
+                    <div className="text-muted flex flex-col items-center gap-1">
                       <PhotoIcon className="h-8 w-8" />
-                      <span className="text-primary text-xs font-medium">{t("addImage")}</span>
+                      <span className="text-accent text-xs font-medium">{t("addImage")}</span>
                     </div>
                   )}
 
                   {uploadError && (
-                    <div className="bg-danger-50 text-danger absolute inset-0 flex items-center justify-center rounded-xl p-2 text-center text-xs">
+                    <div className="bg-danger/10 text-danger absolute inset-0 flex items-center justify-center rounded-xl p-2 text-center text-xs">
                       {uploadError}
                     </div>
                   )}
@@ -334,7 +335,7 @@ export default function ImageGalleryInput({
       </div>
 
       {/* Footer */}
-      <div className="text-default-400 flex items-center justify-between text-xs">
+      <div className="text-muted flex items-center justify-between text-xs">
         <span>{t("dragToReorder")}</span>
         <span>
           {images.length} / {maxImages}

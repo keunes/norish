@@ -1,9 +1,10 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
-
 import React, { useCallback, useRef, useState } from "react";
 import NextImage from "next/image";
+import { useRecipeImages, useRecipeVideos } from "@/hooks/recipes";
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import {
   closestCenter,
   DndContext,
@@ -30,12 +31,10 @@ import {
   XMarkIcon,
 } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod/recipe-videos";
 import { createClientLogger } from "@norish/shared/lib/logger";
-
-import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { useRecipeImages, useRecipeVideos } from "@/hooks/recipes";
 
 const log = createClientLogger("MediaGalleryInput");
 
@@ -46,6 +45,7 @@ export interface RecipeGalleryMedia {
   thumbnail?: string | null;
   duration?: number | null;
   order: number;
+  version?: number;
 }
 
 export interface MediaGalleryInputProps {
@@ -59,7 +59,12 @@ export interface MediaGalleryInputProps {
 interface SortableMediaItemProps {
   item: RecipeGalleryMedia;
   index: number;
-  onDelete: (id: string | undefined, src: string, type: "image" | "video") => void;
+  onDelete: (
+    id: string | undefined,
+    src: string,
+    type: "image" | "video",
+    version?: number
+  ) => void;
   isFirstImage: boolean;
 }
 
@@ -100,13 +105,13 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
   return (
     <div
       ref={setNodeRef}
-      className="bg-default-100 relative aspect-square w-28 shrink-0 overflow-hidden rounded-xl shadow-sm sm:w-32"
+      className="bg-surface-secondary relative aspect-square w-28 shrink-0 overflow-hidden rounded-xl shadow-sm sm:w-32"
       style={style}
     >
       {/* Drag handle */}
       <button
         ref={setActivatorNodeRef}
-        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-black/60 text-white active:cursor-grabbing"
+        className="absolute top-2 left-2 z-20 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-full bg-neutral-900 text-white active:cursor-grabbing"
         type="button"
         {...attributes}
         {...listeners}
@@ -125,7 +130,7 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
       <button
         className="bg-danger absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white shadow"
         type="button"
-        onClick={() => onDelete(item.id, item.src, item.type)}
+        onClick={() => onDelete(item.id, item.src, item.type, item.version)}
       >
         <XMarkIcon className="h-3.5 w-3.5" />
       </button>
@@ -143,19 +148,19 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
               src={item.thumbnail}
             />
           ) : (
-            <div className="bg-default-200 flex h-full w-full items-center justify-center">
-              <VideoCameraIcon className="text-default-400 h-12 w-12" />
+            <div className="bg-surface-tertiary flex h-full w-full items-center justify-center">
+              <VideoCameraIcon className="text-muted h-12 w-12" />
             </div>
           )}
           {/* Play icon overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-900">
               <PlayIcon className="h-5 w-5 text-white" />
             </div>
           </div>
           {/* Duration badge */}
           {durationStr && (
-            <div className="absolute bottom-2 left-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+            <div className="absolute bottom-2 left-2 z-10 rounded bg-neutral-900 px-1.5 py-0.5 text-xs text-white">
               {durationStr}
             </div>
           )}
@@ -171,7 +176,7 @@ function SortableMediaItem({ item, index, onDelete, isFirstImage }: SortableMedi
       )}
 
       {/* Order badge */}
-      <div className="absolute right-2 bottom-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+      <div className="absolute right-2 bottom-2 z-10 rounded bg-neutral-900 px-1.5 py-0.5 text-xs text-white">
         {index + 1}
       </div>
     </div>
@@ -302,6 +307,7 @@ export default function MediaGalleryInput({
               thumbnail: result.thumbnail,
               duration: result.duration,
               order: result.order ?? nextOrder,
+              version: result.version,
             };
 
             onChange([...media, newMedia]);
@@ -318,6 +324,7 @@ export default function MediaGalleryInput({
               type: "image",
               src: result.url,
               order: result.order ?? nextOrder,
+              version: result.version,
             };
 
             onChange([...media, newMedia]);
@@ -349,7 +356,7 @@ export default function MediaGalleryInput({
   );
 
   const handleDelete = useCallback(
-    async (id: string | undefined, src: string, type: "image" | "video") => {
+    async (id: string | undefined, src: string, type: "image" | "video", version?: number) => {
       const newMedia = media.filter((m) => m.src !== src);
       const reordered = newMedia.map((m, idx) => ({ ...m, order: idx }));
 
@@ -358,9 +365,9 @@ export default function MediaGalleryInput({
       try {
         if (id) {
           if (type === "video") {
-            await deleteGalleryVideo(id);
+            await deleteGalleryVideo(id, version ?? 1);
           } else {
-            await deleteGalleryImage(id);
+            await deleteGalleryImage(id, version ?? 1);
           }
         }
       } catch (err) {
@@ -442,8 +449,8 @@ export default function MediaGalleryInput({
                   className={[
                     "relative flex aspect-square w-28 shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed sm:w-32",
                     dragActive
-                      ? "border-primary bg-primary-50 dark:bg-primary-900/20"
-                      : "border-default-300 hover:border-primary",
+                      ? "border-accent bg-accent-soft dark:bg-accent/20"
+                      : "border-border-secondary hover:border-accent",
                     isUploading ? "pointer-events-none opacity-50" : "",
                   ].join(" ")}
                   type="button"
@@ -456,18 +463,18 @@ export default function MediaGalleryInput({
                 >
                   {isUploading ? (
                     <div className="flex flex-col items-center gap-1">
-                      <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-                      <span className="text-primary text-xs">{t("uploading")}</span>
+                      <div className="border-accent h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+                      <span className="text-accent text-xs">{t("uploading")}</span>
                     </div>
                   ) : (
-                    <div className="text-default-400 flex flex-col items-center gap-1">
+                    <div className="text-muted flex flex-col items-center gap-1">
                       <PhotoIcon className="h-8 w-8" />
-                      <span className="text-primary text-xs font-medium">{tActions("add")}</span>
+                      <span className="text-accent text-xs font-medium">{tActions("add")}</span>
                     </div>
                   )}
 
                   {uploadError && (
-                    <div className="bg-danger-50 text-danger absolute inset-0 flex items-center justify-center rounded-xl p-2 text-center text-xs">
+                    <div className="bg-danger/10 text-danger absolute inset-0 flex items-center justify-center rounded-xl p-2 text-center text-xs">
                       {uploadError}
                     </div>
                   )}
@@ -487,7 +494,7 @@ export default function MediaGalleryInput({
       </div>
 
       {/* Footer */}
-      <div className="text-default-400 flex items-center justify-between text-xs">
+      <div className="text-muted flex items-center justify-between text-xs">
         <span>{t("dragToReorder")}</span>
         <span>
           {imageCount}/{maxImages} images, {videoCount}/{maxVideos} videos

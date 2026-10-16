@@ -1,0 +1,301 @@
+{
+  "actions": {
+    "save": "Gem",
+    "cancel": "Annuller",
+    "delete": "Slet",
+    "duplicate": "Dupliker",
+    "edit": "Rediger",
+    "create": "Opret",
+    "add": "Tilføj",
+    "remove": "Fjern",
+    "close": "Luk",
+    "apply": "Anvend",
+    "reset": "Nulstil",
+    "clear": "Ryd",
+    "selectAll": "Vælg alle",
+    "deselectAll": "Fravælg alle",
+    "confirm": "Bekræft",
+    "back": "Tilbage",
+    "next": "Næste",
+    "done": "Færdig",
+    "retry": "Prøv igen",
+    "submit": "Send",
+    "search": "Søg",
+    "filter": "Filtrer",
+    "sort": "Sorter",
+    "import": "Importer",
+    "aiImport": "AI-import",
+    "importWithAI": "Importer med AI",
+    "goHome": "Gå til forsiden",
+    "test": "Test",
+    "format": "Formater",
+    "restoreDefaults": "Gendan standardindstillinger",
+    "saveChanges": "Gem ændringer"
+  },
+  "secret": {
+    "reveal": "Vis hemmelighed",
+    "hide": "Skjul hemmelighed",
+    "keepsCurrent": "Lad feltet stå tomt for at beholde den gemte værdi."
+  },
+  "status": {
+    "loading": "Indlæser...",
+    "saving": "Gemmer...",
+    "deleting": "Sletter...",
+    "error": "Fejl",
+    "success": "Succes",
+    "noResults": "Ingen resultater fundet",
+    "changing": "Ændrer…"
+  },
+  "filters": {
+    "title": "Filtre",
+    "search": "Søg",
+    "searchIn": "Søg i",
+    "sort": "Sorter",
+    "mode": "Tilstand",
+    "modeAll": "Alle",
+    "modeAny": "Enhver",
+    "tags": "Tags",
+    "searchTags": "Søg tags",
+    "favoritesAndRating": "Favoritter og bedømmelse",
+    "favorites": "Favoritter",
+    "cookingTime": "Tilberedningstid",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Kategorier",
+    "category": {
+      "breakfast": "Morgenmad",
+      "lunch": "Frokost",
+      "dinner": "Aftensmad",
+      "snack": "Snack"
+    },
+    "sortByTitle": "Titel",
+    "sortByDate": "Dato",
+    "clearFilters": "Ryd filtre"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "t"
+  },
+  "validation": {
+    "required": "Dette felt er påkrævet",
+    "invalidUrl": "Indtast venligst en gyldig URL"
+  },
+  "errors": {
+    "operationFailed": "Handlingen mislykkedes",
+    "nameCannotBeEmpty": "Navn kan ikke være tomt",
+    "technicalDetails": "Noget gik galt. Tjek browserkonsollen for tekniske detaljer."
+  },
+  "slots": {
+    "breakfast": "Morgenmad",
+    "lunch": "Frokost",
+    "dinner": "Aftensmad",
+    "snack": "Snack",
+    "chooseSlot": "Vælg tidsrum"
+  },
+  "connection": {
+    "connecting": "Opretter forbindelse til Norish...",
+    "checkInternet": "Tjek venligst din internetforbindelse",
+    "offlineBanner": "Du er offline og ser cachelagrede data",
+    "serverUnreachableBanner": "Norish-serveren er ikke tilgængelig, ser cachelagrede data",
+    "live": "Forbundet",
+    "offline": "Offline",
+    "openDetails": "Connection details"
+  },
+  "language": {
+    "title": "Sprog"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Nora er forvirret.",
+    "message": "Hun snuser rundt for at finde ud af, hvor du ville hen.",
+    "imageAlt": "Nora ser forvirret ud"
+  },
+  "import": {
+    "url": {
+      "title": "Importer opskrift",
+      "label": "Opskrift-URL",
+      "placeholder": "https://eksempel.dk/din-opskrift",
+      "failed": "Kunne ikke importere opskrift",
+      "failedWithAI": "Kunne ikke importere opskrift med AI"
+    },
+    "clipboard": {
+      "title": "Importér en opskrift fra det link, du har kopieret?"
+    },
+    "paste": {
+      "title": "Importer fra indsætning",
+      "label": "Opskrifttekst eller JSON-LD",
+      "placeholder": "Indsæt en opskrift (fritekst) eller JSON-LD her...",
+      "characters": "{count} / {max} tegn",
+      "tooLarge": "Indsætningen er for stor",
+      "maxCharacters": "Maksimalt {max} tegn pr. opskrift",
+      "importing": "Importerer opskrift...",
+      "importingWithAI": "Importerer opskrift med AI...",
+      "inProgress": "Importering i gang, vent venligst...",
+      "failed": "Importering mislykkedes"
+    },
+    "image": {
+      "title": "Importer fra billede",
+      "dropzone": "Slip billeder her eller klik for at gennemse",
+      "paste": "for at indsætte",
+      "formats": "Understøtter JPG, PNG, WebP. Maks. 10 MB pr. fil.",
+      "invalidType": "Ugyldig filtype",
+      "notSupported": "{name} er ikke et understøttet billedformat",
+      "tooLarge": "Filen er for stor",
+      "exceeds": "{name} overstiger grænsen på 10 MB",
+      "tooMany": "For mange filer",
+      "maxFiles": "Maksimalt {max} filer er tilladt",
+      "importing": "Importerer opskrift fra billeder...",
+      "analyzing": "Analyserer dine billeder, vent venligst...",
+      "failed": "Importering mislykkedes",
+      "selectedCount": "{count} billeder valgt – de kombineres til én opskrift",
+      "library": "Bibliotek",
+      "takePhoto": "Tag billede",
+      "counter": "{count} / {max} billeder",
+      "importFromCount": "Importer fra {count, plural, one {# billede} other {# billeder}}"
+    },
+    "menu": {
+      "description": "Importer fra en URL, scan et billede eller start fra bunden."
+    }
+  },
+  "formatting": {
+    "title": "Formateringstips",
+    "heading": "Start en linje med <strong>#</strong> for en overskrift",
+    "bold": "Omslut med <strong>**dobbelte stjerner**</strong> for fed skrift",
+    "recipeLink": "Skriv <strong>/opskriftsnavn</strong> for at linke til en anden opskrift",
+    "ingredientMention": "Skriv <strong>@</strong> for at tilknytte en ingrediens til trinnet — ordet lander i sætningen, tilknytningen bliver en brik nedenunder",
+    "helpAriaLabel": "Hjælp til formatering"
+  },
+  "tagInput": {
+    "placeholder": "Skriv tags adskilt af mellemrum..."
+  },
+  "recurrence": {
+    "title": "Gentag",
+    "frequency": "Hyppighed",
+    "interval": "Interval",
+    "onDay": "På dag",
+    "daily": "Dagligt",
+    "weekly": "Ugentligt",
+    "monthly": "Månedligt",
+    "day": "dag",
+    "days": "dage",
+    "week": "uge",
+    "weeks": "uger",
+    "month": "måned",
+    "months": "måneder",
+    "next": "Næste:",
+    "every": "Hver",
+    "everyOther": "Hver anden",
+    "on": "på",
+    "today": "i dag",
+    "tomorrow": "i morgen",
+    "weekdays": {
+      "sun": "Søn",
+      "mon": "Man",
+      "tue": "Tir",
+      "wed": "Ons",
+      "thu": "Tor",
+      "fri": "Fre",
+      "sat": "Lør"
+    },
+    "weekdaysFull": {
+      "0": "Mandag",
+      "1": "Tirsdag",
+      "2": "Onsdag",
+      "3": "Torsdag",
+      "4": "Fredag",
+      "5": "Lørdag",
+      "6": "Søndag"
+    }
+  },
+  "badges": {
+    "new": "Ny"
+  },
+  "timer": {
+    "done": "Færdig",
+    "done_action": "Færdig",
+    "one": "Timer",
+    "other": "Timere",
+    "label_one": "1 timer",
+    "label_other": "{count} timere",
+    "notification_title": "Timer færdig",
+    "notification_body": "{label} er færdig!",
+    "notifications_disabled": "Notifikationer er deaktiveret",
+    "notifications_disabled_hint": "Aktiver notifikationer i dine browserindstillinger for at modtage alarmer, når timere afsluttes i baggrunden."
+  },
+  "offlineStatus": {
+    "title": "Connection & offline",
+    "connection": {
+      "heading": "Connection",
+      "live": "Live",
+      "offline": "Offline",
+      "forced": "Offline (forced)",
+      "liveDescription": "Connected to Norish. Changes sync as you make them.",
+      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
+      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "devBadge": "dev"
+    },
+    "cache": {
+      "heading": "Offline cache",
+      "recipes": "Recipes",
+      "cookbooks": "Kogebøger",
+      "groceries": "Groceries",
+      "stores": "Stores",
+      "planned": "This week",
+      "dataAge": "Data from {when}",
+      "dataAgeUnknown": "Not warmed yet",
+      "wipe": "Clear cached data",
+      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
+      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
+      "wipeConfirm": "Clear",
+      "wipeCancel": "Keep"
+    },
+    "outbox": {
+      "heading": "Queued changes",
+      "empty": "Nothing queued — everything's synced.",
+      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
+      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
+      "syncNow": "Sync now",
+      "retryAll": "Retry all",
+      "discardAll": "Discard all",
+      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
+      "discardConfirm": "Discard",
+      "discardCancel": "Keep",
+      "status": {
+        "pending": "Syncing",
+        "parked": "Needs attention",
+        "conflicted": "Conflict"
+      }
+    },
+    "devToggle": {
+      "heading": "Developer",
+      "force": "Force offline",
+      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
+      "on": "On",
+      "off": "Off"
+    }
+  },
+  "offlineFallback": {
+    "title": "Nora er også offline.",
+    "body": "Denne side er ikke gemt til offline — sider, du har besøgt for nylig, er her stadig.",
+    "backOnlineTitle": "Nora har fundet forbindelsen!",
+    "backOnlineBody": "Norish kan nås igen — prøv at indlæse denne side igen.",
+    "retry": "Prøv igen",
+    "home": "Åbn Norish"
+  },
+  "queuedOffline": {
+    "title": "Du er offline",
+    "description": "Sat i kø — Norish fuldfører dette automatisk, når du er online igen."
+  },
+  "storageUnavailable": {
+    "title": "Kunne ikke starte",
+    "description": "Norish kunne ikke læse sin sikre lagring og ved derfor ikke, hvilken server appen hører til. Intet er ændret. Prøv igen, eller genstart appen.",
+    "detailsLabel": "Tekniske detaljer"
+  },
+  "aiKeyRejected": {
+    "title": "En AI-nøgle virker ikke længere",
+    "description": "Udbyderen har afvist API-nøglen til {blocks} siden {since}. Gem en ny nøgle for at få de AI-funktioner til at virke igen.",
+    "openSettings": "Åbn indstillinger"
+  }
+}

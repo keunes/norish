@@ -1,0 +1,63 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Nuova ricetta",
+      "description": "Scrivi la tua ricetta"
+    },
+    "importUrl": {
+      "title": "Importa da URL",
+      "description": "Incolla un link di una ricetta"
+    },
+    "settings": {
+      "title": "Impostazioni",
+      "description": "Gestisci il tuo account"
+    },
+    "logout": "Esci",
+    "signOutConfirm": {
+      "title": "Scartare le modifiche non sincronizzate?",
+      "description": "{count, plural, one {# modifica fatta offline non ha ancora raggiunto il server.} other {# modifiche fatte offline non hanno ancora raggiunto il server.}} Uscendo, questo lavoro in attesa verrà scartato definitivamente e i dati offline del tuo account verranno rimossi da questo dispositivo."
+    },
+    "version": {
+      "updateAvailable": "v{version} disponibile"
+    }
+  },
+  "theme": {
+    "title": "Tema",
+    "loading": "Caricamento…",
+    "light": "Modalità chiara",
+    "dark": "Modalità scura",
+    "system": "Predefinito di sistema"
+  },
+  "nav": {
+    "home": "Ricette",
+    "calendar": "Calendario",
+    "groceries": "Spesa"
+  },
+  "mobile": {
+    "searchPlaceholder": "Cerca ricette...",
+    "toggleSearch": "Attiva/disattiva ricerca",
+    "goBack": "Torna indietro"
+  },
+  "archiveImporter": {
+    "uploading": "Caricamento…",
+    "uploadFile": "Carica un file",
+    "dragDrop": "o trascina e rilascia",
+    "formats": ".norishrecipes (Norish), .melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor/Recipe Keeper)",
+    "dropzoneLabel": "Carica un file di archivio ricette",
+    "uploadingFile": "Caricamento file…",
+    "processing": "Elaborazione: {details}",
+    "complete": "Completato: {details}",
+    "imported": "{count} importate",
+    "errors": "{count, plural, one {# errore} other {# errori}}",
+    "ofTotal": "{current} di {total}",
+    "progressLabel": "Avanzamento dell'importazione",
+    "showNotes": "Mostra {count, plural, one {# nota di importazione} other {# note di importazione}}",
+    "hideNotes": "Nascondi {count, plural, one {# nota di importazione} other {# note di importazione}}",
+    "toasts": {
+      "startTitle": "Importazione ricette avviata",
+      "startDescription": "{count, plural, one {Importazione di # ricetta…} other {Importazione di # ricette…}}",
+      "completeTitle": "Importazione ricette completata",
+      "completeDescription": "{imported, plural, one {# ricetta importata} other {# ricette importate}}{notes, plural, =0 {} one {, # con una nota} other {, # con note}}{errors, plural, =0 {} one {, # errore} other {, # errori}}"
+    }
+  }
+}

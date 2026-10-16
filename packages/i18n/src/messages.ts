@@ -1,3 +1,5 @@
+import type { LocaleCatalogCode } from "./locales";
+
 export const I18N_MESSAGE_SECTIONS = [
   "common",
   "recipes",
@@ -11,7 +13,7 @@ export const I18N_MESSAGE_SECTIONS = [
 type MessageSection = (typeof I18N_MESSAGE_SECTIONS)[number];
 type MessageLoader = () => Promise<{ default: Record<string, unknown> }>;
 
-const MESSAGE_LOADERS: Record<string, Partial<Record<MessageSection, MessageLoader>>> = {
+const MESSAGE_LOADERS: Record<LocaleCatalogCode, Partial<Record<MessageSection, MessageLoader>>> = {
   en: {
     common: () => import("./messages/en/common.json"),
     recipes: () => import("./messages/en/recipes.json"),
@@ -66,6 +68,15 @@ const MESSAGE_LOADERS: Record<string, Partial<Record<MessageSection, MessageLoad
     navbar: () => import("./messages/nl/navbar.json"),
     auth: () => import("./messages/nl/auth.json"),
   },
+  no: {
+    common: () => import("./messages/no/common.json"),
+    recipes: () => import("./messages/no/recipes.json"),
+    groceries: () => import("./messages/no/groceries.json"),
+    calendar: () => import("./messages/no/calendar.json"),
+    settings: () => import("./messages/no/settings.json"),
+    navbar: () => import("./messages/no/navbar.json"),
+    auth: () => import("./messages/no/auth.json"),
+  },
   ko: {
     common: () => import("./messages/ko/common.json"),
     recipes: () => import("./messages/ko/recipes.json"),
@@ -84,11 +95,74 @@ const MESSAGE_LOADERS: Record<string, Partial<Record<MessageSection, MessageLoad
     navbar: () => import("./messages/ru/navbar.json"),
     auth: () => import("./messages/ru/auth.json"),
   },
+  pl: {
+    common: () => import("./messages/pl/common.json"),
+    recipes: () => import("./messages/pl/recipes.json"),
+    groceries: () => import("./messages/pl/groceries.json"),
+    calendar: () => import("./messages/pl/calendar.json"),
+    settings: () => import("./messages/pl/settings.json"),
+    navbar: () => import("./messages/pl/navbar.json"),
+    auth: () => import("./messages/pl/auth.json"),
+  },
+  da: {
+    common: () => import("./messages/da/common.json"),
+    recipes: () => import("./messages/da/recipes.json"),
+    groceries: () => import("./messages/da/groceries.json"),
+    calendar: () => import("./messages/da/calendar.json"),
+    settings: () => import("./messages/da/settings.json"),
+    navbar: () => import("./messages/da/navbar.json"),
+    auth: () => import("./messages/da/auth.json"),
+  },
+  it: {
+    common: () => import("./messages/it/common.json"),
+    recipes: () => import("./messages/it/recipes.json"),
+    groceries: () => import("./messages/it/groceries.json"),
+    calendar: () => import("./messages/it/calendar.json"),
+    settings: () => import("./messages/it/settings.json"),
+    navbar: () => import("./messages/it/navbar.json"),
+    auth: () => import("./messages/it/auth.json"),
+  },
+  "pt-BR": {
+    common: () => import("./messages/pt-BR/common.json"),
+    recipes: () => import("./messages/pt-BR/recipes.json"),
+    groceries: () => import("./messages/pt-BR/groceries.json"),
+    calendar: () => import("./messages/pt-BR/calendar.json"),
+    settings: () => import("./messages/pt-BR/settings.json"),
+    navbar: () => import("./messages/pt-BR/navbar.json"),
+    auth: () => import("./messages/pt-BR/auth.json"),
+  },
+  bg: {
+    common: () => import("./messages/bg/common.json"),
+    recipes: () => import("./messages/bg/recipes.json"),
+    groceries: () => import("./messages/bg/groceries.json"),
+    calendar: () => import("./messages/bg/calendar.json"),
+    settings: () => import("./messages/bg/settings.json"),
+    navbar: () => import("./messages/bg/navbar.json"),
+    auth: () => import("./messages/bg/auth.json"),
+  },
+  fi: {
+    common: () => import("./messages/fi/common.json"),
+    recipes: () => import("./messages/fi/recipes.json"),
+    groceries: () => import("./messages/fi/groceries.json"),
+    calendar: () => import("./messages/fi/calendar.json"),
+    settings: () => import("./messages/fi/settings.json"),
+    navbar: () => import("./messages/fi/navbar.json"),
+    auth: () => import("./messages/fi/auth.json"),
+  },
+  uk: {
+    common: () => import("./messages/uk/common.json"),
+    recipes: () => import("./messages/uk/recipes.json"),
+    groceries: () => import("./messages/uk/groceries.json"),
+    calendar: () => import("./messages/uk/calendar.json"),
+    settings: () => import("./messages/uk/settings.json"),
+    navbar: () => import("./messages/uk/navbar.json"),
+    auth: () => import("./messages/uk/auth.json"),
+  },
 };
 
 export async function loadLocaleMessages(locale: string): Promise<Record<string, unknown>> {
   const messages: Record<string, unknown> = {};
-  const localeLoaders = MESSAGE_LOADERS[locale] ?? {};
+  const localeLoaders = MESSAGE_LOADERS[locale as LocaleCatalogCode] ?? {};
 
   for (const section of I18N_MESSAGE_SECTIONS) {
     const loadSection = localeLoaders[section];

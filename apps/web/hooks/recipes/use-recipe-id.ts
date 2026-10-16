@@ -1,9 +1,10 @@
 "use client";
 
 import type { RecipeIdResult } from "@norish/shared-react/hooks";
+import { createUseRecipeId } from "@norish/shared-react/hooks/recipes/recipe";
 
-import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
+const useSharedRecipeId = createUseRecipeId();
 
 export type { RecipeIdResult };
 
-export const useRecipeId = sharedRecipeFamilyHooks.useRecipeId;
+export const useRecipeId = useSharedRecipeId;

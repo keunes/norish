@@ -1,0 +1,17 @@
+services:
+  db:
+    container_name: norish-db-local
+    ports:
+      - "5432:5432"
+
+  obscura:
+    container_name: norish-obscura-local
+    ports:
+      # Loopback only: this is here so a developer's `pnpm run dev` on the host
+      # can reach the browser, not so the CDP server faces the network.
+      - "127.0.0.1:9222:9222"
+
+  redis:
+    container_name: norish-redis-local
+    ports:
+      - "6379:6379"

@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 type IngredientWithAmount = { amount?: number | string | null };
 
-export type ScaledIngredient<T extends IngredientWithAmount> = T & {
-  originalAmount?: string | null;
+/** The ingredient at the chosen servings, its amount always a number. */
+export type ScaledIngredient<T extends IngredientWithAmount> = Omit<T, "amount"> & {
+  amount: number | null;
 };
 
 export type ServingsScalerResult<T extends IngredientWithAmount> = {
@@ -25,37 +26,23 @@ export function useServingsScaler<T extends IngredientWithAmount>(
   const [servings, setServingsState] = useState<number>(
     Math.max(0.125, initialServings ?? originalServings)
   );
-  const [scaledIngredients, setScaledIngredients] = useState<ScaledIngredient<T>[]>([]);
 
-  useEffect(() => {
+  const scaledIngredients = useMemo<ScaledIngredient<T>[]>(() => {
     if (ingredients.length === 0) {
-      setScaledIngredients([]);
-
-      return;
+      return [];
     }
 
-    const scaled = ingredients.map((ing) => {
-      const baseAmount = ing.amount?.toString() ?? null;
-      let displayAmount = baseAmount;
-
-      if (baseAmount && originalServings > 0 && servings !== originalServings) {
-        const amountNum = Number(baseAmount);
-
-        if (!isNaN(amountNum) && amountNum > 0) {
-          const scaledValue = Math.round((amountNum / originalServings) * servings * 10000) / 10000;
-
-          displayAmount = scaledValue.toString();
-        }
-      }
+    return ingredients.map((ing) => {
+      const base = ing.amount === null || ing.amount === undefined ? NaN : Number(ing.amount);
+      const amount = Number.isFinite(base) ? base : null;
+      const scale =
+        amount !== null && amount > 0 && originalServings > 0 && servings !== originalServings;
 
       return {
         ...ing,
-        amount: displayAmount,
-        originalAmount: baseAmount,
-      } as ScaledIngredient<T>;
+        amount: scale ? Math.round((amount / originalServings) * servings * 10000) / 10000 : amount,
+      };
     });
-
-    setScaledIngredients(scaled);
   }, [ingredients, servings, originalServings]);
 
   const setServings = useCallback((newServings: number) => {

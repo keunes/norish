@@ -2,11 +2,13 @@
  * AI Provider Listing - List available models from providers.
  */
 
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
-import type { AIProvider, AvailableModel } from "./types";
+import { Ollama } from "ollama";
 
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
+import type { AIProvider, AvailableModel } from "../runtime/types";
+import { normalizeOllamaEndpoint, normalizeOpenAICompatibleEndpoint } from "../runtime/endpoints";
 
 // ============================================================================
 // Constants
@@ -14,6 +16,56 @@ import { aiLogger } from "@norish/shared-server/logger";
 
 /** Keywords for identifying audio/transcription models. */
 const AUDIO_MODEL_KEYWORDS = ["whisper", "audio", "speech", "transcri", "voice"];
+
+/** How each provider is named back to the administrator who configured it. */
+const PROVIDER_LABELS: Record<string, string> = {
+  openai: "OpenAI",
+  azure: "Azure OpenAI",
+  anthropic: "Anthropic",
+  google: "Google",
+  mistral: "Mistral",
+  deepseek: "DeepSeek",
+  perplexity: "Perplexity",
+  groq: "Groq",
+  ollama: "Ollama",
+  "lm-studio": "LM Studio",
+  "generic-openai": "The endpoint",
+};
+
+function providerLabel(provider: string): string {
+  return PROVIDER_LABELS[provider] ?? provider;
+}
+
+/**
+ * A provider that was asked and refused, or could not be reached at all.
+ *
+ * Distinct from the empty list, which means "there is nothing to ask with yet".
+ * Collapsing the two is how a rejected API key came to look identical to a
+ * broken feature: the administrator sees an empty dropdown either way and has
+ * nothing to act on.
+ *
+ * Carries the parts as well as a sentence, because the sentence the reader sees
+ * is the UI's to write in their language.
+ */
+export class ModelListingError extends Error {
+  readonly provider: string;
+
+  constructor(
+    provider: string,
+    readonly status?: number,
+    readonly statusText?: string
+  ) {
+    const label = providerLabel(provider);
+
+    super(
+      status
+        ? `${label} refused the model list request (${status}${statusText ? ` ${statusText}` : ""})`
+        : `Could not reach ${label} to list models`
+    );
+    this.provider = label;
+    this.name = "ModelListingError";
+  }
+}
 
 /**
  * Check if a model ID/name matches audio model keywords.
@@ -68,16 +120,26 @@ async function fetchModelsRaw(options: FetchModelsOptions): Promise<RawModel[]> 
     if (!response.ok) {
       aiLogger.debug({ status: response.status, provider }, `${provider} models request failed`);
 
-      return [];
+      throw new ModelListingError(provider, response.status, response.statusText);
     }
 
     const data = await response.json();
 
-    return data[dataPath] || [];
+    if (!data || typeof data !== "object") {
+      return [];
+    }
+
+    const models = (data as Record<string, unknown>)[dataPath];
+
+    return Array.isArray(models) ? (models as RawModel[]) : [];
   } catch (error) {
+    if (error instanceof ModelListingError) {
+      throw error;
+    }
+
     aiLogger.debug({ err: error, provider }, `Failed to list ${provider} models`);
 
-    return [];
+    throw new ModelListingError(provider);
   }
 }
 
@@ -92,11 +154,21 @@ type ModelMapper = (m: RawModel) => AvailableModel;
 // Provider Configurations
 // ============================================================================
 
+/** What a model is listed for: the AI settings' text models, or Image Generation's. */
+export type ModelPurpose = "text" | "image";
+
 interface ProviderConfig {
   url: string | ((apiKey: string) => string);
   headers: (apiKey: string) => Record<string, string>;
   dataPath?: "data" | "models";
   filter?: ModelFilter;
+  /**
+   * Which of the provider's models can draw, by the names its image models
+   * go by. A suggestion only (ADR-0014): the field still takes any name, so a
+   * new image model this does not know is typed rather than refused. A
+   * provider with none lists nothing for Image Generation.
+   */
+  imageFilter?: ModelFilter;
   mapper: ModelMapper;
 }
 
@@ -119,10 +191,16 @@ const providerConfigs: Record<string, ProviderConfig> = {
         !id.startsWith("ft:")
       );
     },
+    // The names @ai-sdk/openai itself reads as image models.
+    imageFilter: (m) => /^(dall-e-|gpt-image-|chatgpt-image-)/.test(m.id.toLowerCase()),
     mapper: (m) => ({
       id: m.id,
       name: m.id,
-      supportsVision: m.id.includes("gpt-4") || m.id.includes("gpt-5") || m.id.includes("o1"),
+      supportsVision:
+        m.id.includes("gpt-4") ||
+        m.id.includes("gpt-5") ||
+        m.id.includes("gpt-6") ||
+        m.id.includes("o1"),
     }),
   },
 
@@ -167,6 +245,8 @@ const providerConfigs: Record<string, ProviderConfig> = {
     headers: () => ({}),
     dataPath: "models",
     filter: (m) => m.supportedGenerationMethods?.includes("generateContent") ?? false,
+    // @ai-sdk/google draws with Gemini image models only ("gemini-2.5-flash-image"), not Imagen.
+    imageFilter: (m) => /^(models\/)?gemini-.*-image/.test((m.name || m.id).toLowerCase()),
     mapper: (m) => {
       // name format is "models/gemini-1.5-flash" - extract just the model ID
       const id = (m.name || m.id).replace("models/", "");
@@ -193,10 +273,17 @@ const providerConfigs: Record<string, ProviderConfig> = {
 /**
  * List models using provider config.
  */
-async function listModelsWithConfig(provider: string, apiKey: string): Promise<AvailableModel[]> {
+async function listModelsWithConfig(
+  provider: string,
+  apiKey: string,
+  purpose: ModelPurpose
+): Promise<AvailableModel[]> {
   const config = providerConfigs[provider];
 
   if (!config) return [];
+  const filter = purpose === "image" ? config.imageFilter : config.filter;
+
+  if (purpose === "image" && !filter) return [];
 
   const url = typeof config.url === "function" ? config.url(apiKey) : config.url;
   const models = await fetchModelsRaw({
@@ -208,8 +295,8 @@ async function listModelsWithConfig(provider: string, apiKey: string): Promise<A
 
   let result = models;
 
-  if (config.filter) {
-    result = result.filter(config.filter);
+  if (filter) {
+    result = result.filter(filter);
   }
 
   const mapped = result.map(config.mapper).sort((a, b) => a.id.localeCompare(b.id));
@@ -220,34 +307,43 @@ async function listModelsWithConfig(provider: string, apiKey: string): Promise<A
 }
 
 // ============================================================================
-// Ollama (different API structure)
+// Ollama (uses official client)
 // ============================================================================
 
+/** Vision model family keywords from Ollama model metadata. */
+const VISION_FAMILIES = ["clip", "mllama"];
+
+/** Vision model name keywords as a fallback heuristic. */
+const VISION_NAME_KEYWORDS = ["llava", "vision", "bakllava"];
+
 /**
- * List available models from Ollama.
+ * Detect if an Ollama model supports vision from its metadata + name.
+ */
+function isVisionModel(name: string, families?: string[]): boolean {
+  if (families?.some((f) => VISION_FAMILIES.includes(f.toLowerCase()))) return true;
+
+  const lower = name.toLowerCase();
+
+  return VISION_NAME_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+/**
+ * List available models from Ollama using the official client.
  */
 export async function listOllamaModels(endpoint: string): Promise<AvailableModel[]> {
   try {
-    const baseUrl = endpoint.replace(/\/+$/, "");
-    const response = await fetch(`${baseUrl}/api/tags`, {
-      signal: AbortSignal.timeout(5000),
-    });
+    const client = new Ollama({ host: normalizeOllamaEndpoint(endpoint) });
+    const response = await client.list();
 
-    if (!response.ok) return [];
-
-    const data = await response.json();
-    const models: Array<{ name: string }> = data.models || [];
-
-    return models.map((m) => ({
+    return response.models.map((m) => ({
       id: m.name,
       name: m.name,
-      supportsVision:
-        m.name.toLowerCase().includes("llava") ||
-        m.name.toLowerCase().includes("vision") ||
-        m.name.toLowerCase().includes("bakllava"),
+      supportsVision: isVisionModel(m.name, m.details?.families),
     }));
-  } catch {
-    return [];
+  } catch (error) {
+    aiLogger.debug({ err: error }, "Failed to list Ollama models");
+
+    throw new ModelListingError("ollama");
   }
 }
 
@@ -262,12 +358,6 @@ export async function listOpenAICompatibleModels(
   endpoint: string,
   apiKey?: string
 ): Promise<AvailableModel[]> {
-  let baseUrl = endpoint.replace(/\/+$/, "");
-
-  if (baseUrl.endsWith("/v1")) {
-    baseUrl = baseUrl.slice(0, -3);
-  }
-
   const headers: Record<string, string> = {};
 
   if (apiKey) {
@@ -275,10 +365,10 @@ export async function listOpenAICompatibleModels(
   }
 
   const models = await fetchModelsRaw({
-    url: `${baseUrl}/v1/models`,
+    url: `${normalizeOpenAICompatibleEndpoint(endpoint)}/models`,
     headers,
     timeout: 5000,
-    provider: "OpenAI-compatible",
+    provider: "generic-openai",
   });
 
   return models.map((m) => ({
@@ -298,9 +388,9 @@ export async function listOpenAICompatibleModels(
  */
 export async function listModels(
   provider: AIProvider,
-  options: { endpoint?: string; apiKey?: string }
+  options: { endpoint?: string; apiKey?: string; purpose?: ModelPurpose }
 ): Promise<AvailableModel[]> {
-  const { endpoint, apiKey } = options;
+  const { endpoint, apiKey, purpose = "text" } = options;
 
   // Providers with standard config-based listing
   if (providerConfigs[provider]) {
@@ -310,7 +400,7 @@ export async function listModels(
       return [];
     }
 
-    return listModelsWithConfig(provider, apiKey);
+    return listModelsWithConfig(provider, apiKey, purpose);
   }
 
   // Special cases
@@ -368,7 +458,7 @@ export async function listOpenAITranscriptionModels(apiKey: string): Promise<Ava
   const models = await fetchModelsRaw({
     url: "https://api.openai.com/v1/models",
     headers: { Authorization: `Bearer ${apiKey}` },
-    provider: "OpenAI",
+    provider: "openai",
   });
 
   return models
@@ -384,7 +474,7 @@ export async function listGroqTranscriptionModels(apiKey: string): Promise<Avail
   const models = await fetchModelsRaw({
     url: "https://api.groq.com/openai/v1/models",
     headers: { Authorization: `Bearer ${apiKey}` },
-    provider: "Groq",
+    provider: "groq",
   });
 
   return models
@@ -400,12 +490,6 @@ export async function listOpenAICompatibleTranscriptionModels(
   endpoint: string,
   apiKey?: string
 ): Promise<AvailableModel[]> {
-  let baseUrl = endpoint.replace(/\/+$/, "");
-
-  if (baseUrl.endsWith("/v1")) {
-    baseUrl = baseUrl.slice(0, -3);
-  }
-
   const headers: Record<string, string> = {};
 
   if (apiKey) {
@@ -413,10 +497,10 @@ export async function listOpenAICompatibleTranscriptionModels(
   }
 
   const models = await fetchModelsRaw({
-    url: `${baseUrl}/v1/models`,
+    url: `${normalizeOpenAICompatibleEndpoint(endpoint)}/models`,
     headers,
     timeout: 5000,
-    provider: "OpenAI-compatible",
+    provider: "generic-openai",
   });
 
   // Prefer audio models, but return all if none found

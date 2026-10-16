@@ -1,8 +1,7 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import { videoLogger as log } from "@norish/shared-server/logger";
+
 import type { VideoProcessorContext } from "../types";
-
-import { videoLogger as log } from "@norish/api/logger";
-
 import { InstagramProcessor } from "./instagram";
 
 /**

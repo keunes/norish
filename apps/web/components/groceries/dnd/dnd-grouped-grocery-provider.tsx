@@ -1,8 +1,7 @@
 "use client";
 
-import type { DndGroupedGroceryContextValue, DndGroupedGroceryProviderProps } from "./types";
-
 import { createContext, useContext, useMemo } from "react";
+import { useGroupedGroceryDnd } from "@/hooks/groceries/use-grouped-grocery-dnd";
 import {
   DndContext,
   DragOverlay,
@@ -15,9 +14,8 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
+import type { DndGroupedGroceryContextValue, DndGroupedGroceryProviderProps } from "./types";
 import { GroupDragOverlay } from "./group-drag-overlay";
-
-import { useGroupedGroceryDnd } from "@/hooks/groceries/use-grouped-grocery-dnd";
 
 const DndGroupedGroceryContext = createContext<DndGroupedGroceryContextValue | null>(null);
 
@@ -35,6 +33,8 @@ export function DndGroupedGroceryProvider({
   stores,
   groupedGroceries,
   onReorderGroups,
+  aisleFor,
+  onFileGroceryName,
 }: DndGroupedGroceryProviderProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -68,6 +68,8 @@ export function DndGroupedGroceryProvider({
     stores,
     groupedGroceries,
     onReorderGroups,
+    aisleFor,
+    onFileGroceryName,
   });
 
   const contextValue = useMemo<DndGroupedGroceryContextValue>(

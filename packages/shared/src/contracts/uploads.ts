@@ -11,6 +11,13 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
 
 export type AllowedImageMimeType = (typeof ALLOWED_IMAGE_MIME_TYPES)[number];
 
+/** What an Ingredient Icon is made from: the pictures a recipe takes, and an iPhone's. */
+export const ICON_PICTURE_MIME_TYPES = [
+  ...ALLOWED_IMAGE_MIME_TYPES,
+  "image/heic",
+  "image/heif",
+] as const;
+
 /**
  * Set for efficient MIME type lookup
  */
@@ -36,11 +43,13 @@ export type ArchiveImportError = {
 };
 
 /**
- * Skipped recipe during archive import (e.g., duplicates)
+ * Something an imported recipe lost on the way in — a cuisine name this
+ * instance's vocabulary does not know, say. The recipe itself landed; the
+ * note says what did not come with it.
  */
-export type ArchiveSkippedItem = {
+export type ArchiveImportNote = {
   file: string;
-  reason: string;
+  note: string;
 };
 
 /**
@@ -59,8 +68,7 @@ export type ArchiveProgressPayload = {
  */
 export type ArchiveCompletedPayload = {
   imported: number;
-  skipped: number;
-  skippedItems: ArchiveSkippedItem[];
+  notes: ArchiveImportNote[];
   errors: ArchiveImportError[];
 };
 
@@ -79,7 +87,7 @@ export type AllowedOcrMimeType = (typeof ALLOWED_OCR_MIME_TYPES)[number];
 export const ALLOWED_OCR_MIME_SET = new Set<string>(ALLOWED_OCR_MIME_TYPES);
 
 export const MAX_OCR_FILES = 10;
-export const MAX_RECIPE_PASTE_CHARS = 10_000;
+export const MAX_RECIPE_PASTE_CHARS = 100_000;
 
 /**
  * Allowed video MIME types for uploads

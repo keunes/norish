@@ -1,20 +1,18 @@
+import type { CreateEventInput } from "@norish/shared-server/caldav/client";
 import type { Slot } from "@norish/shared/contracts";
-import type { CreateEventInput } from "./client";
-
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import {
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
-
-import { CalDavClient } from "./client";
+import { CalDavClient } from "@norish/shared-server/caldav/client";
 
 export function truncateErrorMessage(error: string): string {
   return error.length <= 500 ? error : error.substring(0, 497) + "...";
 }
 
 function parseTimeRange(timeRange: string): { start: string; end: string } {
-  const [start, end] = timeRange.split("-");
+  const [start = "00:00", end = "00:00"] = timeRange.split("-");
 
   return { start: start.trim(), end: end.trim() };
 }
@@ -37,12 +35,19 @@ export function getEventTimeRange(
   };
 
   const timeRange = slotTimeMap[slot];
+
+  if (!timeRange) {
+    throw new Error(`Missing configured time range for slot: ${slot}`);
+  }
+
   const { start: startTime, end: endTime } = parseTimeRange(timeRange);
 
-  const [year, month, day] = date.split("-").map(Number);
-  const [startHour, startMinute] = startTime.split(":").map(Number);
-  const [endHour, endMinute] = endTime.split(":").map(Number);
+  const [year = 1970, month = 1, day = 1] = date.split("-").map(Number);
+  const [startHour = 0, startMinute = 0] = startTime.split(":").map(Number);
+  const [endHour = 0, endMinute = 0] = endTime.split(":").map(Number);
 
+  // A slot is a wall-clock time ("dinner at 18:00" wherever the household is),
+  // carried in the UTC fields and written to the calendar as a floating time.
   return {
     start: new Date(Date.UTC(year, month - 1, day, startHour, startMinute)),
     end: new Date(Date.UTC(year, month - 1, day, endHour, endMinute)),
@@ -68,14 +73,12 @@ export async function syncPlannedItem(
     throw new Error("CalDAV not configured or disabled");
   }
 
-  // Check if we need to update an existing event
+  // An item we have already synced keeps its event: writing over the same uid
+  // is what makes a move or a retitle land on the existing entry instead of
+  // adding a second one and orphaning the first.
   const syncStatus = await getCaldavSyncStatusByItemId(userId, itemId);
   const isNew = !syncStatus;
-
-  // If updating and title changed, delete old event first
-  if (syncStatus?.caldavEventUid && syncStatus.eventTitle !== eventTitle) {
-    await deletePlannedItem(userId, itemId);
-  }
+  const existingEventUid = syncStatus?.caldavEventUid ?? undefined;
 
   const client = new CalDavClient({
     serverUrl: config.serverUrl,
@@ -97,9 +100,11 @@ export async function syncPlannedItem(
     url,
   };
 
-  const created = await client.createEvent(eventInput);
+  const written = existingEventUid
+    ? await client.updateEvent({ ...eventInput, uid: existingEventUid })
+    : await client.createEvent(eventInput);
 
-  return { uid: created.uid, isNew };
+  return { uid: written.uid, isNew };
 }
 
 export async function deletePlannedItem(userId: string, itemId: string): Promise<void> {

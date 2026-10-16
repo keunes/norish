@@ -1,5 +1,7 @@
-import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { isQueuedOutboxSignal, markOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 import {
   createMockGroceriesData,
@@ -18,8 +20,14 @@ const _mockMutations = {
   createRecurring: vi.fn(),
   updateRecurring: vi.fn(),
   deleteRecurring: vi.fn(),
+  detachRecurring: vi.fn(),
   checkRecurring: vi.fn(),
+  assignToStore: vi.fn(),
+  reorderInStore: vi.fn(),
+  markAllDone: vi.fn(),
+  deleteDone: vi.fn(),
 };
+const showErrorToast = vi.hoisted(() => vi.fn());
 
 // Mock the dependencies
 vi.mock("@tanstack/react-query", async () => {
@@ -27,10 +35,9 @@ vi.mock("@tanstack/react-query", async () => {
 
   return {
     ...actual,
-    useMutation: vi.fn((_options) => {
-      // Return mock mutation based on context
+    useMutation: vi.fn((options: { mutationFn?: (...args: unknown[]) => unknown } | undefined) => {
       return {
-        mutate: vi.fn(),
+        mutate: options?.mutationFn ?? vi.fn(),
         mutateAsync: vi.fn().mockResolvedValue("mock-id"),
         isLoading: false,
         error: null,
@@ -49,18 +56,33 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           queryFn: async () => createMockGroceriesData(),
         }),
       },
-      create: { mutationOptions: vi.fn() },
-      toggle: { mutationOptions: vi.fn() },
-      update: { mutationOptions: vi.fn() },
-      delete: { mutationOptions: vi.fn() },
-      createRecurring: { mutationOptions: vi.fn() },
-      updateRecurring: { mutationOptions: vi.fn() },
-      deleteRecurring: { mutationOptions: vi.fn() },
-      checkRecurring: { mutationOptions: vi.fn() },
-      markAllDone: { mutationOptions: vi.fn() },
-      deleteDone: { mutationOptions: vi.fn() },
-      assignToStore: { mutationOptions: vi.fn() },
-      reorderInStore: { mutationOptions: vi.fn() },
+      create: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.create })) },
+      toggle: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.toggle })) },
+      update: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.update })) },
+      delete: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.delete })) },
+      createRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.createRecurring })),
+      },
+      updateRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.updateRecurring })),
+      },
+      deleteRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteRecurring })),
+      },
+      detachRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.detachRecurring })),
+      },
+      checkRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.checkRecurring })),
+      },
+      markAllDone: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.markAllDone })) },
+      deleteDone: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteDone })) },
+      assignToStore: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.assignToStore })),
+      },
+      reorderInStore: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.reorderInStore })),
+      },
     },
     config: {
       units: {
@@ -85,6 +107,10 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   }),
 }));
 
+vi.mock("@/hooks/groceries/error-adapter", () => ({
+  useGroceriesErrorAdapter: () => ({ showErrorToast }),
+}));
+
 vi.mock("@/hooks/config", () => ({
   useUnitsQuery: () => ({
     units: {
@@ -107,7 +133,7 @@ vi.mock("@/hooks/config", () => ({
 vi.mock("@norish/shared/lib/helpers", () => ({
   parseIngredientWithDefaults: vi.fn((raw: string) => [
     {
-      description: raw.trim(),
+      description: raw.trim().replace(/^\d+(?:\.\d+)?\s+\S+\s+/u, ""),
       quantity: 1,
       unitOfMeasure: "piece",
     },
@@ -119,8 +145,14 @@ vi.mock("@norish/shared/lib/recurrence/calculator", () => ({
   getTodayString: vi.fn(() => "2025-01-15"),
 }));
 
+let useGroceriesMutations: (typeof import("@/hooks/groceries/use-groceries-mutations"))["useGroceriesMutations"];
+
 describe("useGroceriesMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
+
+  beforeAll(async () => {
+    ({ useGroceriesMutations } = await import("@/hooks/groceries/use-groceries-mutations"));
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -137,8 +169,6 @@ describe("useGroceriesMutations", () => {
 
       queryClient.setQueryData(["groceries", "list"], initialData);
 
-      // Import and render the hook
-      const { useGroceriesMutations } = await import("@/hooks/groceries/use-groceries-mutations");
       const { result } = renderHook(() => useGroceriesMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -165,6 +195,107 @@ describe("useGroceriesMutations", () => {
       expect(typeof result.current.deleteRecurringGrocery).toBe("function");
       expect(typeof result.current.getRecurringGroceryForGrocery).toBe("function");
     });
+
+    it("adds created groceries to the cache optimistically", async () => {
+      const initialData = createMockGroceriesData(
+        [createMockGrocery({ id: "existing", name: "Milk", storeId: "store-1", sortOrder: 0 })],
+        []
+      );
+
+      queryClient.setQueryData(["groceries", "list"], initialData);
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.createGrocery("1 piece Apples", "store-1");
+      });
+
+      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
+        "groceries",
+        "list",
+      ]);
+
+      expect(data?.groceries[0]).toMatchObject({
+        name: "Apples",
+        amount: 1,
+        unit: "piece",
+        isDone: false,
+        storeId: "store-1",
+        sortOrder: 0,
+      });
+      expect(data?.groceries[1]).toMatchObject({
+        id: "existing",
+        sortOrder: 1,
+      });
+    });
+
+    it("removes an optimistic grocery and reports a failed Outbox admission", () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([createMockGrocery({ id: "existing", name: "Milk" })], [])
+      );
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.createGrocery("Apples"));
+
+      const options = _mockMutations.create.mock.calls[0]?.[1] as
+        { onError: (error: unknown) => void } | undefined;
+
+      const admissionError = new TypeError("Failed to fetch");
+
+      markOutboxAdmissionFailed(admissionError);
+      expect(isQueuedOutboxSignal(admissionError)).toBe(false);
+      expect(options?.onError).toEqual(expect.any(Function));
+      act(() => options?.onError(admissionError));
+
+      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
+        "groceries",
+        "list",
+      ]);
+
+      expect(showErrorToast).toHaveBeenCalledWith(
+        "The grocery change was not saved. Please try again."
+      );
+      expect(data?.groceries.map((grocery) => grocery.id)).toEqual(["existing"]);
+    });
+
+    it("rolls back a grocery check-off and reports a failed Outbox admission", () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([createMockGrocery({ id: "g1", isDone: false, version: 3 })], [])
+      );
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.toggleGroceries(["g1"], true));
+
+      const options = _mockMutations.toggle.mock.calls[0]?.[1] as
+        { onError: (error: unknown) => void } | undefined;
+
+      const admissionError = new TypeError("Failed to fetch");
+
+      markOutboxAdmissionFailed(admissionError);
+      expect(isQueuedOutboxSignal(admissionError)).toBe(false);
+      expect(options?.onError).toEqual(expect.any(Function));
+      act(() => options?.onError(admissionError));
+
+      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
+        "groceries",
+        "list",
+      ]);
+
+      expect(showErrorToast).toHaveBeenCalledWith(
+        "The grocery change was not saved. Please try again."
+      );
+      expect(data?.groceries[0]).toMatchObject({ id: "g1", isDone: false, version: 3 });
+    });
   });
 
   describe("getRecurringGroceryForGrocery", () => {
@@ -176,7 +307,6 @@ describe("useGroceriesMutations", () => {
 
       queryClient.setQueryData(["groceries", "list"], initialData);
 
-      const { useGroceriesMutations } = await import("@/hooks/groceries/use-groceries-mutations");
       const { result } = renderHook(() => useGroceriesMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -193,7 +323,6 @@ describe("useGroceriesMutations", () => {
 
       queryClient.setQueryData(["groceries", "list"], initialData);
 
-      const { useGroceriesMutations } = await import("@/hooks/groceries/use-groceries-mutations");
       const { result } = renderHook(() => useGroceriesMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -208,7 +337,6 @@ describe("useGroceriesMutations", () => {
 
       queryClient.setQueryData(["groceries", "list"], initialData);
 
-      const { useGroceriesMutations } = await import("@/hooks/groceries/use-groceries-mutations");
       const { result } = renderHook(() => useGroceriesMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -216,6 +344,131 @@ describe("useGroceriesMutations", () => {
       const found = result.current.getRecurringGroceryForGrocery("non-existent");
 
       expect(found).toBeNull();
+    });
+  });
+
+  describe("versioned mutation inputs", () => {
+    it("passes the current grocery version on update", async () => {
+      const grocery = createMockGrocery({ id: "g1", version: 4, name: "Milk" });
+
+      queryClient.setQueryData(["groceries", "list"], createMockGroceriesData([grocery], []));
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      result.current.updateGrocery("g1", "Oat milk");
+
+      expect(_mockMutations.update).toHaveBeenCalledWith(
+        { groceryId: "g1", raw: "Oat milk", version: 4 },
+        expect.any(Object)
+      );
+    });
+
+    it("passes grocery versions on delete", async () => {
+      const groceries = [
+        createMockGrocery({ id: "g1", version: 2 }),
+        createMockGrocery({ id: "g2", version: 5 }),
+      ];
+
+      queryClient.setQueryData(["groceries", "list"], createMockGroceriesData(groceries, []));
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      result.current.deleteGroceries(["g1", "g2"]);
+
+      expect(_mockMutations.delete).toHaveBeenCalledWith(
+        {
+          groceries: [
+            { id: "g1", version: 2 },
+            { id: "g2", version: 5 },
+          ],
+        },
+        expect.any(Object)
+      );
+    });
+
+    it("passes grocery and recurring versions when toggling a recurring grocery", async () => {
+      const grocery = createMockGrocery({ id: "g1", version: 3, recurringGroceryId: "r1" });
+      const recurring = createMockRecurringGrocery({ id: "r1", version: 7 });
+
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([grocery], [recurring])
+      );
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      result.current.toggleRecurringGrocery("r1", "g1", true);
+
+      expect(_mockMutations.checkRecurring).toHaveBeenCalledWith(
+        {
+          recurringGroceryId: "r1",
+          recurringVersion: 7,
+          groceryId: "g1",
+          groceryVersion: 3,
+          isDone: true,
+        },
+        expect.any(Object)
+      );
+    });
+
+    it("sends an id/version snapshot when marking all groceries done in a store", async () => {
+      const groceries = [
+        createMockGrocery({ id: "g1", version: 2, storeId: "store-1", isDone: false }),
+        createMockGrocery({ id: "g2", version: 5, storeId: "store-1", isDone: false }),
+        createMockGrocery({ id: "g3", version: 8, storeId: "store-1", isDone: true }),
+      ];
+
+      queryClient.setQueryData(["groceries", "list"], createMockGroceriesData(groceries, []));
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      result.current.markAllDoneInStore("store-1");
+
+      expect(_mockMutations.markAllDone).toHaveBeenCalledWith(
+        {
+          storeId: "store-1",
+          groceries: [
+            { id: "g1", version: 2 },
+            { id: "g2", version: 5 },
+          ],
+        },
+        expect.any(Object)
+      );
+    });
+
+    it("sends an id/version snapshot when deleting done groceries in a store", async () => {
+      const groceries = [
+        createMockGrocery({ id: "g1", version: 2, storeId: "store-1", isDone: true }),
+        createMockGrocery({ id: "g2", version: 5, storeId: "store-1", isDone: true }),
+        createMockGrocery({ id: "g3", version: 8, storeId: "store-1", isDone: false }),
+      ];
+
+      queryClient.setQueryData(["groceries", "list"], createMockGroceriesData(groceries, []));
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      result.current.deleteDoneInStore("store-1");
+
+      expect(_mockMutations.deleteDone).toHaveBeenCalledWith(
+        {
+          storeId: "store-1",
+          groceries: [
+            { id: "g1", version: 2 },
+            { id: "g2", version: 5 },
+          ],
+        },
+        expect.any(Object)
+      );
     });
   });
 });

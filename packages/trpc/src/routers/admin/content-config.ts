@@ -1,8 +1,9 @@
-import type { PromptsConfig, TimerKeywordsConfig } from "@norish/config/zod/server-config";
-
 import { z } from "zod";
+
+import type { TimerKeywordsConfig } from "@norish/config/zod/server-config";
 import {
   ContentIndicatorsSchema,
+  IngredientWordsMapSchema,
   PromptsConfigInputSchema,
   RecurrenceConfigSchema,
   ServerConfigKeys,
@@ -10,6 +11,9 @@ import {
   UnitsMapSchema,
 } from "@norish/config/zod/server-config";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { getEffectivePrompts, loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
+import { pruneToOverrides } from "@norish/shared-server/ai/prompts/overrides";
+import { forgetSpellingRules } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
@@ -72,6 +76,40 @@ const updateUnits = adminProcedure.input(z.string()).mutation(async ({ input, ct
     ctx.user.id,
     false
   );
+  forgetSpellingRules();
+
+  return { success: true };
+});
+
+/**
+ * Update the ingredient words names are read by (ADR-0037). Accepts a JSON
+ * string, parsed and validated, and marks the words as the administrator's,
+ * so a release's new words no longer replace them.
+ */
+const updateIngredientWords = adminProcedure.input(z.string()).mutation(async ({ input, ctx }) => {
+  log.info({ userId: ctx.user.id }, "Updating ingredient words config");
+
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(input);
+  } catch {
+    return { success: false, error: "Invalid JSON format" };
+  }
+
+  const result = IngredientWordsMapSchema.safeParse(parsed);
+
+  if (!result.success) {
+    return { success: false, error: result.error.message };
+  }
+
+  await setConfig(
+    ServerConfigKeys.INGREDIENT_WORDS,
+    { words: result.data, isOverridden: true },
+    ctx.user.id,
+    false
+  );
+  forgetSpellingRules();
 
   return { success: true };
 });
@@ -103,24 +141,35 @@ const updateRecurrenceConfig = adminProcedure.input(z.string()).mutation(async (
 });
 
 /**
- * Get prompts config.
- * Returns the current prompts from the database.
+ * Get prompts for the admin surface: stored overrides merged over the
+ * shipped defaults, so a release's new prompt text shows up unless the
+ * administrator wrote their own.
  */
 const getPrompts = adminProcedure.query(async () => {
-  return await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
+  const { values, overriddenFields } = await getEffectivePrompts();
+
+  return { ...values, isOverridden: overriddenFields.length > 0 };
 });
 
 /**
  * Update prompts config.
- * Accepts prompt strings and marks as admin-overridden.
+ *
+ * Only genuine overrides are stored: a submitted prompt equal to the shipped
+ * default (or blank) carries no intent and is dropped, so saving the form
+ * never pins prompts the administrator did not change — and reverting a
+ * prompt to the default text un-pins it.
  */
 const updatePrompts = adminProcedure
   .input(PromptsConfigInputSchema)
   .mutation(async ({ input, ctx }) => {
-    log.info({ userId: ctx.user.id }, "Updating prompts config");
+    const { overrides } = pruneToOverrides(input, loadDefaultPrompts());
 
-    // Mark as overridden
-    await setConfig(ServerConfigKeys.PROMPTS, { ...input, isOverridden: true }, ctx.user.id, false);
+    log.info(
+      { userId: ctx.user.id, overriddenFields: Object.keys(overrides) },
+      "Updating prompts config"
+    );
+
+    await setConfig(ServerConfigKeys.PROMPTS, overrides, ctx.user.id, false);
 
     return { success: true };
   });
@@ -156,6 +205,7 @@ const updateTimerKeywords = adminProcedure
 export const contentConfigProcedures = router({
   updateContentIndicators,
   updateUnits,
+  updateIngredientWords,
   updateRecurrenceConfig,
   getPrompts,
   updatePrompts,

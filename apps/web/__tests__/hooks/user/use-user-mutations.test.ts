@@ -196,7 +196,7 @@ describe("useUserMutations", () => {
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
 
       const initialData = createMockUserSettingsData(
-        createMockUser({ id: "user-1", name: "Test User", preferences: { timersEnabled: true } }),
+        createMockUser({ id: "user-1", name: "Test User", preferences: { locale: "en" } }),
         []
       );
 
@@ -209,13 +209,13 @@ describe("useUserMutations", () => {
       });
 
       // Start the mutation (don't await yet)
-      const resPromise = result.current.updatePreferences({ timersEnabled: false });
+      const resPromise = result.current.updatePreferences({ locale: "de-informal" });
 
       // Verify optimistic update was applied before mutation resolves
       await vi.waitFor(() => {
         const optimistic = queryClient.getQueryData(mockUserQueryKey) as any;
 
-        expect(optimistic.user.preferences.timersEnabled).toBe(false);
+        expect(optimistic.user.preferences.locale).toBe("de-informal");
       });
 
       // Now resolve the mutation with failure
@@ -235,7 +235,7 @@ describe("useUserMutations", () => {
     it("merges server response into cache on successful preference update", async () => {
       vi.resetModules();
 
-      const serverPreferences = { timersEnabled: false, showConversionButton: true };
+      const serverPreferences = { locale: "fr" };
 
       vi.doMock("@/app/providers/trpc-provider", () => ({
         useTRPC: () => ({
@@ -279,7 +279,7 @@ describe("useUserMutations", () => {
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
 
       const initialData = createMockUserSettingsData(
-        createMockUser({ id: "user-1", name: "Test User", preferences: { timersEnabled: true } }),
+        createMockUser({ id: "user-1", name: "Test User", preferences: { locale: "en" } }),
         []
       );
 
@@ -289,7 +289,7 @@ describe("useUserMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const res = await result.current.updatePreferences({ timersEnabled: false });
+      const res = await result.current.updatePreferences({ locale: "de-informal" });
 
       expect(res.success).toBe(true);
       expect(res.preferences).toEqual(serverPreferences);
@@ -298,6 +298,58 @@ describe("useUserMutations", () => {
       const after = queryClient.getQueryData(mockUserQueryKey) as any;
 
       expect(after.user.preferences).toEqual(serverPreferences);
+    });
+
+    it("keeps the cached preferences when a rename answers with the user", async () => {
+      vi.resetModules();
+
+      vi.doMock("@/app/providers/trpc-provider", () => ({
+        useTRPC: () => ({
+          user: {
+            get: { queryKey: () => mockUserQueryKey },
+            getAllergies: { queryKey: () => mockAllergiesQueryKey },
+            // The server's answer carries no preferences.
+            updateName: {
+              mutationOptions: () => ({
+                mutationFn: async () => ({
+                  success: true,
+                  user: { id: "user-1", email: "a@b.c", name: "Renamed", image: null, version: 5 },
+                }),
+              }),
+            },
+            uploadAvatar: { mutationOptions: vi.fn() },
+            deleteAvatar: { mutationOptions: vi.fn() },
+            deleteAccount: { mutationOptions: vi.fn() },
+            updatePreferences: { mutationOptions: vi.fn() },
+            apiKeys: {
+              create: { mutationOptions: vi.fn() },
+              delete: { mutationOptions: vi.fn() },
+              toggle: { mutationOptions: vi.fn() },
+            },
+            setAllergies: { mutationOptions: vi.fn() },
+          },
+        }),
+      }));
+
+      const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
+      const preferences = { locale: "nl", desktop: { hiddenItems: ["rating"] } };
+
+      queryClient.setQueryData(
+        mockUserQueryKey,
+        createMockUserSettingsData(createMockUser({ id: "user-1", preferences } as never), [])
+      );
+
+      const { result } = renderHook(() => useUserMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await result.current.updateName("Renamed");
+
+      const after = queryClient.getQueryData(mockUserQueryKey) as any;
+
+      expect(after.user.name).toBe("Renamed");
+      expect(after.user.version).toBe(5);
+      expect(after.user.preferences).toEqual(preferences);
     });
   });
 });

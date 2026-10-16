@@ -1,11 +1,40 @@
 import z from "zod";
 
+import { DevicePreferencesSchema } from "./device-preferences";
+
+/**
+ * What happens once a recipe is planned: nothing, the groceries panel for it,
+ * or its lines to buy straight onto the list. Absent means the panel.
+ */
+export const AFTER_PLANNING_CHOICES = ["nothing", "openGroceries", "addGroceries"] as const;
+
+/**
+ * Which measurement system a recipe is converted to as it opens, by AI where
+ * the converted copy has yet to be written. Absent means off: a recipe opens
+ * as it was last shown.
+ */
+export const MEASUREMENT_SYSTEM_CHOICES = [
+  "off",
+  "metric",
+  "us",
+  "metricWithAI",
+  "usWithAI",
+] as const;
+
+/**
+ * The profile's preferences document: the person's own choices, which follow
+ * them to every device, plus a block of Device Preferences per Device Kind.
+ * Every choice is read on its own, so one this version does not know (a
+ * broken block, an `afterPlanning` from a newer version) reads as absent and
+ * never costs the reader the rest; a stored `hidden` key from before Hidden
+ * Items moved per kind is ignored.
+ */
 export const UserPreferencesSchema = z.object({
-  timersEnabled: z.boolean().optional(),
-  showConversionButton: z.boolean().optional(),
-  showRatings: z.boolean().optional(),
-  showFavorites: z.boolean().optional(),
-  locale: z.string().nullable().optional(),
+  locale: z.string().nullable().optional().catch(undefined),
+  afterPlanning: z.enum(AFTER_PLANNING_CHOICES).optional().catch(undefined),
+  measurementSystem: z.enum(MEASUREMENT_SYSTEM_CHOICES).optional().catch(undefined),
+  phone: DevicePreferencesSchema.optional().catch(undefined),
+  desktop: DevicePreferencesSchema.optional().catch(undefined),
 });
 
 export type UserPreferencesDto = z.infer<typeof UserPreferencesSchema>;
@@ -17,6 +46,27 @@ export const UserDtoSchema = z.object({
   email: z.string(),
   name: z.string(),
   image: z.string().nullable().optional(),
+  version: z.number().int().positive(),
   isServerAdmin: z.boolean().optional(),
   preferences: UserPreferencesSchema.optional(),
+});
+
+export const UpdateUserNameInputSchema = z.object({
+  name: z.string().min(1, "Name cannot be empty").max(100, "Name too long"),
+  version: z.number().int().positive(),
+});
+
+export const UpdateUserPreferencesInputSchema = z.object({
+  version: z.number().int().positive(),
+  // Each person-level choice without its fallback, so a write rejects a value
+  // outside its set; the device blocks are written by setDevicePreferences.
+  preferences: z.object({
+    locale: UserPreferencesSchema.shape.locale.unwrap(),
+    afterPlanning: UserPreferencesSchema.shape.afterPlanning.unwrap(),
+    measurementSystem: UserPreferencesSchema.shape.measurementSystem.unwrap(),
+  }),
+});
+
+export const DeleteUserAvatarInputSchema = z.object({
+  version: z.number().int().positive(),
 });

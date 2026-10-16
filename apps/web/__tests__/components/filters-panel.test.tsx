@@ -14,11 +14,11 @@ const filtersState = {
   showFavoritesOnly: false,
   minRating: null as number | null,
   maxCookingTime: null as number | null,
+  searchFields: ["title", "ingredients"] as string[],
 };
 
 const userPreferencesState = {
-  showRatings: true,
-  showFavorites: true,
+  hidden: [] as string[],
 };
 
 vi.mock("next-intl", () => ({
@@ -27,13 +27,26 @@ vi.mock("next-intl", () => ({
 
 vi.mock("motion/react", () => ({
   motion: {
-    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    span: ({
+      animate: _animate,
+      children,
+      initial: _initial,
+      transition: _transition,
+      ...props
+    }: any) => <span {...props}>{children}</span>,
   },
 }));
 
-vi.mock("@/components/Panel/Panel", () => ({
-  default: ({ children }: any) => <div>{children}</div>,
-}));
+vi.mock("@/components/Panel/Panel", () => {
+  const Panel = ({ children }: any) => <div>{children}</div>;
+
+  Panel.Body = ({ children }: any) => <div>{children}</div>;
+  Panel.Footer = ({ children }: any) => <div>{children}</div>;
+
+  return {
+    default: Panel,
+  };
+});
 
 vi.mock("@/components/dashboard/search-field-toggles", () => ({
   default: () => <div>search-field-toggles</div>,
@@ -43,7 +56,7 @@ vi.mock("@/components/skeleton/chip-skeleton", () => ({
   default: () => <div>loading</div>,
 }));
 
-vi.mock("@norish/ui/rating-stars", () => ({
+vi.mock("@norish/ui/star-rating", () => ({
   default: () => <div>rating-stars</div>,
 }));
 
@@ -60,6 +73,12 @@ vi.mock("@/context/user-context", () => ({
     user: { preferences: userPreferencesState },
   }),
 }));
+
+vi.mock("@/context/device-preferences-context", async () =>
+  (await import("../helpers/device-preferences-mock")).mockDevicePreferences(() => ({
+    hiddenItems: userPreferencesState.hidden,
+  }))
+);
 
 vi.mock("@/hooks/config", () => ({
   useTagsQuery: () => ({
@@ -96,8 +115,8 @@ describe("FiltersPanel", () => {
 
     expect(() => render(<FiltersPanel open onOpenChange={vi.fn()} />)).not.toThrow();
 
-    expect(screen.getByText("sortByDate")).toHaveAttribute("color", "default");
-    expect(screen.getByText("sortByTitle")).toHaveAttribute("color", "default");
+    expect(screen.getByText("sortByDate")).toHaveAttribute("variant", "tertiary");
+    expect(screen.getByText("sortByTitle")).toHaveAttribute("variant", "tertiary");
 
     filtersState.sortMode = "dateDesc";
   });
@@ -114,8 +133,7 @@ describe("FiltersPanel", () => {
   });
 
   it("hides favorites and rating section when both preferences are disabled", () => {
-    userPreferencesState.showFavorites = false;
-    userPreferencesState.showRatings = false;
+    userPreferencesState.hidden = ["favorites", "rating"];
 
     render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
@@ -123,13 +141,11 @@ describe("FiltersPanel", () => {
     expect(screen.queryByText("favorites")).not.toBeInTheDocument();
     expect(screen.queryByText("rating-stars")).not.toBeInTheDocument();
 
-    userPreferencesState.showFavorites = true;
-    userPreferencesState.showRatings = true;
+    userPreferencesState.hidden = [];
   });
 
   it("shows only favorites filter when ratings are disabled", () => {
-    userPreferencesState.showFavorites = true;
-    userPreferencesState.showRatings = false;
+    userPreferencesState.hidden = ["rating"];
 
     render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
@@ -137,12 +153,11 @@ describe("FiltersPanel", () => {
     expect(screen.getByText("favorites")).toBeInTheDocument();
     expect(screen.queryByText("rating-stars")).not.toBeInTheDocument();
 
-    userPreferencesState.showRatings = true;
+    userPreferencesState.hidden = [];
   });
 
   it("shows only rating filter when favorites are disabled", () => {
-    userPreferencesState.showFavorites = false;
-    userPreferencesState.showRatings = true;
+    userPreferencesState.hidden = ["favorites"];
 
     render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
@@ -150,6 +165,6 @@ describe("FiltersPanel", () => {
     expect(screen.queryByText("favorites")).not.toBeInTheDocument();
     expect(screen.getByText("rating-stars")).toBeInTheDocument();
 
-    userPreferencesState.showFavorites = true;
+    userPreferencesState.hidden = [];
   });
 });

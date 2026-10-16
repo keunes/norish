@@ -1,132 +1,122 @@
 /**
  * Nutrition Estimation Worker
  *
- * Processes nutrition estimation jobs from the queue.
+ * A recipe that supplies Nutrition Information of its own is estimated as
+ * a whole, as before: one AI request and an atomic replacement of the group,
+ * where gap-filling runs replace only while the group is still incomplete.
+ *
+ * A recipe that supplies none has its nutrition worked out from its lines
+ * (ADR-0039), and the language model fills only the gap: it is given the
+ * lines Ingredient Nutrition counts, with their numbers, and estimates the
+ * lines left out, one share per line. The shares are stored apart from the
+ * recipe's own group, under the lines' keys, and a reader's worked-out total
+ * adds the share of each line still left out for them. A recipe whose every line counts asks
+ * the model nothing. The lines are counted from the datasets' numbers, with
+ * no household's correction, which is what most readers see.
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { Job } from "bullmq";
-import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/trpc/helpers";
 
-import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
-import { createLogger } from "@norish/api/logger";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
-import { getRecipeFull, updateRecipeWithRefs } from "@norish/db";
-import { getBullClient } from "@norish/queue/redis/bullmq";
-import { emitByPolicy } from "@norish/trpc/helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
+import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
+import {
+  clearRecipeNutritionEstimate,
+  replaceRecipeNutrition,
+  saveRecipeNutritionEstimate,
+} from "@norish/db/repositories/recipe-enrichment";
+import {
+  estimateNutritionFromIngredients,
+  estimateNutritionGap,
+} from "@norish/shared-server/ai/enrichment/nutrition-estimator";
+import { NO_HOUSEHOLD } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
+import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
+import { createLogger } from "@norish/shared-server/logger";
+import { enrichmentWriteMode } from "@norish/shared/lib/recipe-enrichment";
+import { suppliesNutrition } from "@norish/shared/lib/recipe-nutrition";
 
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
+import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { handleEnrichmentJobFailure, runEnrichmentJob } from "../enrichment/worker-runner";
+import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:nutrition-estimation");
 
-async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promise<void> {
-  const { recipeId, userId, householdKey } = job.data;
-
-  log.info(
-    { jobId: job.id, recipeId, attempt: job.attemptsMade + 1 },
-    "Processing nutrition estimation job"
-  );
-
-  const policy = await getRecipePermissionPolicy();
-  const ctx: PolicyEmitContext = { userId, householdKey };
-
-  const recipe = await getRecipeFull(recipeId);
-
-  if (!recipe) {
-    throw new Error(`Recipe not found: ${recipeId}`);
-  }
-
-  if (recipe.recipeIngredients.length === 0) {
-    throw new Error("Recipe has no ingredients to estimate from");
-  }
-
-  const ingredients = recipe.recipeIngredients.map((ri) => ({
-    ingredientName: ri.ingredientName,
-    amount: ri.amount,
-    unit: ri.unit,
-  }));
-
-  const result = await estimateNutritionFromIngredients(
-    recipe.name,
-    recipe.servings ?? 1,
-    ingredients
-  );
-
-  if (!result.success) {
-    throw new Error(result.error);
-  }
-
-  const estimate = result.data;
-
-  // Update recipe with estimated nutrition
-  await updateRecipeWithRefs(recipe.id, userId, {
-    calories: estimate.calories,
-    fat: estimate.fat.toString(),
-    carbs: estimate.carbs.toString(),
-    protein: estimate.protein.toString(),
-  });
-
-  // Fetch updated recipe and emit event
-  const updatedRecipe = await getRecipeFull(recipe.id);
-
-  if (updatedRecipe) {
-    log.info({ jobId: job.id, recipeId }, "Nutrition estimated and saved");
-
-    emitByPolicy(recipeEmitter, policy.view, ctx, "updated", { recipe: updatedRecipe });
-  }
-}
-
-async function handleJobFailed(
-  job: Job<NutritionEstimationJobData> | undefined,
-  error: Error
+export async function processNutritionEstimationJob(
+  job: Job<RecipeEnrichmentJobData>
 ): Promise<void> {
-  if (!job) return;
+  await runEnrichmentJob(job, async (recipe) => {
+    if (suppliesNutrition(recipe)) {
+      const estimate = await estimateNutritionFromIngredients(
+        recipe.name,
+        recipe.servings ?? 1,
+        recipe.recipeIngredients.map((ingredient) => ({
+          ingredientName: ingredient.ingredientName,
+          amount: ingredient.amount,
+          unit: ingredient.unit,
+        }))
+      );
 
-  const { recipeId, userId, householdKey } = job.data;
-  const maxAttempts = job.opts.attempts ?? 3;
-  const isFinalFailure = job.attemptsMade >= maxAttempts;
+      // The estimate is complete by contract: the schema requires all four
+      // values as non-negative numbers, so the runtime has already rejected —
+      // and will retry — a model answer with anything missing.
+      await reportStep(job, "saving");
 
-  log.error(
-    {
-      jobId: job.id,
-      recipeId,
-      attempt: job.attemptsMade,
-      maxAttempts,
-      isFinalFailure,
-      error: error.message,
-    },
-    "Nutrition estimation job failed"
-  );
+      const mode = enrichmentWriteMode("nutrition-estimation", job.data);
+      const applied = await replaceRecipeNutrition(recipe.id, estimate, mode);
 
-  if (isFinalFailure) {
-    // Emit failed event with recipeId to clear loading state
-    const policy = await getRecipePermissionPolicy();
-    const ctx: PolicyEmitContext = { userId, householdKey };
+      log.info(
+        { recipeId: recipe.id, applied, origin: job.data.origin, mode },
+        applied ? "Nutrition estimate saved" : "Nutrition estimate deferred to supplied data"
+      );
 
-    emitByPolicy(recipeEmitter, policy.view, ctx, "failed", {
-      reason: error.message || "Failed to estimate nutrition after multiple attempts",
-      recipeId,
-    });
-  }
+      return applied;
+    }
+
+    const worked = await workOutRecipeNutrition(recipe, NO_HOUSEHOLD);
+    // Seasoning is left out of every total and never estimated.
+    const gaps = worked?.leftOut.filter((line) => line.reason !== "seasoning") ?? [];
+
+    if (!worked || gaps.length === 0) {
+      log.info({ recipeId: recipe.id }, "Every line counts; no estimate asked for");
+
+      return await clearRecipeNutritionEstimate(recipe.id);
+    }
+
+    const lineById = new Map(recipe.recipeIngredients.map((line) => [line.id, line]));
+    const shares = await estimateNutritionGap(
+      recipe.name,
+      recipe.servings ?? 1,
+      gaps.map((named) => ({
+        key: named.key,
+        ingredientName: named.name,
+        amount: lineById.get(named.lineId)?.amount ?? null,
+        unit: lineById.get(named.lineId)?.unit ?? null,
+      })),
+      worked.counted.map((line) => {
+        const counted = lineById.get(line.lineId);
+        const text = [counted?.amount, counted?.unit, line.name].filter((part) => part != null);
+
+        return { ...line, text: text.join(" ") };
+      })
+    );
+
+    await reportStep(job, "saving");
+
+    const saved = await saveRecipeNutritionEstimate(recipe.id, { lines: shares });
+
+    log.info(
+      { recipeId: recipe.id, saved, leftOut: gaps.length, origin: job.data.origin },
+      "Nutrition estimate of the lines left out saved"
+    );
+
+    return saved;
+  });
 }
 
-export async function startNutritionEstimationWorker(): Promise<void> {
-  await createLazyWorker<NutritionEstimationJobData>(
-    QUEUE_NAMES.NUTRITION_ESTIMATION,
-    processNutritionJob,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.NUTRITION_ESTIMATION],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.NUTRITION_ESTIMATION],
-    },
-    handleJobFailed
-  );
-}
+const nutritionEstimationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
+  QUEUE_NAMES.NUTRITION_ESTIMATION,
+  processNutritionEstimationJob,
+  handleEnrichmentJobFailure
+);
 
-export async function stopNutritionEstimationWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.NUTRITION_ESTIMATION);
-}
+export const startNutritionEstimationWorker = nutritionEstimationWorker.start;
+export const stopNutritionEstimationWorker = nutritionEstimationWorker.stop;

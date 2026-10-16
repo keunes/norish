@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { UserDtoSchema } from "@norish/shared/contracts/zod/user";
+
+import type { User } from "@norish/shared/contracts";
+import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
+import {
+  UpdateUserNameInputSchema,
+  UpdateUserPreferencesInputSchema,
+  UserDtoSchema,
+} from "@norish/shared/contracts/zod";
 
 // API Key metadata schema (matches ApiKeyMetadata type)
 export const ApiKeyMetadataSchema = z.object({
@@ -12,19 +19,30 @@ export const ApiKeyMetadataSchema = z.object({
 });
 
 export type ApiKeyMetadataDto = z.infer<typeof ApiKeyMetadataSchema>;
+export type UserSettingsDto = {
+  user: User;
+  apiKeys: ApiKeyMetadataDto[];
+};
+
+type UpdateNameInput = {
+  name: string;
+  version: number;
+};
+
+type UpdatePreferencesInput = {
+  version: number;
+  preferences: Partial<UserPreferencesDto>;
+};
 
 // User settings response (user + api keys)
-export const UserSettingsSchema = z.object({
+export const UserSettingsSchema: z.ZodType<UserSettingsDto> = z.object({
   user: UserDtoSchema,
   apiKeys: z.array(ApiKeyMetadataSchema),
 });
 
-export type UserSettingsDto = z.infer<typeof UserSettingsSchema>;
-
 // Input schemas
-export const UpdateNameInputSchema = z.object({
-  name: z.string().min(1, "Name cannot be empty").max(100, "Name too long"),
-});
+export const UpdateNameInputSchema: z.ZodType<UpdateNameInput, UpdateNameInput> =
+  UpdateUserNameInputSchema;
 
 export const CreateApiKeyInputSchema = z.object({
   name: z.string().optional(),
@@ -40,14 +58,7 @@ export const ToggleApiKeyInputSchema = z.object({
 });
 
 // Preferences
-export const UpdatePreferencesInputSchema = z.object({
-  preferences: z
-    .object({
-      timersEnabled: z.boolean().optional(),
-      showConversionButton: z.boolean().optional(),
-      showRatings: z.boolean().optional(),
-      showFavorites: z.boolean().optional(),
-      locale: z.string().nullable().optional(),
-    })
-    .partial(),
-});
+export const UpdatePreferencesInputSchema: z.ZodType<
+  UpdatePreferencesInput,
+  UpdatePreferencesInput
+> = UpdateUserPreferencesInputSchema;

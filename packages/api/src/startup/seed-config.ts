@@ -7,31 +7,40 @@ import type {
   ServerConfigKey,
   TimerKeywordsConfig,
 } from "@norish/db/zodSchemas/server-config";
-
-import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
-import { serverLogger } from "@norish/api/logger";
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import defaultIngredientWords from "@norish/config/ingredient-words.default.json";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
-import {
-  buildLocaleConfigFromEnv,
-  DEFAULT_LOCALE_CONFIG,
-} from "@norish/config/server-config-loader";
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
 import {
   configExists,
   deleteConfig,
   getConfig,
+  normalizeAndBackfillConfig,
   setConfig,
 } from "@norish/db/repositories/server-config";
 import {
+  DEFAULT_INGREDIENT_PERMISSION_POLICY,
+  DEFAULT_JOB_RETENTION,
   DEFAULT_RECIPE_PERMISSION_POLICY,
+  IngredientWordsConfigSchema,
+  IngredientWordsMapSchema,
   ServerConfigKeys,
   UnitsConfigSchema,
   UnitsMapSchema,
 } from "@norish/db/zodSchemas/server-config";
+import {
+  loadDefaultPrompts,
+  loadRetiredDefaultPrompts,
+} from "@norish/shared-server/ai/prompts/loader";
+import { pruneToOverrides } from "@norish/shared-server/ai/prompts/overrides";
+import {
+  buildLocaleConfigFromEnv,
+  DEFAULT_LOCALE_CONFIG,
+} from "@norish/shared-server/config/server-config-loader";
+import { serverLogger } from "@norish/shared-server/logger";
 
 /**
  * Configuration definition for seeding
@@ -100,6 +109,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     description: `Scheduler cleanup: ${SERVER_CONFIG.SCHEDULER_CLEANUP_MONTHS} months`,
   },
   {
+    key: ServerConfigKeys.JOB_RETENTION,
+    getDefaultValue: () => DEFAULT_JOB_RETENTION,
+    sensitive: false,
+    description: `Job retention (completed: ${DEFAULT_JOB_RETENTION.keepCompleted}, failed: ${DEFAULT_JOB_RETENTION.keepFailed}, max age: ${DEFAULT_JOB_RETENTION.maxAgeDays}d)`,
+  },
+  {
     key: ServerConfigKeys.AI_CONFIG,
     getDefaultValue: () => ({
       enabled: SERVER_CONFIG.AI_ENABLED,
@@ -109,6 +124,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
       apiKey: SERVER_CONFIG.AI_API_KEY || undefined,
       temperature: SERVER_CONFIG.AI_TEMPERATURE,
       maxTokens: SERVER_CONFIG.AI_MAX_TOKENS,
+      timeoutMs: SERVER_CONFIG.AI_TIMEOUT_MS,
     }),
     sensitive: true, // sensitive due to API key
     description: `AI config (${SERVER_CONFIG.AI_ENABLED ? "enabled" : "disabled"})`,
@@ -119,7 +135,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
       enabled: SERVER_CONFIG.VIDEO_PARSING_ENABLED,
       maxLengthSeconds: SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS,
       maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
-      ytDlpVersion: SERVER_CONFIG.YT_DLP_VERSION,
+      ytDlpProxy: SERVER_CONFIG.YT_DLP_PROXY || undefined,
       transcriptionProvider: SERVER_CONFIG.TRANSCRIPTION_PROVIDER,
       transcriptionEndpoint: SERVER_CONFIG.TRANSCRIPTION_ENDPOINT || undefined,
       transcriptionApiKey: SERVER_CONFIG.TRANSCRIPTION_API_KEY || undefined,
@@ -135,10 +151,18 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     description: "Recipe permission policy (default: household)",
   },
   {
-    key: ServerConfigKeys.PROMPTS,
-    getDefaultValue: () => ({ ...loadDefaultPrompts(), isOverridden: false }),
+    key: ServerConfigKeys.INGREDIENT_PERMISSION_POLICY,
+    getDefaultValue: () => DEFAULT_INGREDIENT_PERMISSION_POLICY,
     sensitive: false,
-    description: "AI prompts for recipe extraction and unit conversion",
+    description: "Ingredient permission policy (default: household)",
+  },
+  {
+    key: ServerConfigKeys.PROMPTS,
+    // Overrides only: defaults live in the shipped prompt files and are
+    // merged at read time, so new releases' prompts arrive without a write.
+    getDefaultValue: () => ({}),
+    sensitive: false,
+    description: "AI prompt overrides (empty: all prompts follow shipped defaults)",
   },
   {
     key: ServerConfigKeys.LOCALE_CONFIG,
@@ -168,11 +192,13 @@ export async function seedServerConfig(): Promise<void> {
   // Always validate and seed missing configs
   const seededCount = await seedMissingConfigs();
 
+  await normalizeExistingConfigs();
   await importEnvAuthProvidersIfMissing();
   await syncUnits();
   await syncPrompts();
   await syncLocales();
   await syncTimerKeywords();
+  await syncIngredientWords();
 
   if (seededCount === 0) {
     serverLogger.info("All server configuration keys present");
@@ -231,6 +257,14 @@ async function seedMissingConfigs(): Promise<number> {
   }
 
   return seededCount;
+}
+
+async function normalizeExistingConfigs(): Promise<void> {
+  const keys = Object.values(ServerConfigKeys) as ServerConfigKey[];
+
+  for (const key of keys) {
+    await normalizeAndBackfillConfig(key);
+  }
 }
 
 /**
@@ -450,6 +484,16 @@ async function syncGoogleProvider(): Promise<void> {
   }
 }
 
+/**
+ * Reduce the stored prompts row to genuine administrator overrides.
+ *
+ * Rows written before 0.20 carried full copies of the then-current default
+ * texts (plus a row-level isOverridden flag that froze all of them after any
+ * save). Dropping every field that matches a shipped default — current or
+ * retired — releases those copies, so the release's prompts reach the admin
+ * surface and the model, while texts an administrator actually wrote are
+ * exactly the fields that survive.
+ */
 async function syncPrompts(): Promise<void> {
   const existing = await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
 
@@ -459,27 +503,19 @@ async function syncPrompts(): Promise<void> {
     return;
   }
 
-  if (existing.isOverridden) {
-    serverLogger.debug("Prompts are overridden by admin, skipping file sync");
+  const { overrides, changed } = pruneToOverrides(
+    existing,
+    loadDefaultPrompts(),
+    loadRetiredDefaultPrompts()
+  );
 
-    return;
-  }
+  if (changed) {
+    await setConfig(ServerConfigKeys.PROMPTS, overrides, null, false);
 
-  const defaultPrompts = loadDefaultPrompts();
-  const storedComparable = {
-    recipeExtraction: existing.recipeExtraction,
-    unitConversion: existing.unitConversion,
-  };
-
-  if (configsDiffer(storedComparable, defaultPrompts)) {
-    await setConfig(
-      ServerConfigKeys.PROMPTS,
-      { ...defaultPrompts, isOverridden: false },
-      null,
-      false
+    serverLogger.info(
+      { overriddenFields: Object.keys(overrides) },
+      "Pruned stored prompts to administrator overrides"
     );
-
-    serverLogger.info("Updated prompts from default files (content changed)");
   }
 }
 
@@ -527,8 +563,59 @@ async function syncTimerKeywords(): Promise<void> {
   }
 }
 
+/** A value as JSON with every object's keys sorted: jsonb keeps no key order, so a stored row compares by content. */
+function sortedJson(value: unknown): string {
+  return JSON.stringify(value, (_, inner: unknown) =>
+    inner && typeof inner === "object" && !Array.isArray(inner)
+      ? Object.fromEntries(
+          Object.entries(inner as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1))
+        )
+      : inner
+  );
+}
+
 /**
- * Migrate units config to wrapped schema format introduced in v0.16.0.
+ * Seed the ingredient words (ADR-0037), and carry the words Norish ships into
+ * a row the administrator has not edited, as the units and timer keywords
+ * are; an edited row is left alone.
+ */
+async function syncIngredientWords(): Promise<void> {
+  const stored = IngredientWordsConfigSchema.safeParse(
+    await getConfig<unknown>(ServerConfigKeys.INGREDIENT_WORDS)
+  );
+
+  if (stored.success && stored.data.isOverridden) {
+    serverLogger.debug("Ingredient words are overridden by admin, skipping file sync");
+
+    return;
+  }
+
+  const shipped = IngredientWordsMapSchema.parse(defaultIngredientWords);
+
+  if (stored.success && sortedJson(stored.data.words) === sortedJson(shipped)) return;
+
+  await setConfig(
+    ServerConfigKeys.INGREDIENT_WORDS,
+    { words: shipped, isOverridden: false },
+    null,
+    false
+  );
+  serverLogger.info(
+    stored.success
+      ? "Updated ingredient words from default file (content changed)"
+      : "Seeded ingredient words from default config file"
+  );
+}
+
+/**
+ * Migrate units config to wrapped schema format introduced in v0.16.0, and
+ * carry shipped vocabulary changes into a row the administrator has not edited.
+ *
+ * The units row is seeded at first boot, so without the second half an upgrade
+ * reaches nobody who already runs Norish: the six locales the vocabulary was
+ * missing would have stayed missing on every existing server, and units would
+ * have kept rendering in English for them (#504). Timer keywords already work
+ * this way; an edited row is still left alone.
  */
 async function syncUnits(): Promise<void> {
   const existing = await getConfig<unknown>(ServerConfigKeys.UNITS);
@@ -540,6 +627,22 @@ async function syncUnits(): Promise<void> {
   const wrapped = UnitsConfigSchema.safeParse(existing);
 
   if (wrapped.success) {
+    if (wrapped.data.isOverridden) {
+      serverLogger.debug("Units are overridden by admin, skipping file sync");
+
+      return;
+    }
+
+    if (configsDiffer(wrapped.data.units, defaultUnits as Record<string, unknown>)) {
+      await setConfig(
+        ServerConfigKeys.UNITS,
+        { units: defaultUnits, isOverridden: false },
+        null,
+        false
+      );
+      serverLogger.info("Updated units from default file (content changed)");
+    }
+
     return;
   }
 
@@ -614,8 +717,8 @@ async function syncLocales(): Promise<void> {
     if (!existing.locales[locale]) {
       newLocales.push(locale);
       // If ENABLED_LOCALES env is set, only enable if locale is in that list
-      // Otherwise use the default enabled state
-      const enabled = hasEnvFilter ? envEnabledLocales.includes(locale) : entry.enabled;
+      // Otherwise default to false for newly added languages so the admin can review them
+      const enabled = hasEnvFilter ? envEnabledLocales.includes(locale) : false;
 
       existing.locales[locale] = { ...entry, enabled };
     }
@@ -624,51 +727,5 @@ async function syncLocales(): Promise<void> {
   if (newLocales.length > 0) {
     await setConfig(ServerConfigKeys.LOCALE_CONFIG, existing, null, false);
     serverLogger.info({ locales: newLocales }, "Added new locales to config");
-  }
-}
-
-/**
- * Load default values from .default.json files
- * Used for "Restore to defaults" functionality
- */
-export function getDefaultConfigValue(key: ServerConfigKey): unknown {
-  switch (key) {
-    case ServerConfigKeys.REGISTRATION_ENABLED:
-      return true;
-    case ServerConfigKeys.UNITS:
-      return { units: defaultUnits, isOverridden: false };
-    case ServerConfigKeys.CONTENT_INDICATORS:
-      return defaultContentIndicators;
-    case ServerConfigKeys.RECURRENCE_CONFIG:
-      return defaultRecurrenceConfig;
-    case ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS:
-      return 3;
-    case ServerConfigKeys.AI_CONFIG:
-      return {
-        enabled: false,
-        provider: "openai",
-        model: "gpt-5-mini",
-        temperature: 1.0,
-        maxTokens: 10000,
-      };
-    case ServerConfigKeys.VIDEO_CONFIG:
-      return {
-        enabled: false,
-        maxLengthSeconds: 120,
-        maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
-        ytDlpVersion: "2025.11.12",
-        transcriptionProvider: "disabled",
-        transcriptionModel: "whisper-1",
-      };
-    case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
-      return DEFAULT_RECIPE_PERMISSION_POLICY;
-    case ServerConfigKeys.PROMPTS:
-      return { ...loadDefaultPrompts(), isOverridden: false };
-    case ServerConfigKeys.LOCALE_CONFIG:
-      return DEFAULT_LOCALE_CONFIG;
-    case ServerConfigKeys.TIMER_KEYWORDS:
-      return { ...defaultTimerKeywords, isOverridden: false };
-    default:
-      return null;
   }
 }

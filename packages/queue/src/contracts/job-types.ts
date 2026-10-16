@@ -1,5 +1,11 @@
 import type { Job } from "bullmq";
 
+import type { ReviewMode } from "@norish/shared/contracts/ingredient-catalogue";
+import type {
+  RecipeEnrichmentKind,
+  RecipeEnrichmentOrigin,
+} from "@norish/shared/lib/recipe-enrichment";
+
 export interface RecipeImportJobData {
   url: string;
   recipeId: string;
@@ -48,58 +54,121 @@ export type AddImageImportJobResult =
   | { status: "duplicate"; existingJobId: string };
 
 export interface PasteImportJobData {
-  recipeId: string;
+  batchId: string;
+  recipeIds: string[];
   userId: string;
   householdKey: string;
   householdUserIds: string[] | null;
   text: string;
   forceAI?: boolean;
+  structuredRecipes?: StructuredPasteImportRecipe[];
+}
+
+export interface StructuredPasteImportRecipe {
+  recipeId: string;
+  recipe: import("@norish/shared/contracts").FullRecipeInsertDTO;
+  importedRating: number | null;
+}
+
+export interface PasteImportJobResult {
+  recipeIds: string[];
 }
 
 export type AddPasteImportJobResult =
-  | { status: "queued"; job: Job<PasteImportJobData> }
+  | { status: "queued"; job: Job<PasteImportJobData, PasteImportJobResult> }
   | { status: "duplicate"; existingJobId: string };
 
-export interface NutritionEstimationJobData {
+/**
+ * One job shape for every Recipe Enrichment kind.
+ *
+ * The queues stay independent so a slow kind cannot serialize the others, but
+ * they share this contract because clients need one lifecycle story, not one
+ * per kind.
+ */
+export interface RecipeEnrichmentJobData {
   recipeId: string;
+  /** Unique per accepted enrollment; optional only for retained jobs created before this field existed. */
+  runId?: string;
+  /** Redis-allocated ordering token; optional only for retained jobs created before this field existed. */
+  runSequence?: number;
+  kind: RecipeEnrichmentKind;
   userId: string;
   householdKey: string;
   householdUserIds: string[] | null;
+  origin: RecipeEnrichmentOrigin;
+  /** Set for manual runs only, so a terminal failure reaches the requester alone. */
+  requestedByUserId?: string;
+  /**
+   * An administrator's bulk refresh: this run's write replaces Supplied Recipe
+   * Data instead of deferring to it. Absent on every ordinary run, including
+   * every automatic enrollment a new recipe triggers.
+   */
+  replaceExisting?: boolean;
 }
 
-export type AddNutritionEstimationJobResult =
-  | { status: "queued"; job: Job<NutritionEstimationJobData> }
-  | { status: "duplicate"; existingJobId: string };
+/**
+ * One job of the always-on `storeLookup` queue. A match job answers "what does
+ * this grocery name mean at this shop"; a refresh job re-reads Shelf Prices
+ * that have gone stale. Match jobs carry the higher priority: a user's new
+ * grocery jumps a stale batch.
+ */
+export type StoreLookupJobData =
+  | {
+      kind: "match";
+      storeId: string;
+      /**
+       * The Ingredient asked about, which the answer is filed under (ADR-0037).
+       * Absent on a job queued before the upgrade, which names only the text.
+       */
+      ingredientId?: string;
+      /** The grocery's name as the list shows it: what the shop is searched for. */
+      name: string;
+      householdKey: string;
+    }
+  | { kind: "refresh"; storeId: string; productIds: string[]; householdKey: string };
 
-export interface AutoTaggingJobData {
-  recipeId: string;
-  userId: string;
-  householdKey: string;
+/**
+ * One Draw icons round: the foods whose Ingredient Icons a person asked to
+ * be drawn, and who asked, since each food's icon is set under the
+ * ingredient permission policy for that person, checked again as the round
+ * reaches it.
+ */
+export interface IngredientIconsJobData {
+  /** The foods, by id and by name, so the job monitor reads "uien" rather than an id. */
+  ingredients: Array<{ id: string; name: string }>;
+  actor: {
+    userId: string;
+    householdUserIds: string[] | null;
+    isServerAdmin: boolean;
+  };
 }
 
-export type AddAutoTaggingJobResult =
-  | { status: "queued"; job: Job<AutoTaggingJobData> }
-  | { status: "duplicate"; existingJobId: string }
-  | { status: "skipped"; reason: "disabled" };
-
-export interface AutoCategorizationJobData {
-  recipeId: string;
-  userId: string;
-  householdKey: string;
+/**
+ * Foods one resolution just minted for someone's action, for what the
+ * administrator turned on for new foods: their Plain Name, their icon.
+ */
+export interface NewIngredientsJobData {
+  ingredientIds: string[];
 }
 
-export type AddAutoCategorizationJobResult =
-  | { status: "queued"; job: Job<AutoCategorizationJobData> }
-  | { status: "duplicate"; existingJobId: string }
-  | { status: "skipped"; reason: "disabled" };
-
-export interface AllergyDetectionJobData {
-  recipeId: string;
-  userId: string;
-  householdKey: string;
+/**
+ * One round of Ask AI over Flagged Ingredients (ADR-0037): the foods a person
+ * asked about, in the order the page listed them, and who asked, since each
+ * food's edit follows the ingredient permission policy for that person. A
+ * round outlives the tab that started it, so it carries the actor rather than
+ * a session.
+ */
+export interface IngredientReviewJobData {
+  /**
+   * The foods, by id and by name, so the job monitor reads "uitjes" rather
+   * than an id, and what is asked of each: what a flagged food is, what food
+   * it is a kind of, or its Plain Name. One round may ask a food's flag and
+   * another food's name.
+   */
+  ingredients: Array<{ id: string; name: string; mode: ReviewMode }>;
+  actor: {
+    userId: string;
+    householdUserIds: string[] | null;
+    isServerAdmin: boolean;
+  };
 }
-
-export type AddAllergyDetectionJobResult =
-  | { status: "queued"; job: Job<AllergyDetectionJobData> }
-  | { status: "duplicate"; existingJobId: string }
-  | { status: "skipped"; reason: "disabled" | "no_allergies" };

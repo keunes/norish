@@ -2,46 +2,55 @@
 
 import { useEffect, useRef } from "react";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
-import { Switch, Tooltip } from "@heroui/react";
+import { ToggleButton, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useWakeLockContext } from "./wake-lock-context";
 
-export default function WakeLockToggle() {
+type WakeLockToggleProps = {
+  /**
+   * Off where the surface already took the wake lock itself — cooking mode
+   * does, so its toggle only ever hands it back rather than racing it for a
+   * second one.
+   */
+  autoEnable?: boolean;
+};
+
+export default function WakeLockToggle({ autoEnable = true }: WakeLockToggleProps) {
   const { isSupported, isActive, toggle } = useWakeLockContext();
   const t = useTranslations("recipes.wakeLock");
   const hasAttemptedAutoEnableRef = useRef(false);
 
   useEffect(() => {
-    if (!isSupported || isActive || hasAttemptedAutoEnableRef.current) return;
+    if (!autoEnable || !isSupported || isActive || hasAttemptedAutoEnableRef.current) return;
 
     hasAttemptedAutoEnableRef.current = true;
     toggle();
-  }, [isSupported, isActive, toggle]);
+  }, [autoEnable, isSupported, isActive, toggle]);
 
-  if (!isSupported) {
-    return (
-      <Tooltip content={t("notSupported")}>
-        <div className="flex items-center gap-2 opacity-50">
-          <DevicePhoneMobileIcon className="h-5 w-5" />
-          <span className="text-sm">{t("keepScreenOn")}</span>
-        </div>
-      </Tooltip>
-    );
-  }
+  const tooltip = !isSupported
+    ? t("notSupported")
+    : isActive
+      ? t("activeTooltip")
+      : t("inactiveTooltip");
 
   return (
-    <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
-      <div className="flex items-center gap-2">
-        <DevicePhoneMobileIcon className="h-5 w-5" />
-        <Switch
-          aria-label={t("ariaLabel")}
-          color="success"
-          isSelected={isActive}
-          size="sm"
-          onValueChange={toggle}
-        />
-      </div>
+    <Tooltip delay={0}>
+      {/* Unsupported stays focusable rather than disabled, so its tooltip
+          can still say why it does nothing. */}
+      <ToggleButton
+        isIconOnly
+        aria-disabled={!isSupported || undefined}
+        aria-label={t("ariaLabel")}
+        className={`size-10 min-w-10 rounded-full ${isSupported ? "" : "opacity-50"}`}
+        isSelected={isActive}
+        onChange={() => {
+          if (isSupported) void toggle();
+        }}
+      >
+        <DevicePhoneMobileIcon className="size-5" />
+      </ToggleButton>
+      <Tooltip.Content placement="top">{tooltip}</Tooltip.Content>
     </Tooltip>
   );
 }

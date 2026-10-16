@@ -1,6 +1,12 @@
 import type { QueryKey } from "@tanstack/react-query";
 import type { createTRPCContext } from "@trpc/tanstack-react-query";
-import type { StoreCreateDto, StoreDto, StoreUpdateInput } from "@norish/shared/contracts";
+
+import type {
+  StoreCreateDto,
+  StoreDto,
+  StoreSearchAddressResult,
+  StoreUpdateInput,
+} from "@norish/shared/contracts";
 import type { AppRouter } from "@norish/trpc/client";
 
 type TrpcContext = ReturnType<typeof createTRPCContext<AppRouter>>;
@@ -22,11 +28,33 @@ export type StoresCacheHelpers = {
   invalidate: () => void;
 };
 
+export type StoreUpdateDraft = Omit<StoreUpdateInput, "version">;
+export type StoreGrocerySnapshot = Array<{ id: string; version: number }>;
+
 export type StoresMutationsResult = {
   createStore: (data: StoreCreateDto) => Promise<string>;
-  updateStore: (data: StoreUpdateInput) => void;
-  deleteStore: (storeId: string, deleteGroceries: boolean) => void;
+  updateStore: (data: StoreUpdateDraft) => void;
+  deleteStore: (
+    storeId: string,
+    deleteGroceries: boolean,
+    grocerySnapshot: StoreGrocerySnapshot
+  ) => void;
   reorderStores: (storeIds: string[]) => void;
+  checkSearchAddress: (
+    storeId: string,
+    term: string | null,
+    searchAddress: string | null,
+    website: string | null
+  ) => Promise<StoreSearchAddressResult>;
+  /**
+   * File a grocery's Ingredient at a Store under one of its aisles, or under
+   * none (null), which forgets it. The server resolves the grocery's name.
+   */
+  fileGroceryName: (
+    storeId: string,
+    grocery: { name: string | null; ingredientId?: string | null },
+    aisleId: string | null
+  ) => void;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;

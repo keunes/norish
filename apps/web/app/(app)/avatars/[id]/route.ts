@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-
 import { NextResponse } from "next/server";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 export const runtime = "nodejs";
@@ -48,10 +48,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return new Response(new Uint8Array(file), {
       headers: {
         "Content-Type": type,
-        "Cache-Control": "no-store",
+        // ADR-0021: every upload mints a new filename, so the content behind a
+        // given URL never changes. `private` keeps shared caches out — the
+        // route sits behind the auth proxy.
+        "Cache-Control": "private, max-age=31536000, immutable",
       },
     });
   } catch (_error) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Not found" },
+      { status: 404, headers: { "Cache-Control": "no-store" } }
+    );
   }
 }

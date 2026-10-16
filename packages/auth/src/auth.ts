@@ -1,7 +1,5 @@
 import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
-import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
-
 import { apiKey } from "@better-auth/api-key";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
@@ -9,17 +7,19 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
-import { authLogger } from "@norish/api/logger";
-import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@norish/auth/crypto";
+
+import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
+import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { isRegistrationEnabled } from "@norish/config/server-config-loader";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { setApiKeyAuthService } from "@norish/db/repositories/api-keys";
 import { setConfig } from "@norish/db/repositories/server-config";
 import { countUsers } from "@norish/db/repositories/users";
 import * as schema from "@norish/db/schema/auth";
-import { getPublisherClient } from "@norish/queue/redis/client";
+import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
+import { authLogger } from "@norish/shared-server/logger";
+import { getPublisherClient } from "@norish/shared-server/redis/client";
 
 import {
   getPendingOIDCProfile,
@@ -42,6 +42,11 @@ import {
  * Better Auth queries users with WHERE email = 'plain@email.com',
  * but we store encrypted emails. This wrapper converts email lookups
  * to use the deterministic emailHmac field instead.
+ *
+ * The user it finds by email, or joined onto an account (an OAuth sign-in),
+ * comes back decrypted: Better Auth compares the provider's verified email
+ * with it to mark the user verified, and only links further providers to a
+ * verified user.
  */
 function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
   baseAdapterFactory: (options: T) => DBAdapter<T>
@@ -64,14 +69,27 @@ function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
               w.field === "email" ? { ...w, field: "emailHmac", value: emailHmacValue } : w
             );
 
-            return baseAdapter.findOne({
-              ...params,
-              where: modifiedWhere,
-            });
+            return decryptUser(
+              await baseAdapter.findOne({
+                ...params,
+                where: modifiedWhere,
+              })
+            );
           }
         }
 
-        return baseAdapter.findOne(params);
+        const result = await baseAdapter.findOne(params);
+
+        if (
+          params.model === "account" &&
+          result &&
+          typeof result === "object" &&
+          "user" in result
+        ) {
+          return { ...result, user: decryptUser(result.user) };
+        }
+
+        return result;
       },
     };
   };
@@ -188,10 +206,7 @@ function buildEmailAndPasswordConfig() {
   };
 }
 
-// Lazy-initialized auth instance
-let _auth: ReturnType<typeof betterAuth> | null = null;
-
-function createAuth() {
+function createBetterAuth() {
   const emailAndPasswordConfig = buildEmailAndPasswordConfig();
 
   // Create base drizzle adapter factory
@@ -251,11 +266,12 @@ function createAuth() {
         await redis.del(key);
       },
     },
-    // Rate limiting configuration
+    // Rate limiting configuration. Values come from the environment so a test
+    // harness can lift the ceiling; the defaults are the production ones.
     rateLimit: {
-      enabled: true,
-      window: 60, // 60 seconds
-      max: 20, // 20 requests per window
+      enabled: SERVER_CONFIG.AUTH_RATE_LIMIT_ENABLED,
+      window: SERVER_CONFIG.AUTH_RATE_LIMIT_WINDOW, // seconds
+      max: SERVER_CONFIG.AUTH_RATE_LIMIT_MAX, // requests per window
       storage: "secondary-storage",
     },
     // Email and password authentication (conditionally enabled)
@@ -293,6 +309,10 @@ function createAuth() {
       ...(process.env.NODE_ENV === "development" && {
         skipStateCookieCheck: true,
       }),
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["oidc", "google", "github"],
+      },
     },
     socialProviders: buildSocialProviders(),
     databaseHooks: {
@@ -463,8 +483,17 @@ function createAuth() {
   });
 }
 
-// Type for the auth instance including plugins
-type AuthInstance = ReturnType<typeof createAuth>;
+// Type for the auth instance including plugin API methods used by this package.
+type AuthInstance = ReturnType<typeof betterAuth> & {
+  api: ReturnType<typeof betterAuth>["api"] & ApiKeyAuthService;
+};
+
+function createAuth(): AuthInstance {
+  return createBetterAuth() as AuthInstance;
+}
+
+// Lazy-initialized auth instance
+let _auth: AuthInstance | null = null;
 
 /**
  * Get the auth instance (lazy-initialized on first access)

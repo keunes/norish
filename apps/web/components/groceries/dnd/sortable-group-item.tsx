@@ -1,13 +1,13 @@
 "use client";
 
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-import type { GroupDragHandle } from "./types";
-
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
+import type { GroupDragHandle } from "./types";
+import { ROW_CLASS_NAME } from "./sortable-grocery-item";
 
 interface SortableGroupItemProps {
   group: GroceryGroup;
@@ -41,17 +41,22 @@ export function SortableGroupItem({ group, children }: SortableGroupItemProps) {
   const dragHandle = (
     <button
       ref={setActivatorNodeRef}
-      className="text-default-400 flex h-8 w-8 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+      className="text-muted/60 flex h-8 w-8 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
       type="button"
       {...attributes}
       {...listeners}
     >
-      <Bars3Icon className="h-5 w-5" />
+      <Bars3Icon className="h-4 w-4" />
     </button>
   );
 
   return (
-    <div ref={setNodeRef} className="relative" style={style}>
+    <div
+      ref={setNodeRef}
+      className={ROW_CLASS_NAME}
+      style={style}
+      onTouchStart={listeners?.onTouchStart}
+    >
       {/* The actual grouped grocery item content */}
       {children({ dragHandle })}
     </div>

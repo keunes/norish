@@ -16,6 +16,50 @@
       {
         "locale": "ko",
         "name": "cl"
+      },
+      {
+        "locale": "da",
+        "name": "cl"
+      },
+      {
+        "locale": "it",
+        "name": "cl"
+      },
+      {
+        "locale": "fr",
+        "name": "cl"
+      },
+      {
+        "locale": "es",
+        "name": "cl"
+      },
+      {
+        "locale": "ru",
+        "name": "сл"
+      },
+      {
+        "locale": "pl",
+        "name": "cl"
+      },
+      {
+        "locale": "no",
+        "name": "cl"
+      },
+      {
+        "locale": "pt",
+        "name": "cl"
+      },
+      {
+        "locale": "bg",
+        "name": "сл"
+      },
+      {
+        "locale": "fi",
+        "name": "cl"
+      },
+      {
+        "locale": "uk",
+        "name": "сл"
       }
     ],
     "plural": [
@@ -34,9 +78,78 @@
       {
         "locale": "ko",
         "name": "센티리터"
+      },
+      {
+        "locale": "da",
+        "name": "cl"
+      },
+      {
+        "locale": "it",
+        "name": "cl"
+      },
+      {
+        "locale": "fr",
+        "name": "centilitres"
+      },
+      {
+        "locale": "es",
+        "name": "centilitros"
+      },
+      {
+        "locale": "ru",
+        "name": "сантилитры"
+      },
+      {
+        "locale": "pl",
+        "name": "centylitry"
+      },
+      {
+        "locale": "no",
+        "name": "centiliter"
+      },
+      {
+        "locale": "pt",
+        "name": "centilitros"
+      },
+      {
+        "locale": "bg",
+        "name": "сантилитра"
+      },
+      {
+        "locale": "fi",
+        "name": "senttilitraa"
+      },
+      {
+        "locale": "uk",
+        "name": "сл"
       }
     ],
-    "alternates": ["centiliter", "centiliters", "zentiliter", "cl.", "센티리터"]
+    "alternates": [
+      "centiliter",
+      "centiliters",
+      "zentiliter",
+      "cl.",
+      "센티리터",
+      "centilitro",
+      "centilitri",
+      "centilitre",
+      "centilitres",
+      "cl",
+      "centilitros",
+      "сл",
+      "сантилитры",
+      "сантилитр",
+      "сантилитра",
+      "centylitry",
+      "centylitr",
+      "сантилитър",
+      "senttilitra",
+      "senttilitraa",
+      "сантилітр",
+      "сантилітри",
+      "сантилітра",
+      "сантилітрів"
+    ]
   },
   "deciliter": {
     "short": [
@@ -55,6 +168,50 @@
       {
         "locale": "ko",
         "name": "dl"
+      },
+      {
+        "locale": "da",
+        "name": "dl"
+      },
+      {
+        "locale": "it",
+        "name": "dl"
+      },
+      {
+        "locale": "fr",
+        "name": "dl"
+      },
+      {
+        "locale": "es",
+        "name": "dl"
+      },
+      {
+        "locale": "ru",
+        "name": "дл"
+      },
+      {
+        "locale": "pl",
+        "name": "dl"
+      },
+      {
+        "locale": "no",
+        "name": "dl"
+      },
+      {
+        "locale": "pt",
+        "name": "dl"
+      },
+      {
+        "locale": "bg",
+        "name": "дл"
+      },
+      {
+        "locale": "fi",
+        "name": "dl"
+      },
+      {
+        "locale": "uk",
+        "name": "дл"
       }
     ],
     "plural": [
@@ -73,9 +230,79 @@
       {
         "locale": "ko",
         "name": "데시리터"
+      },
+      {
+        "locale": "da",
+        "name": "dl"
+      },
+      {
+        "locale": "it",
+        "name": "dl"
+      },
+      {
+        "locale": "fr",
+        "name": "décilitres"
+      },
+      {
+        "locale": "es",
+        "name": "decilitros"
+      },
+      {
+        "locale": "ru",
+        "name": "децилитры"
+      },
+      {
+        "locale": "pl",
+        "name": "decylitry"
+      },
+      {
+        "locale": "no",
+        "name": "desiliter"
+      },
+      {
+        "locale": "pt",
+        "name": "decilitros"
+      },
+      {
+        "locale": "bg",
+        "name": "децилитра"
+      },
+      {
+        "locale": "fi",
+        "name": "desilitraa"
+      },
+      {
+        "locale": "uk",
+        "name": "дл"
       }
     ],
-    "alternates": ["deciliter", "deciliters", "deziliter", "dl.", "데시리터"]
+    "alternates": [
+      "deciliter",
+      "deciliters",
+      "deziliter",
+      "dl.",
+      "데시리터",
+      "decilitro",
+      "decilitri",
+      "décilitre",
+      "décilitres",
+      "dl",
+      "decilitros",
+      "дл",
+      "децилитры",
+      "децилитр",
+      "децилитра",
+      "decylitry",
+      "decylitr",
+      "desiliter",
+      "децилитър",
+      "desilitra",
+      "desilitraa",
+      "децилітр",
+      "децилітри",
+      "децилітра",
+      "децилітрів"
+    ]
   },
   "gram": {
     "short": [
@@ -94,6 +321,50 @@
       {
         "locale": "ko",
         "name": "g"
+      },
+      {
+        "locale": "da",
+        "name": "g"
+      },
+      {
+        "locale": "it",
+        "name": "g"
+      },
+      {
+        "locale": "fr",
+        "name": "g"
+      },
+      {
+        "locale": "es",
+        "name": "g"
+      },
+      {
+        "locale": "ru",
+        "name": "г"
+      },
+      {
+        "locale": "pl",
+        "name": "g"
+      },
+      {
+        "locale": "no",
+        "name": "g"
+      },
+      {
+        "locale": "pt",
+        "name": "g"
+      },
+      {
+        "locale": "bg",
+        "name": "г"
+      },
+      {
+        "locale": "fi",
+        "name": "g"
+      },
+      {
+        "locale": "uk",
+        "name": "г"
       }
     ],
     "plural": [
@@ -112,9 +383,85 @@
       {
         "locale": "ko",
         "name": "그램"
+      },
+      {
+        "locale": "da",
+        "name": "g"
+      },
+      {
+        "locale": "it",
+        "name": "g"
+      },
+      {
+        "locale": "fr",
+        "name": "grammes"
+      },
+      {
+        "locale": "es",
+        "name": "gramos"
+      },
+      {
+        "locale": "ru",
+        "name": "граммы"
+      },
+      {
+        "locale": "pl",
+        "name": "gramy"
+      },
+      {
+        "locale": "no",
+        "name": "gram"
+      },
+      {
+        "locale": "pt",
+        "name": "gramas"
+      },
+      {
+        "locale": "bg",
+        "name": "грама"
+      },
+      {
+        "locale": "fi",
+        "name": "grammaa"
+      },
+      {
+        "locale": "uk",
+        "name": "г"
       }
     ],
-    "alternates": ["g", "g.", "gr", "gr.", "gramm", "grammen", "그램", "그람"]
+    "alternates": [
+      "g",
+      "g.",
+      "gr",
+      "gr.",
+      "gram",
+      "gramm",
+      "grammen",
+      "그램",
+      "그람",
+      "grammo",
+      "grammi",
+      "gramme",
+      "grammes",
+      "gramos",
+      "gramo",
+      "grs",
+      "г",
+      "граммы",
+      "грамм",
+      "граммов",
+      "гр",
+      "gramy",
+      "gramów",
+      "gramas",
+      "grama",
+      "грама",
+      "грам",
+      "gramma",
+      "grammaa",
+      "грами",
+      "грамів"
+    ]
   },
   "teaspoon": {
     "short": [
@@ -133,6 +480,50 @@
       {
         "locale": "ko",
         "name": "작은술"
+      },
+      {
+        "locale": "da",
+        "name": "tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaino"
+      },
+      {
+        "locale": "fr",
+        "name": "càc"
+      },
+      {
+        "locale": "es",
+        "name": "cdta"
+      },
+      {
+        "locale": "ru",
+        "name": "ч. л."
+      },
+      {
+        "locale": "pl",
+        "name": "łyżeczka"
+      },
+      {
+        "locale": "no",
+        "name": "ts"
+      },
+      {
+        "locale": "pt",
+        "name": "c. de chá"
+      },
+      {
+        "locale": "bg",
+        "name": "ч.л."
+      },
+      {
+        "locale": "fi",
+        "name": "tl"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л."
       }
     ],
     "plural": [
@@ -151,21 +542,110 @@
       {
         "locale": "ko",
         "name": "작은술"
+      },
+      {
+        "locale": "da",
+        "name": "tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaini"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à café"
+      },
+      {
+        "locale": "es",
+        "name": "cucharaditas"
+      },
+      {
+        "locale": "ru",
+        "name": "чайные ложки"
+      },
+      {
+        "locale": "pl",
+        "name": "łyżeczki"
+      },
+      {
+        "locale": "no",
+        "name": "teskjeer"
+      },
+      {
+        "locale": "pt",
+        "name": "colheres de chá"
+      },
+      {
+        "locale": "bg",
+        "name": "чаени лъжици"
+      },
+      {
+        "locale": "fi",
+        "name": "teelusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л."
       }
     ],
     "alternates": [
       "teel",
       "teel.",
       "teelöffel",
+      "teelöff.",
+      "teelöff",
       "theelepel",
       "theelepels",
+      "theel",
+      "theel.",
       "tl",
       "tl.",
       "작은술",
       "티스푼",
       "tsp",
       "ts",
-      "t"
+      "t",
+      "tsk.",
+      "teskefuld",
+      "teskefulde",
+      "cucchiaino",
+      "cucchiaini",
+      "cc",
+      "cuillère à café",
+      "cuillères à café",
+      "càc",
+      "cdta",
+      "cucharaditas",
+      "cucharadita",
+      "cdta.",
+      "cta",
+      "ч. л.",
+      "чайные ложки",
+      "чайная ложка",
+      "чайных ложек",
+      "ч.л.",
+      "чл",
+      "łyżeczka",
+      "łyżeczki",
+      "łyżeczek",
+      "teskjeer",
+      "teskje",
+      "ts.",
+      "c. de chá",
+      "colheres de chá",
+      "colher de chá",
+      "c. chá",
+      "чаени лъжици",
+      "чаена лъжица",
+      "teelusikka",
+      "teelusikkaa",
+      "teelusikallinen",
+      "teelusikallista",
+      "чайна ложка",
+      "чайні ложки",
+      "чайних ложок",
+      "чайної ложки",
+      "чайну ложку"
     ]
   },
   "tablespoon": {
@@ -185,6 +665,50 @@
       {
         "locale": "ko",
         "name": "큰술"
+      },
+      {
+        "locale": "da",
+        "name": "spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaio"
+      },
+      {
+        "locale": "fr",
+        "name": "càs"
+      },
+      {
+        "locale": "es",
+        "name": "cda"
+      },
+      {
+        "locale": "ru",
+        "name": "ст. л."
+      },
+      {
+        "locale": "pl",
+        "name": "łyżka"
+      },
+      {
+        "locale": "no",
+        "name": "ss"
+      },
+      {
+        "locale": "pt",
+        "name": "c. de sopa"
+      },
+      {
+        "locale": "bg",
+        "name": "с.л."
+      },
+      {
+        "locale": "fi",
+        "name": "rkl"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л."
       }
     ],
     "plural": [
@@ -203,11 +727,57 @@
       {
         "locale": "ko",
         "name": "큰술"
+      },
+      {
+        "locale": "da",
+        "name": "spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiai"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à soupe"
+      },
+      {
+        "locale": "es",
+        "name": "cucharadas"
+      },
+      {
+        "locale": "ru",
+        "name": "столовые ложки"
+      },
+      {
+        "locale": "pl",
+        "name": "łyżki"
+      },
+      {
+        "locale": "no",
+        "name": "spiseskjeer"
+      },
+      {
+        "locale": "pt",
+        "name": "colheres de sopa"
+      },
+      {
+        "locale": "bg",
+        "name": "супени лъжици"
+      },
+      {
+        "locale": "fi",
+        "name": "ruokalusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л."
       }
     ],
     "alternates": [
       "eetlepel",
       "eetlepels",
+      "eetl",
+      "eetl.",
       "el",
       "el.",
       "essl",
@@ -216,7 +786,53 @@
       "큰술",
       "테이블스푼",
       "tbsp",
-      "T"
+      "T",
+      "spsk.",
+      "spiseskefuld",
+      "spiseskefulde",
+      "cucchiaio",
+      "cucchiai",
+      "cucchiaiate",
+      "cuillère à soupe",
+      "cuillères à soupe",
+      "càs",
+      "cda",
+      "cucharadas",
+      "cucharada",
+      "cda.",
+      "cs",
+      "ст. л.",
+      "столовые ложки",
+      "столовая ложка",
+      "столовых ложек",
+      "ст.л.",
+      "стл",
+      "łyżka",
+      "łyżki",
+      "łyżek",
+      "ss",
+      "spiseskjeer",
+      "spiseskje",
+      "ss.",
+      "c. de sopa",
+      "colheres de sopa",
+      "colher de sopa",
+      "c. sopa",
+      "с.л.",
+      "супени лъжици",
+      "супена лъжица",
+      "с. л.",
+      "rkl",
+      "rkl.",
+      "ruokalusikka",
+      "ruokalusikkaa",
+      "ruokalusikallinen",
+      "ruokalusikallista",
+      "столова ложка",
+      "столові ложки",
+      "столових ложок",
+      "столової ложки",
+      "столову ложку"
     ]
   },
   "knife_tip": {
@@ -236,6 +852,50 @@
       {
         "locale": "ko",
         "name": "칼끝"
+      },
+      {
+        "locale": "da",
+        "name": "knivspids"
+      },
+      {
+        "locale": "it",
+        "name": "punta di coltello"
+      },
+      {
+        "locale": "es",
+        "name": "punta de cuchillo"
+      },
+      {
+        "locale": "ru",
+        "name": "на кончике ножа"
+      },
+      {
+        "locale": "pl",
+        "name": "czubek noża"
+      },
+      {
+        "locale": "no",
+        "name": "knivsodd"
+      },
+      {
+        "locale": "pt",
+        "name": "ponta de faca"
+      },
+      {
+        "locale": "bg",
+        "name": "връх нож"
+      },
+      {
+        "locale": "fr",
+        "name": "pointe de couteau"
+      },
+      {
+        "locale": "fi",
+        "name": "veitsenkärki"
+      },
+      {
+        "locale": "uk",
+        "name": "на кінчику ножа"
       }
     ],
     "plural": [
@@ -254,6 +914,50 @@
       {
         "locale": "ko",
         "name": "칼끝"
+      },
+      {
+        "locale": "da",
+        "name": "knivspidser"
+      },
+      {
+        "locale": "it",
+        "name": "punte di coltello"
+      },
+      {
+        "locale": "es",
+        "name": "puntas de cuchillo"
+      },
+      {
+        "locale": "ru",
+        "name": "на кончике ножа"
+      },
+      {
+        "locale": "pl",
+        "name": "czubki noża"
+      },
+      {
+        "locale": "no",
+        "name": "knivsodder"
+      },
+      {
+        "locale": "pt",
+        "name": "pontas de faca"
+      },
+      {
+        "locale": "bg",
+        "name": "върхове нож"
+      },
+      {
+        "locale": "fr",
+        "name": "pointes de couteau"
+      },
+      {
+        "locale": "fi",
+        "name": "veitsenkärkeä"
+      },
+      {
+        "locale": "uk",
+        "name": "на кінчику ножа"
       }
     ],
     "alternates": [
@@ -265,7 +969,29 @@
       "msp",
       "msp.",
       "칼끝",
-      "칼끝만큼"
+      "칼끝만큼",
+      "knsp",
+      "knsp.",
+      "punta di coltello",
+      "punte di coltello",
+      "punta de cuchillo",
+      "puntas de cuchillo",
+      "на кончике ножа",
+      "czubek noża",
+      "czubki noża",
+      "knivsodd",
+      "knivsodder",
+      "ponta de faca",
+      "pontas de faca",
+      "връх нож",
+      "върхове нож",
+      "pointe de couteau",
+      "pointes de couteau",
+      "veitsenkärki",
+      "veitsenkärkeä",
+      "veitsenkärjellistä",
+      "на кінчику ножа",
+      "кінчик ножа"
     ]
   },
   "pinch": {
@@ -285,6 +1011,50 @@
       {
         "locale": "ko",
         "name": "꼬집"
+      },
+      {
+        "locale": "da",
+        "name": "nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzico"
+      },
+      {
+        "locale": "fr",
+        "name": "pincée"
+      },
+      {
+        "locale": "es",
+        "name": "pizca"
+      },
+      {
+        "locale": "ru",
+        "name": "щепотка"
+      },
+      {
+        "locale": "pl",
+        "name": "szczypta"
+      },
+      {
+        "locale": "no",
+        "name": "klype"
+      },
+      {
+        "locale": "pt",
+        "name": "pitada"
+      },
+      {
+        "locale": "bg",
+        "name": "щипка"
+      },
+      {
+        "locale": "fi",
+        "name": "ripaus"
+      },
+      {
+        "locale": "uk",
+        "name": "щіпка"
       }
     ],
     "plural": [
@@ -303,13 +1073,56 @@
       {
         "locale": "ko",
         "name": "꼬집"
+      },
+      {
+        "locale": "da",
+        "name": "nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzichi"
+      },
+      {
+        "locale": "fr",
+        "name": "pincées"
+      },
+      {
+        "locale": "es",
+        "name": "pizcas"
+      },
+      {
+        "locale": "ru",
+        "name": "щепотки"
+      },
+      {
+        "locale": "pl",
+        "name": "szczypty"
+      },
+      {
+        "locale": "no",
+        "name": "klyper"
+      },
+      {
+        "locale": "pt",
+        "name": "pitadas"
+      },
+      {
+        "locale": "bg",
+        "name": "щипки"
+      },
+      {
+        "locale": "fi",
+        "name": "ripausta"
+      },
+      {
+        "locale": "uk",
+        "name": "щіпки"
       }
     ],
     "alternates": [
       "prise(n)",
       "prise/n",
       "a pinch",
-      "dash",
       "pinch",
       "pinches",
       "pr",
@@ -318,7 +1131,37 @@
       "snufjes",
       "한꼬집",
       "꼬집",
-      "약간"
+      "et nip",
+      "drys",
+      "pizzico",
+      "pizzichi",
+      "un pizzico",
+      "pincée",
+      "pincées",
+      "pizca",
+      "pizcas",
+      "щепотка",
+      "щепотки",
+      "szczypta",
+      "szczypty",
+      "klype",
+      "klyper",
+      "pitada",
+      "pitadas",
+      "щипка",
+      "щипки",
+      "ripaus",
+      "ripausta",
+      "hyppysellinen",
+      "hyppysellistä",
+      "щіпка",
+      "щіпки",
+      "щіпок",
+      "щіпку",
+      "дрібка",
+      "дрібки",
+      "дрібок",
+      "дрібку"
     ]
   },
   "piece": {
@@ -338,6 +1181,50 @@
       {
         "locale": "ko",
         "name": "개"
+      },
+      {
+        "locale": "da",
+        "name": "stk."
+      },
+      {
+        "locale": "it",
+        "name": "pezzo"
+      },
+      {
+        "locale": "es",
+        "name": "ud"
+      },
+      {
+        "locale": "ru",
+        "name": "шт."
+      },
+      {
+        "locale": "pl",
+        "name": "szt."
+      },
+      {
+        "locale": "no",
+        "name": "stk"
+      },
+      {
+        "locale": "pt",
+        "name": "un"
+      },
+      {
+        "locale": "bg",
+        "name": "бр."
+      },
+      {
+        "locale": "fr",
+        "name": "pièce"
+      },
+      {
+        "locale": "fi",
+        "name": "kpl"
+      },
+      {
+        "locale": "uk",
+        "name": "шт."
       }
     ],
     "plural": [
@@ -356,6 +1243,50 @@
       {
         "locale": "ko",
         "name": "개"
+      },
+      {
+        "locale": "da",
+        "name": "stk."
+      },
+      {
+        "locale": "it",
+        "name": "pezzi"
+      },
+      {
+        "locale": "es",
+        "name": "unidades"
+      },
+      {
+        "locale": "ru",
+        "name": "штуки"
+      },
+      {
+        "locale": "pl",
+        "name": "sztuki"
+      },
+      {
+        "locale": "no",
+        "name": "stykker"
+      },
+      {
+        "locale": "pt",
+        "name": "unidades"
+      },
+      {
+        "locale": "bg",
+        "name": "броя"
+      },
+      {
+        "locale": "fr",
+        "name": "pièces"
+      },
+      {
+        "locale": "fi",
+        "name": "kappaletta"
+      },
+      {
+        "locale": "uk",
+        "name": "шт."
       }
     ],
     "alternates": [
@@ -375,9 +1306,47 @@
       "stuks",
       "stückchen",
       "개",
-      "장",
       "모",
-      "토막"
+      "styk",
+      "styks",
+      "pezzo",
+      "pezzi",
+      "pz",
+      "pz.",
+      "ud",
+      "unidades",
+      "unidad",
+      "pieza",
+      "piezas",
+      "uds",
+      "шт.",
+      "штуки",
+      "штука",
+      "штук",
+      "шт",
+      "szt.",
+      "sztuki",
+      "sztuka",
+      "sztuk",
+      "szt",
+      "stykker",
+      "stykke",
+      "un",
+      "unidade",
+      "peça",
+      "peças",
+      "бр.",
+      "броя",
+      "брой",
+      "бр",
+      "pièce",
+      "pièces",
+      "unité",
+      "unités",
+      "kpl",
+      "kpl.",
+      "kappale",
+      "kappaletta"
     ]
   },
   "clove": {
@@ -397,6 +1366,50 @@
       {
         "locale": "ko",
         "name": "쪽"
+      },
+      {
+        "locale": "da",
+        "name": "fed"
+      },
+      {
+        "locale": "it",
+        "name": "spicchio"
+      },
+      {
+        "locale": "es",
+        "name": "diente"
+      },
+      {
+        "locale": "ru",
+        "name": "зубчик"
+      },
+      {
+        "locale": "pl",
+        "name": "ząbek"
+      },
+      {
+        "locale": "no",
+        "name": "fedd"
+      },
+      {
+        "locale": "pt",
+        "name": "dente"
+      },
+      {
+        "locale": "bg",
+        "name": "скилидка"
+      },
+      {
+        "locale": "fr",
+        "name": "gousse"
+      },
+      {
+        "locale": "fi",
+        "name": "kynsi"
+      },
+      {
+        "locale": "uk",
+        "name": "зубчик"
       }
     ],
     "plural": [
@@ -415,9 +1428,85 @@
       {
         "locale": "ko",
         "name": "쪽"
+      },
+      {
+        "locale": "da",
+        "name": "fed"
+      },
+      {
+        "locale": "it",
+        "name": "spicchi"
+      },
+      {
+        "locale": "es",
+        "name": "dientes"
+      },
+      {
+        "locale": "ru",
+        "name": "зубчики"
+      },
+      {
+        "locale": "pl",
+        "name": "ząbki"
+      },
+      {
+        "locale": "no",
+        "name": "fedd"
+      },
+      {
+        "locale": "pt",
+        "name": "dentes"
+      },
+      {
+        "locale": "bg",
+        "name": "скилидки"
+      },
+      {
+        "locale": "fr",
+        "name": "gousses"
+      },
+      {
+        "locale": "fi",
+        "name": "kynttä"
+      },
+      {
+        "locale": "uk",
+        "name": "зубчики"
       }
     ],
-    "alternates": ["zehe(n)", "zehe/n", "teen", "teentje", "teentjes", "tenen", "쪽", "톨"]
+    "alternates": [
+      "zehe(n)",
+      "zehe/n",
+      "teen",
+      "teentje",
+      "teentjes",
+      "tenen",
+      "쪽",
+      "톨",
+      "hvidløgsfed",
+      "spicchio",
+      "spicchi",
+      "diente",
+      "dientes",
+      "зубчик",
+      "зубчики",
+      "зубчика",
+      "ząbek",
+      "ząbki",
+      "ząbków",
+      "fedd",
+      "dente",
+      "dentes",
+      "скилидка",
+      "скилидки",
+      "gousse",
+      "gousses",
+      "kynsi",
+      "kynttä",
+      "valkosipulinkynsi",
+      "valkosipulinkynttä",
+      "зубчиків"
+    ]
   },
   "leaf": {
     "short": [
@@ -436,6 +1525,50 @@
       {
         "locale": "ko",
         "name": "잎"
+      },
+      {
+        "locale": "da",
+        "name": "blad"
+      },
+      {
+        "locale": "it",
+        "name": "foglia"
+      },
+      {
+        "locale": "fr",
+        "name": "feuille"
+      },
+      {
+        "locale": "es",
+        "name": "hoja"
+      },
+      {
+        "locale": "ru",
+        "name": "лист"
+      },
+      {
+        "locale": "pl",
+        "name": "liść"
+      },
+      {
+        "locale": "no",
+        "name": "blad"
+      },
+      {
+        "locale": "pt",
+        "name": "folha"
+      },
+      {
+        "locale": "bg",
+        "name": "лист"
+      },
+      {
+        "locale": "fi",
+        "name": "lehti"
+      },
+      {
+        "locale": "uk",
+        "name": "листок"
       }
     ],
     "plural": [
@@ -454,18 +1587,85 @@
       {
         "locale": "ko",
         "name": "잎"
+      },
+      {
+        "locale": "da",
+        "name": "blade"
+      },
+      {
+        "locale": "it",
+        "name": "foglie"
+      },
+      {
+        "locale": "fr",
+        "name": "feuilles"
+      },
+      {
+        "locale": "es",
+        "name": "hojas"
+      },
+      {
+        "locale": "ru",
+        "name": "листья"
+      },
+      {
+        "locale": "pl",
+        "name": "liście"
+      },
+      {
+        "locale": "no",
+        "name": "blader"
+      },
+      {
+        "locale": "pt",
+        "name": "folhas"
+      },
+      {
+        "locale": "bg",
+        "name": "листа"
+      },
+      {
+        "locale": "fi",
+        "name": "lehteä"
+      },
+      {
+        "locale": "uk",
+        "name": "листки"
       }
     ],
     "alternates": [
       "blaadje",
       "blaadjes",
-      "blad",
       "bladeren",
       "blättchen",
       "leaf",
       "leaves",
       "잎",
-      "장"
+      "foglia",
+      "foglie",
+      "foglietta",
+      "foglioline",
+      "feuille",
+      "feuilles",
+      "hoja",
+      "hojas",
+      "лист",
+      "листья",
+      "листа",
+      "листьев",
+      "liść",
+      "liście",
+      "liści",
+      "blad",
+      "blader",
+      "folha",
+      "folhas",
+      "lehti",
+      "lehteä",
+      "листок",
+      "листки",
+      "листка",
+      "листків"
     ]
   },
   "sprig": {
@@ -485,6 +1685,50 @@
       {
         "locale": "ko",
         "name": "줄기"
+      },
+      {
+        "locale": "da",
+        "name": "kvist"
+      },
+      {
+        "locale": "it",
+        "name": "rametto"
+      },
+      {
+        "locale": "es",
+        "name": "ramita"
+      },
+      {
+        "locale": "ru",
+        "name": "веточка"
+      },
+      {
+        "locale": "pl",
+        "name": "gałązka"
+      },
+      {
+        "locale": "no",
+        "name": "kvist"
+      },
+      {
+        "locale": "pt",
+        "name": "raminho"
+      },
+      {
+        "locale": "bg",
+        "name": "стръкче"
+      },
+      {
+        "locale": "fr",
+        "name": "brin"
+      },
+      {
+        "locale": "fi",
+        "name": "oksa"
+      },
+      {
+        "locale": "uk",
+        "name": "гілочка"
       }
     ],
     "plural": [
@@ -503,16 +1747,58 @@
       {
         "locale": "ko",
         "name": "줄기"
+      },
+      {
+        "locale": "da",
+        "name": "kviste"
+      },
+      {
+        "locale": "it",
+        "name": "rametti"
+      },
+      {
+        "locale": "es",
+        "name": "ramitas"
+      },
+      {
+        "locale": "ru",
+        "name": "веточки"
+      },
+      {
+        "locale": "pl",
+        "name": "gałązki"
+      },
+      {
+        "locale": "no",
+        "name": "kvister"
+      },
+      {
+        "locale": "pt",
+        "name": "raminhos"
+      },
+      {
+        "locale": "bg",
+        "name": "стръкчета"
+      },
+      {
+        "locale": "fr",
+        "name": "brins"
+      },
+      {
+        "locale": "fi",
+        "name": "oksaa"
+      },
+      {
+        "locale": "uk",
+        "name": "гілочки"
       }
     ],
     "alternates": [
       "sprig",
       "sprigs",
       "sprigs of",
-      "stengel",
       "stiel",
       "stiele",
-      "stängel",
       "stängelchen",
       "tak",
       "takje",
@@ -520,7 +1806,31 @@
       "takken",
       "zweiglein",
       "줄기",
-      "가지"
+      "가지",
+      "rametto",
+      "rametti",
+      "ramita",
+      "ramitas",
+      "веточка",
+      "веточки",
+      "веточек",
+      "gałązka",
+      "gałązki",
+      "gałązek",
+      "kvist",
+      "kvister",
+      "raminho",
+      "raminhos",
+      "стръкче",
+      "стръкчета",
+      "brin",
+      "brins",
+      "oksa",
+      "oksaa",
+      "гілочка",
+      "гілочки",
+      "гілочок",
+      "гілочку"
     ]
   },
   "bunch": {
@@ -540,6 +1850,50 @@
       {
         "locale": "ko",
         "name": "다발"
+      },
+      {
+        "locale": "da",
+        "name": "bundt"
+      },
+      {
+        "locale": "it",
+        "name": "mazzo"
+      },
+      {
+        "locale": "es",
+        "name": "manojo"
+      },
+      {
+        "locale": "ru",
+        "name": "пучок"
+      },
+      {
+        "locale": "pl",
+        "name": "pęczek"
+      },
+      {
+        "locale": "no",
+        "name": "bunt"
+      },
+      {
+        "locale": "pt",
+        "name": "maço"
+      },
+      {
+        "locale": "bg",
+        "name": "връзка"
+      },
+      {
+        "locale": "fr",
+        "name": "bouquet"
+      },
+      {
+        "locale": "fi",
+        "name": "nippu"
+      },
+      {
+        "locale": "uk",
+        "name": "пучок"
       }
     ],
     "plural": [
@@ -558,6 +1912,50 @@
       {
         "locale": "ko",
         "name": "다발"
+      },
+      {
+        "locale": "da",
+        "name": "bundter"
+      },
+      {
+        "locale": "it",
+        "name": "mazzi"
+      },
+      {
+        "locale": "es",
+        "name": "manojos"
+      },
+      {
+        "locale": "ru",
+        "name": "пучки"
+      },
+      {
+        "locale": "pl",
+        "name": "pęczki"
+      },
+      {
+        "locale": "no",
+        "name": "bunter"
+      },
+      {
+        "locale": "pt",
+        "name": "maços"
+      },
+      {
+        "locale": "bg",
+        "name": "връзки"
+      },
+      {
+        "locale": "fr",
+        "name": "bouquets"
+      },
+      {
+        "locale": "fi",
+        "name": "nippua"
+      },
+      {
+        "locale": "uk",
+        "name": "пучки"
       }
     ],
     "alternates": [
@@ -572,7 +1970,34 @@
       "büschel",
       "다발",
       "한단",
-      "단"
+      "단",
+      "mazzo",
+      "mazzi",
+      "mazzetto",
+      "mazzetti",
+      "manojo",
+      "manojos",
+      "пучок",
+      "пучки",
+      "пучка",
+      "pęczek",
+      "pęczki",
+      "pęczków",
+      "bunt",
+      "bunter",
+      "maço",
+      "maços",
+      "връзка",
+      "връзки",
+      "bouquet",
+      "bouquets",
+      "botte",
+      "bottes",
+      "nippu",
+      "nippua",
+      "kimppu",
+      "kimppua",
+      "пучків"
     ]
   },
   "stalk": {
@@ -592,6 +2017,50 @@
       {
         "locale": "ko",
         "name": "대"
+      },
+      {
+        "locale": "da",
+        "name": "stængel"
+      },
+      {
+        "locale": "it",
+        "name": "gambo"
+      },
+      {
+        "locale": "es",
+        "name": "tallo"
+      },
+      {
+        "locale": "ru",
+        "name": "стебель"
+      },
+      {
+        "locale": "pl",
+        "name": "łodyga"
+      },
+      {
+        "locale": "no",
+        "name": "stilk"
+      },
+      {
+        "locale": "pt",
+        "name": "talo"
+      },
+      {
+        "locale": "bg",
+        "name": "стрък"
+      },
+      {
+        "locale": "fr",
+        "name": "tige"
+      },
+      {
+        "locale": "fi",
+        "name": "varsi"
+      },
+      {
+        "locale": "uk",
+        "name": "стебло"
       }
     ],
     "plural": [
@@ -610,9 +2079,80 @@
       {
         "locale": "ko",
         "name": "대"
+      },
+      {
+        "locale": "da",
+        "name": "stængler"
+      },
+      {
+        "locale": "it",
+        "name": "gambi"
+      },
+      {
+        "locale": "es",
+        "name": "tallos"
+      },
+      {
+        "locale": "ru",
+        "name": "стебли"
+      },
+      {
+        "locale": "pl",
+        "name": "łodygi"
+      },
+      {
+        "locale": "no",
+        "name": "stilker"
+      },
+      {
+        "locale": "pt",
+        "name": "talos"
+      },
+      {
+        "locale": "bg",
+        "name": "стръкове"
+      },
+      {
+        "locale": "fr",
+        "name": "tiges"
+      },
+      {
+        "locale": "fi",
+        "name": "vartta"
+      },
+      {
+        "locale": "uk",
+        "name": "стебла"
       }
     ],
-    "alternates": ["stengel", "stengels", "대", "줄기"]
+    "alternates": [
+      "stengel",
+      "stengels",
+      "대",
+      "stilk",
+      "stilke",
+      "gambo",
+      "gambi",
+      "tallo",
+      "tallos",
+      "стебель",
+      "стебли",
+      "стебля",
+      "łodyga",
+      "łodygi",
+      "stilker",
+      "talo",
+      "talos",
+      "стрък",
+      "стръкове",
+      "tige",
+      "tiges",
+      "varsi",
+      "vartta",
+      "стебло",
+      "стебла",
+      "стебел"
+    ]
   },
   "pack": {
     "short": [
@@ -631,6 +2171,50 @@
       {
         "locale": "ko",
         "name": "팩"
+      },
+      {
+        "locale": "da",
+        "name": "pakke"
+      },
+      {
+        "locale": "it",
+        "name": "conf."
+      },
+      {
+        "locale": "fr",
+        "name": "paquet"
+      },
+      {
+        "locale": "es",
+        "name": "paquete"
+      },
+      {
+        "locale": "ru",
+        "name": "упаковка"
+      },
+      {
+        "locale": "pl",
+        "name": "opakowanie"
+      },
+      {
+        "locale": "no",
+        "name": "pakke"
+      },
+      {
+        "locale": "pt",
+        "name": "pacote"
+      },
+      {
+        "locale": "bg",
+        "name": "опаковка"
+      },
+      {
+        "locale": "fi",
+        "name": "pkt"
+      },
+      {
+        "locale": "uk",
+        "name": "упаковка"
       }
     ],
     "plural": [
@@ -649,6 +2233,50 @@
       {
         "locale": "ko",
         "name": "팩"
+      },
+      {
+        "locale": "da",
+        "name": "pakker"
+      },
+      {
+        "locale": "it",
+        "name": "conf."
+      },
+      {
+        "locale": "fr",
+        "name": "paquets"
+      },
+      {
+        "locale": "es",
+        "name": "paquetes"
+      },
+      {
+        "locale": "ru",
+        "name": "упаковки"
+      },
+      {
+        "locale": "pl",
+        "name": "opakowania"
+      },
+      {
+        "locale": "no",
+        "name": "pakker"
+      },
+      {
+        "locale": "pt",
+        "name": "pacotes"
+      },
+      {
+        "locale": "bg",
+        "name": "опаковки"
+      },
+      {
+        "locale": "fi",
+        "name": "pakettia"
+      },
+      {
+        "locale": "uk",
+        "name": "упаковки"
       }
     ],
     "alternates": [
@@ -670,8 +2298,35 @@
       "päckchen",
       "팩",
       "봉",
-      "봉지",
-      "포"
+      "포",
+      "pk.",
+      "confezione",
+      "confezioni",
+      "conf",
+      "conf.",
+      "paquet",
+      "paquets",
+      "paquete",
+      "paquetes",
+      "упаковка",
+      "упаковки",
+      "opakowanie",
+      "opakowania",
+      "pakke",
+      "pakker",
+      "pacote",
+      "pacotes",
+      "опаковка",
+      "опаковки",
+      "pkt",
+      "pkt.",
+      "paketti",
+      "pakettia",
+      "упаковок",
+      "пачка",
+      "пачки",
+      "пачок",
+      "пачку"
     ]
   },
   "can": {
@@ -691,6 +2346,50 @@
       {
         "locale": "ko",
         "name": "캔"
+      },
+      {
+        "locale": "da",
+        "name": "dåse"
+      },
+      {
+        "locale": "it",
+        "name": "lattina"
+      },
+      {
+        "locale": "es",
+        "name": "lata"
+      },
+      {
+        "locale": "ru",
+        "name": "банка"
+      },
+      {
+        "locale": "pl",
+        "name": "puszka"
+      },
+      {
+        "locale": "no",
+        "name": "boks"
+      },
+      {
+        "locale": "pt",
+        "name": "lata"
+      },
+      {
+        "locale": "bg",
+        "name": "консерва"
+      },
+      {
+        "locale": "fr",
+        "name": "conserve"
+      },
+      {
+        "locale": "fi",
+        "name": "tlk"
+      },
+      {
+        "locale": "uk",
+        "name": "банка"
       }
     ],
     "plural": [
@@ -709,6 +2408,50 @@
       {
         "locale": "ko",
         "name": "캔"
+      },
+      {
+        "locale": "da",
+        "name": "dåser"
+      },
+      {
+        "locale": "it",
+        "name": "lattine"
+      },
+      {
+        "locale": "es",
+        "name": "latas"
+      },
+      {
+        "locale": "ru",
+        "name": "банки"
+      },
+      {
+        "locale": "pl",
+        "name": "puszki"
+      },
+      {
+        "locale": "no",
+        "name": "bokser"
+      },
+      {
+        "locale": "pt",
+        "name": "latas"
+      },
+      {
+        "locale": "bg",
+        "name": "консерви"
+      },
+      {
+        "locale": "fr",
+        "name": "conserves"
+      },
+      {
+        "locale": "fi",
+        "name": "tölkkiä"
+      },
+      {
+        "locale": "uk",
+        "name": "банки"
       }
     ],
     "alternates": [
@@ -731,7 +2474,28 @@
       "kleine dosen",
       "tin",
       "캔",
-      "통"
+      "lattina",
+      "lattine",
+      "lata",
+      "latas",
+      "банка",
+      "банки",
+      "puszka",
+      "puszki",
+      "boks",
+      "bokser",
+      "консерва",
+      "консерви",
+      "conserve",
+      "conserves",
+      "tlk",
+      "tlk.",
+      "tölkki",
+      "tölkkiä",
+      "банок",
+      "бляшанка",
+      "бляшанки",
+      "бляшанок"
     ]
   },
   "jar": {
@@ -742,15 +2506,59 @@
       },
       {
         "locale": "de",
-        "name": "Glas"
+        "name": "Gl."
       },
       {
         "locale": "nl",
-        "name": "pot"
+        "name": "potje"
       },
       {
         "locale": "ko",
-        "name": "병"
+        "name": "유리병"
+      },
+      {
+        "locale": "da",
+        "name": "krukke"
+      },
+      {
+        "locale": "it",
+        "name": "vasetto"
+      },
+      {
+        "locale": "es",
+        "name": "tarro"
+      },
+      {
+        "locale": "ru",
+        "name": "баночка"
+      },
+      {
+        "locale": "pl",
+        "name": "słoik"
+      },
+      {
+        "locale": "no",
+        "name": "krukke"
+      },
+      {
+        "locale": "pt",
+        "name": "frasco"
+      },
+      {
+        "locale": "bg",
+        "name": "буркан"
+      },
+      {
+        "locale": "fr",
+        "name": "bocal"
+      },
+      {
+        "locale": "fi",
+        "name": "purkki"
+      },
+      {
+        "locale": "uk",
+        "name": "слоїк"
       }
     ],
     "plural": [
@@ -760,15 +2568,59 @@
       },
       {
         "locale": "de",
-        "name": "Gläser"
+        "name": "Gl."
       },
       {
         "locale": "nl",
-        "name": "potten"
+        "name": "potjes"
       },
       {
         "locale": "ko",
-        "name": "병"
+        "name": "유리병"
+      },
+      {
+        "locale": "da",
+        "name": "krukker"
+      },
+      {
+        "locale": "it",
+        "name": "vasetti"
+      },
+      {
+        "locale": "es",
+        "name": "tarros"
+      },
+      {
+        "locale": "ru",
+        "name": "баночки"
+      },
+      {
+        "locale": "pl",
+        "name": "słoiki"
+      },
+      {
+        "locale": "no",
+        "name": "krukker"
+      },
+      {
+        "locale": "pt",
+        "name": "frascos"
+      },
+      {
+        "locale": "bg",
+        "name": "буркани"
+      },
+      {
+        "locale": "fr",
+        "name": "bocaux"
+      },
+      {
+        "locale": "fi",
+        "name": "purkkia"
+      },
+      {
+        "locale": "uk",
+        "name": "слоїки"
       }
     ],
     "alternates": [
@@ -779,10 +2631,37 @@
       "jar",
       "jars",
       "mason jar",
-      "pot",
-      "potten",
-      "병",
-      "유리병"
+      "유리병",
+      "vasetto",
+      "vasetti",
+      "barattolo",
+      "barattoli",
+      "tarro",
+      "tarros",
+      "bote",
+      "botes",
+      "frasco",
+      "frascos",
+      "баночка",
+      "баночки",
+      "słoik",
+      "słoiki",
+      "słoików",
+      "krukke",
+      "krukker",
+      "vidro",
+      "vidros",
+      "буркан",
+      "буркани",
+      "bocal",
+      "bocaux",
+      "purkki",
+      "purkkia",
+      "слоїк",
+      "слоїки",
+      "слоїка",
+      "слоїків",
+      "баночок"
     ]
   },
   "bottle": {
@@ -802,6 +2681,50 @@
       {
         "locale": "ko",
         "name": "병"
+      },
+      {
+        "locale": "da",
+        "name": "fl."
+      },
+      {
+        "locale": "it",
+        "name": "bottiglia"
+      },
+      {
+        "locale": "fr",
+        "name": "bouteille"
+      },
+      {
+        "locale": "es",
+        "name": "botella"
+      },
+      {
+        "locale": "ru",
+        "name": "бутылка"
+      },
+      {
+        "locale": "pl",
+        "name": "butelka"
+      },
+      {
+        "locale": "no",
+        "name": "flaske"
+      },
+      {
+        "locale": "pt",
+        "name": "garrafa"
+      },
+      {
+        "locale": "bg",
+        "name": "бутилка"
+      },
+      {
+        "locale": "fi",
+        "name": "plo"
+      },
+      {
+        "locale": "uk",
+        "name": "пляшка"
       }
     ],
     "plural": [
@@ -820,6 +2743,50 @@
       {
         "locale": "ko",
         "name": "병"
+      },
+      {
+        "locale": "da",
+        "name": "flasker"
+      },
+      {
+        "locale": "it",
+        "name": "bottiglie"
+      },
+      {
+        "locale": "fr",
+        "name": "bouteilles"
+      },
+      {
+        "locale": "es",
+        "name": "botellas"
+      },
+      {
+        "locale": "ru",
+        "name": "бутылки"
+      },
+      {
+        "locale": "pl",
+        "name": "butelki"
+      },
+      {
+        "locale": "no",
+        "name": "flasker"
+      },
+      {
+        "locale": "pt",
+        "name": "garrafas"
+      },
+      {
+        "locale": "bg",
+        "name": "бутилки"
+      },
+      {
+        "locale": "fi",
+        "name": "pulloa"
+      },
+      {
+        "locale": "uk",
+        "name": "пляшки"
       }
     ],
     "alternates": [
@@ -827,7 +2794,6 @@
       "flaschen",
       "bottle",
       "bottles",
-      "btl",
       "btls",
       "fl",
       "fl.",
@@ -836,7 +2802,29 @@
       "flesjes",
       "flessen",
       "fläschchen",
-      "병"
+      "병",
+      "bottiglia",
+      "bottiglie",
+      "bouteille",
+      "bouteilles",
+      "botella",
+      "botellas",
+      "бутылка",
+      "бутылки",
+      "butelka",
+      "butelki",
+      "flaske",
+      "flasker",
+      "garrafa",
+      "garrafas",
+      "бутилка",
+      "бутилки",
+      "plo",
+      "pullo",
+      "pulloa",
+      "пляшка",
+      "пляшки",
+      "пляшок"
     ]
   },
   "bag": {
@@ -856,6 +2844,50 @@
       {
         "locale": "ko",
         "name": "봉지"
+      },
+      {
+        "locale": "da",
+        "name": "pose"
+      },
+      {
+        "locale": "it",
+        "name": "sacchetto"
+      },
+      {
+        "locale": "es",
+        "name": "bolsa"
+      },
+      {
+        "locale": "ru",
+        "name": "пакет"
+      },
+      {
+        "locale": "pl",
+        "name": "torebka"
+      },
+      {
+        "locale": "no",
+        "name": "pose"
+      },
+      {
+        "locale": "pt",
+        "name": "saco"
+      },
+      {
+        "locale": "bg",
+        "name": "торбичка"
+      },
+      {
+        "locale": "fr",
+        "name": "sac"
+      },
+      {
+        "locale": "fi",
+        "name": "pussi"
+      },
+      {
+        "locale": "uk",
+        "name": "пакет"
       }
     ],
     "plural": [
@@ -874,6 +2906,50 @@
       {
         "locale": "ko",
         "name": "봉지"
+      },
+      {
+        "locale": "da",
+        "name": "poser"
+      },
+      {
+        "locale": "it",
+        "name": "sacchetti"
+      },
+      {
+        "locale": "es",
+        "name": "bolsas"
+      },
+      {
+        "locale": "ru",
+        "name": "пакеты"
+      },
+      {
+        "locale": "pl",
+        "name": "torebki"
+      },
+      {
+        "locale": "no",
+        "name": "poser"
+      },
+      {
+        "locale": "pt",
+        "name": "sacos"
+      },
+      {
+        "locale": "bg",
+        "name": "торбички"
+      },
+      {
+        "locale": "fr",
+        "name": "sacs"
+      },
+      {
+        "locale": "fi",
+        "name": "pussia"
+      },
+      {
+        "locale": "uk",
+        "name": "пакети"
       }
     ],
     "alternates": [
@@ -881,17 +2957,37 @@
       "bags",
       "btl",
       "btl.",
-      "beutel",
       "sack",
       "tütchen",
       "tüte",
       "tüten",
       "zak",
-      "zakje",
-      "zakjes",
       "zakken",
       "봉지",
-      "자루"
+      "자루",
+      "sacchetto",
+      "sacchetti",
+      "busta",
+      "buste",
+      "bolsa",
+      "bolsas",
+      "пакет",
+      "пакеты",
+      "пакета",
+      "torebka",
+      "torebki",
+      "pose",
+      "poser",
+      "saco",
+      "sacos",
+      "торбичка",
+      "торбички",
+      "sac",
+      "sacs",
+      "pussi",
+      "pussia",
+      "пакети",
+      "пакетів"
     ]
   },
   "box": {
@@ -906,11 +3002,55 @@
       },
       {
         "locale": "nl",
-        "name": "doos"
+        "name": "doosje"
       },
       {
         "locale": "ko",
         "name": "박스"
+      },
+      {
+        "locale": "da",
+        "name": "æske"
+      },
+      {
+        "locale": "it",
+        "name": "scatola"
+      },
+      {
+        "locale": "fr",
+        "name": "boîte"
+      },
+      {
+        "locale": "es",
+        "name": "caja"
+      },
+      {
+        "locale": "ru",
+        "name": "коробка"
+      },
+      {
+        "locale": "pl",
+        "name": "pudełko"
+      },
+      {
+        "locale": "no",
+        "name": "eske"
+      },
+      {
+        "locale": "pt",
+        "name": "caixa"
+      },
+      {
+        "locale": "bg",
+        "name": "кутия"
+      },
+      {
+        "locale": "fi",
+        "name": "laatikko"
+      },
+      {
+        "locale": "uk",
+        "name": "коробка"
       }
     ],
     "plural": [
@@ -924,14 +3064,87 @@
       },
       {
         "locale": "nl",
-        "name": "dozen"
+        "name": "doosjes"
       },
       {
         "locale": "ko",
         "name": "박스"
+      },
+      {
+        "locale": "da",
+        "name": "æsker"
+      },
+      {
+        "locale": "it",
+        "name": "scatole"
+      },
+      {
+        "locale": "fr",
+        "name": "boîtes"
+      },
+      {
+        "locale": "es",
+        "name": "cajas"
+      },
+      {
+        "locale": "ru",
+        "name": "коробки"
+      },
+      {
+        "locale": "pl",
+        "name": "pudełka"
+      },
+      {
+        "locale": "no",
+        "name": "esker"
+      },
+      {
+        "locale": "pt",
+        "name": "caixas"
+      },
+      {
+        "locale": "bg",
+        "name": "кутии"
+      },
+      {
+        "locale": "fi",
+        "name": "laatikkoa"
+      },
+      {
+        "locale": "uk",
+        "name": "коробки"
       }
     ],
-    "alternates": ["box", "boxes", "bx", "bx.", "doosje", "doosjes", "dozen", "박스", "상자"]
+    "alternates": [
+      "box",
+      "boxes",
+      "bx",
+      "bx.",
+      "doosje",
+      "doosjes",
+      "박스",
+      "상자",
+      "scatola",
+      "scatole",
+      "boîte",
+      "boîtes",
+      "caja",
+      "cajas",
+      "коробка",
+      "коробки",
+      "pudełko",
+      "pudełka",
+      "eske",
+      "esker",
+      "caixa",
+      "caixas",
+      "кутия",
+      "кутии",
+      "laatikko",
+      "laatikkoa",
+      "doos",
+      "коробок"
+    ]
   },
   "handful": {
     "short": [
@@ -950,6 +3163,50 @@
       {
         "locale": "ko",
         "name": "한줌"
+      },
+      {
+        "locale": "da",
+        "name": "håndfuld"
+      },
+      {
+        "locale": "it",
+        "name": "manciata"
+      },
+      {
+        "locale": "es",
+        "name": "puñado"
+      },
+      {
+        "locale": "ru",
+        "name": "горсть"
+      },
+      {
+        "locale": "pl",
+        "name": "garść"
+      },
+      {
+        "locale": "no",
+        "name": "håndfull"
+      },
+      {
+        "locale": "pt",
+        "name": "punhado"
+      },
+      {
+        "locale": "bg",
+        "name": "шепа"
+      },
+      {
+        "locale": "fr",
+        "name": "poignée"
+      },
+      {
+        "locale": "fi",
+        "name": "kourallinen"
+      },
+      {
+        "locale": "uk",
+        "name": "жменя"
       }
     ],
     "plural": [
@@ -968,6 +3225,50 @@
       {
         "locale": "ko",
         "name": "한줌"
+      },
+      {
+        "locale": "da",
+        "name": "håndfulde"
+      },
+      {
+        "locale": "it",
+        "name": "manciate"
+      },
+      {
+        "locale": "es",
+        "name": "puñados"
+      },
+      {
+        "locale": "ru",
+        "name": "горсти"
+      },
+      {
+        "locale": "pl",
+        "name": "garście"
+      },
+      {
+        "locale": "no",
+        "name": "håndfuller"
+      },
+      {
+        "locale": "pt",
+        "name": "punhados"
+      },
+      {
+        "locale": "bg",
+        "name": "шепи"
+      },
+      {
+        "locale": "fr",
+        "name": "poignées"
+      },
+      {
+        "locale": "fi",
+        "name": "kourallista"
+      },
+      {
+        "locale": "uk",
+        "name": "жмені"
       }
     ],
     "alternates": [
@@ -982,7 +3283,31 @@
       "hdv",
       "hdv.",
       "한줌",
-      "줌"
+      "줌",
+      "manciata",
+      "manciate",
+      "una manciata",
+      "puñado",
+      "puñados",
+      "горсть",
+      "горсти",
+      "garść",
+      "garście",
+      "garści",
+      "håndfull",
+      "håndfuller",
+      "punhado",
+      "punhados",
+      "шепа",
+      "шепи",
+      "poignée",
+      "poignées",
+      "kourallinen",
+      "kourallista",
+      "жменя",
+      "жмені",
+      "жмень",
+      "жменю"
     ]
   },
   "splash": {
@@ -1001,7 +3326,51 @@
       },
       {
         "locale": "ko",
-        "name": "약간"
+        "name": "조금"
+      },
+      {
+        "locale": "da",
+        "name": "skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzo"
+      },
+      {
+        "locale": "es",
+        "name": "chorro"
+      },
+      {
+        "locale": "ru",
+        "name": "всплеск"
+      },
+      {
+        "locale": "pl",
+        "name": "chlust"
+      },
+      {
+        "locale": "no",
+        "name": "skvett"
+      },
+      {
+        "locale": "pt",
+        "name": "jato"
+      },
+      {
+        "locale": "bg",
+        "name": "плисък"
+      },
+      {
+        "locale": "fr",
+        "name": "giclée"
+      },
+      {
+        "locale": "fi",
+        "name": "loraus"
+      },
+      {
+        "locale": "uk",
+        "name": "ковток"
       }
     ],
     "plural": [
@@ -1019,7 +3388,51 @@
       },
       {
         "locale": "ko",
-        "name": "약간"
+        "name": "조금"
+      },
+      {
+        "locale": "da",
+        "name": "skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzi"
+      },
+      {
+        "locale": "es",
+        "name": "chorros"
+      },
+      {
+        "locale": "ru",
+        "name": "всплески"
+      },
+      {
+        "locale": "pl",
+        "name": "chlusty"
+      },
+      {
+        "locale": "no",
+        "name": "skvetter"
+      },
+      {
+        "locale": "pt",
+        "name": "jatos"
+      },
+      {
+        "locale": "bg",
+        "name": "плисъци"
+      },
+      {
+        "locale": "fr",
+        "name": "giclées"
+      },
+      {
+        "locale": "fi",
+        "name": "lorausta"
+      },
+      {
+        "locale": "uk",
+        "name": "ковтки"
       }
     ],
     "alternates": [
@@ -1031,8 +3444,32 @@
       "schuß",
       "splash",
       "splashes",
-      "약간",
-      "조금"
+      "조금",
+      "et skvæt",
+      "slat",
+      "slatter",
+      "spruzzo",
+      "spruzzi",
+      "schizzo",
+      "chorro",
+      "chorros",
+      "всплеск",
+      "всплески",
+      "chlust",
+      "chlusty",
+      "skvett",
+      "skvetter",
+      "jato",
+      "jatos",
+      "плисък",
+      "плисъци",
+      "giclée",
+      "giclées",
+      "loraus",
+      "lorausta",
+      "ковток",
+      "ковтки",
+      "ковтків"
     ]
   },
   "cup": {
@@ -1052,6 +3489,50 @@
       {
         "locale": "ko",
         "name": "컵"
+      },
+      {
+        "locale": "da",
+        "name": "kop"
+      },
+      {
+        "locale": "it",
+        "name": "tazza"
+      },
+      {
+        "locale": "fr",
+        "name": "tasse"
+      },
+      {
+        "locale": "es",
+        "name": "taza"
+      },
+      {
+        "locale": "ru",
+        "name": "стакан"
+      },
+      {
+        "locale": "pl",
+        "name": "szklanka"
+      },
+      {
+        "locale": "no",
+        "name": "kopp"
+      },
+      {
+        "locale": "pt",
+        "name": "xícara"
+      },
+      {
+        "locale": "bg",
+        "name": "чаша"
+      },
+      {
+        "locale": "fi",
+        "name": "kuppi"
+      },
+      {
+        "locale": "uk",
+        "name": "склянка"
       }
     ],
     "plural": [
@@ -1070,6 +3551,50 @@
       {
         "locale": "ko",
         "name": "컵"
+      },
+      {
+        "locale": "da",
+        "name": "kopper"
+      },
+      {
+        "locale": "it",
+        "name": "tazze"
+      },
+      {
+        "locale": "fr",
+        "name": "tasses"
+      },
+      {
+        "locale": "es",
+        "name": "tazas"
+      },
+      {
+        "locale": "ru",
+        "name": "стаканы"
+      },
+      {
+        "locale": "pl",
+        "name": "szklanki"
+      },
+      {
+        "locale": "no",
+        "name": "kopper"
+      },
+      {
+        "locale": "pt",
+        "name": "xícaras"
+      },
+      {
+        "locale": "bg",
+        "name": "чаши"
+      },
+      {
+        "locale": "fi",
+        "name": "kupillista"
+      },
+      {
+        "locale": "uk",
+        "name": "склянки"
       }
     ],
     "alternates": [
@@ -1091,7 +3616,36 @@
       "tass.",
       "tässchen",
       "컵",
-      "공기"
+      "pægl",
+      "tazza",
+      "tazze",
+      "tazzina",
+      "tazzine",
+      "tasse",
+      "tasses",
+      "taza",
+      "tazas",
+      "стакан",
+      "стаканы",
+      "стакана",
+      "szklanka",
+      "szklanki",
+      "kopp",
+      "kopper",
+      "xícara",
+      "xícaras",
+      "chávena",
+      "chávenas",
+      "чаша",
+      "чаши",
+      "kuppi",
+      "kuppia",
+      "kupillinen",
+      "kupillista",
+      "склянка",
+      "склянки",
+      "склянок",
+      "склянку"
     ]
   },
   "glass": {
@@ -1111,6 +3665,50 @@
       {
         "locale": "ko",
         "name": "잔"
+      },
+      {
+        "locale": "da",
+        "name": "glas"
+      },
+      {
+        "locale": "it",
+        "name": "bicchiere"
+      },
+      {
+        "locale": "fr",
+        "name": "verre"
+      },
+      {
+        "locale": "es",
+        "name": "vaso"
+      },
+      {
+        "locale": "ru",
+        "name": "бокал"
+      },
+      {
+        "locale": "pl",
+        "name": "kieliszek"
+      },
+      {
+        "locale": "no",
+        "name": "glass"
+      },
+      {
+        "locale": "pt",
+        "name": "copo"
+      },
+      {
+        "locale": "bg",
+        "name": "чашка"
+      },
+      {
+        "locale": "fi",
+        "name": "lasi"
+      },
+      {
+        "locale": "uk",
+        "name": "келих"
       }
     ],
     "plural": [
@@ -1129,6 +3727,50 @@
       {
         "locale": "ko",
         "name": "잔"
+      },
+      {
+        "locale": "da",
+        "name": "glas"
+      },
+      {
+        "locale": "it",
+        "name": "bicchieri"
+      },
+      {
+        "locale": "fr",
+        "name": "verres"
+      },
+      {
+        "locale": "es",
+        "name": "vasos"
+      },
+      {
+        "locale": "ru",
+        "name": "бокалы"
+      },
+      {
+        "locale": "pl",
+        "name": "kieliszki"
+      },
+      {
+        "locale": "no",
+        "name": "glass"
+      },
+      {
+        "locale": "pt",
+        "name": "copos"
+      },
+      {
+        "locale": "bg",
+        "name": "чашки"
+      },
+      {
+        "locale": "fi",
+        "name": "lasillista"
+      },
+      {
+        "locale": "uk",
+        "name": "келихи"
       }
     ],
     "alternates": [
@@ -1141,7 +3783,30 @@
       "kleines glas",
       "shotglas",
       "잔",
-      "컵"
+      "bicchiere",
+      "bicchieri",
+      "verre",
+      "verres",
+      "vaso",
+      "vasos",
+      "бокал",
+      "бокалы",
+      "бокала",
+      "kieliszek",
+      "kieliszki",
+      "glass",
+      "copo",
+      "copos",
+      "чашка",
+      "чашки",
+      "lasi",
+      "lasia",
+      "lasillinen",
+      "lasillista",
+      "келих",
+      "келихи",
+      "келиха",
+      "келихів"
     ]
   },
   "slice": {
@@ -1161,6 +3826,50 @@
       {
         "locale": "ko",
         "name": "조각"
+      },
+      {
+        "locale": "da",
+        "name": "skive"
+      },
+      {
+        "locale": "it",
+        "name": "fetta"
+      },
+      {
+        "locale": "fr",
+        "name": "tranche"
+      },
+      {
+        "locale": "es",
+        "name": "rebanada"
+      },
+      {
+        "locale": "ru",
+        "name": "ломтик"
+      },
+      {
+        "locale": "pl",
+        "name": "kromka"
+      },
+      {
+        "locale": "no",
+        "name": "skive"
+      },
+      {
+        "locale": "pt",
+        "name": "fatia"
+      },
+      {
+        "locale": "bg",
+        "name": "филия"
+      },
+      {
+        "locale": "fi",
+        "name": "viipale"
+      },
+      {
+        "locale": "uk",
+        "name": "скибочка"
       }
     ],
     "plural": [
@@ -1179,6 +3888,50 @@
       {
         "locale": "ko",
         "name": "조각"
+      },
+      {
+        "locale": "da",
+        "name": "skiver"
+      },
+      {
+        "locale": "it",
+        "name": "fette"
+      },
+      {
+        "locale": "fr",
+        "name": "tranches"
+      },
+      {
+        "locale": "es",
+        "name": "rebanadas"
+      },
+      {
+        "locale": "ru",
+        "name": "ломтики"
+      },
+      {
+        "locale": "pl",
+        "name": "kromki"
+      },
+      {
+        "locale": "no",
+        "name": "skiver"
+      },
+      {
+        "locale": "pt",
+        "name": "fatias"
+      },
+      {
+        "locale": "bg",
+        "name": "филии"
+      },
+      {
+        "locale": "fi",
+        "name": "viipaletta"
+      },
+      {
+        "locale": "uk",
+        "name": "скибочки"
       }
     ],
     "alternates": [
@@ -1193,7 +3946,36 @@
       "slice",
       "slices",
       "조각",
-      "슬라이스"
+      "슬라이스",
+      "fetta",
+      "fette",
+      "tranche",
+      "tranches",
+      "rebanada",
+      "rebanadas",
+      "loncha",
+      "lonchas",
+      "ломтик",
+      "ломтики",
+      "ломтика",
+      "kromka",
+      "kromki",
+      "skive",
+      "skiver",
+      "fatia",
+      "fatias",
+      "филия",
+      "филии",
+      "viipale",
+      "viipaletta",
+      "siivu",
+      "siivua",
+      "скибочка",
+      "скибочки",
+      "скибочок",
+      "скибка",
+      "скибки",
+      "скибок"
     ]
   },
   "strip": {
@@ -1213,6 +3995,50 @@
       {
         "locale": "ko",
         "name": "채"
+      },
+      {
+        "locale": "da",
+        "name": "strimmel"
+      },
+      {
+        "locale": "it",
+        "name": "striscia"
+      },
+      {
+        "locale": "es",
+        "name": "tira"
+      },
+      {
+        "locale": "ru",
+        "name": "полоска"
+      },
+      {
+        "locale": "pl",
+        "name": "pasek"
+      },
+      {
+        "locale": "no",
+        "name": "strimmel"
+      },
+      {
+        "locale": "pt",
+        "name": "tira"
+      },
+      {
+        "locale": "bg",
+        "name": "лента"
+      },
+      {
+        "locale": "fr",
+        "name": "lanière"
+      },
+      {
+        "locale": "fi",
+        "name": "suikale"
+      },
+      {
+        "locale": "uk",
+        "name": "смужка"
       }
     ],
     "plural": [
@@ -1231,9 +4057,81 @@
       {
         "locale": "ko",
         "name": "채"
+      },
+      {
+        "locale": "da",
+        "name": "strimler"
+      },
+      {
+        "locale": "it",
+        "name": "strisce"
+      },
+      {
+        "locale": "es",
+        "name": "tiras"
+      },
+      {
+        "locale": "ru",
+        "name": "полоски"
+      },
+      {
+        "locale": "pl",
+        "name": "paski"
+      },
+      {
+        "locale": "no",
+        "name": "strimler"
+      },
+      {
+        "locale": "pt",
+        "name": "tiras"
+      },
+      {
+        "locale": "bg",
+        "name": "ленти"
+      },
+      {
+        "locale": "fr",
+        "name": "lanières"
+      },
+      {
+        "locale": "fi",
+        "name": "suikaletta"
+      },
+      {
+        "locale": "uk",
+        "name": "смужки"
       }
     ],
-    "alternates": ["reepje", "reepjes", "repen", "strip", "strips", "채", "가늘게썬조각"]
+    "alternates": [
+      "reepje",
+      "reepjes",
+      "strip",
+      "strips",
+      "채",
+      "가늘게썬조각",
+      "striscia",
+      "strisce",
+      "listarella",
+      "listarelle",
+      "tira",
+      "tiras",
+      "полоска",
+      "полоски",
+      "pasek",
+      "paski",
+      "strimmel",
+      "strimler",
+      "лента",
+      "ленти",
+      "lanière",
+      "lanières",
+      "suikale",
+      "suikaletta",
+      "смужка",
+      "смужки",
+      "смужок"
+    ]
   },
   "sheet": {
     "short": [
@@ -1243,7 +4141,7 @@
       },
       {
         "locale": "de",
-        "name": "Blatt"
+        "name": "Platte"
       },
       {
         "locale": "nl",
@@ -1252,6 +4150,50 @@
       {
         "locale": "ko",
         "name": "장"
+      },
+      {
+        "locale": "da",
+        "name": "ark"
+      },
+      {
+        "locale": "it",
+        "name": "foglio"
+      },
+      {
+        "locale": "fr",
+        "name": "plaque"
+      },
+      {
+        "locale": "es",
+        "name": "lámina"
+      },
+      {
+        "locale": "ru",
+        "name": "пластина"
+      },
+      {
+        "locale": "pl",
+        "name": "płat"
+      },
+      {
+        "locale": "no",
+        "name": "plate"
+      },
+      {
+        "locale": "pt",
+        "name": "lâmina"
+      },
+      {
+        "locale": "bg",
+        "name": "кора"
+      },
+      {
+        "locale": "fi",
+        "name": "levy"
+      },
+      {
+        "locale": "uk",
+        "name": "аркуш"
       }
     ],
     "plural": [
@@ -1261,7 +4203,7 @@
       },
       {
         "locale": "de",
-        "name": "Blätter"
+        "name": "Platten"
       },
       {
         "locale": "nl",
@@ -1270,9 +4212,81 @@
       {
         "locale": "ko",
         "name": "장"
+      },
+      {
+        "locale": "da",
+        "name": "ark"
+      },
+      {
+        "locale": "it",
+        "name": "fogli"
+      },
+      {
+        "locale": "fr",
+        "name": "plaques"
+      },
+      {
+        "locale": "es",
+        "name": "láminas"
+      },
+      {
+        "locale": "ru",
+        "name": "пластины"
+      },
+      {
+        "locale": "pl",
+        "name": "płaty"
+      },
+      {
+        "locale": "no",
+        "name": "plater"
+      },
+      {
+        "locale": "pt",
+        "name": "lâminas"
+      },
+      {
+        "locale": "bg",
+        "name": "кори"
+      },
+      {
+        "locale": "fi",
+        "name": "levyä"
+      },
+      {
+        "locale": "uk",
+        "name": "аркуші"
       }
     ],
-    "alternates": ["vel", "vellen", "velletje", "velletjes", "장"]
+    "alternates": [
+      "vel",
+      "vellen",
+      "velletje",
+      "velletjes",
+      "장",
+      "foglio",
+      "fogli",
+      "lámina",
+      "láminas",
+      "пластина",
+      "пластины",
+      "płat",
+      "płaty",
+      "plate",
+      "plater",
+      "lâmina",
+      "lâminas",
+      "кора",
+      "кори",
+      "levy",
+      "levyä",
+      "аркуш",
+      "аркуші",
+      "аркуша",
+      "аркушів",
+      "пластини",
+      "пластин"
+    ]
   },
   "serving": {
     "short": [
@@ -1291,6 +4305,50 @@
       {
         "locale": "ko",
         "name": "인분"
+      },
+      {
+        "locale": "da",
+        "name": "portion"
+      },
+      {
+        "locale": "it",
+        "name": "porzione"
+      },
+      {
+        "locale": "es",
+        "name": "ración"
+      },
+      {
+        "locale": "ru",
+        "name": "порция"
+      },
+      {
+        "locale": "pl",
+        "name": "porcja"
+      },
+      {
+        "locale": "no",
+        "name": "porsjon"
+      },
+      {
+        "locale": "pt",
+        "name": "porção"
+      },
+      {
+        "locale": "bg",
+        "name": "порция"
+      },
+      {
+        "locale": "fr",
+        "name": "portion"
+      },
+      {
+        "locale": "fi",
+        "name": "annos"
+      },
+      {
+        "locale": "uk",
+        "name": "порція"
       }
     ],
     "plural": [
@@ -1309,6 +4367,50 @@
       {
         "locale": "ko",
         "name": "인분"
+      },
+      {
+        "locale": "da",
+        "name": "portioner"
+      },
+      {
+        "locale": "it",
+        "name": "porzioni"
+      },
+      {
+        "locale": "es",
+        "name": "raciones"
+      },
+      {
+        "locale": "ru",
+        "name": "порции"
+      },
+      {
+        "locale": "pl",
+        "name": "porcje"
+      },
+      {
+        "locale": "no",
+        "name": "porsjoner"
+      },
+      {
+        "locale": "pt",
+        "name": "porções"
+      },
+      {
+        "locale": "bg",
+        "name": "порции"
+      },
+      {
+        "locale": "fr",
+        "name": "portions"
+      },
+      {
+        "locale": "fi",
+        "name": "annosta"
+      },
+      {
+        "locale": "uk",
+        "name": "порції"
       }
     ],
     "alternates": [
@@ -1320,7 +4422,26 @@
       "portions",
       "serving",
       "servings",
-      "인분"
+      "인분",
+      "porzione",
+      "porzioni",
+      "ración",
+      "raciones",
+      "porción",
+      "porciones",
+      "порция",
+      "порции",
+      "porcja",
+      "porcje",
+      "porsjon",
+      "porsjoner",
+      "porção",
+      "porções",
+      "annos",
+      "annosta",
+      "порція",
+      "порції",
+      "порцій"
     ]
   },
   "round_slice": {
@@ -1331,7 +4452,7 @@
       },
       {
         "locale": "de",
-        "name": "Scheibe"
+        "name": "Rädchen"
       },
       {
         "locale": "nl",
@@ -1340,6 +4461,50 @@
       {
         "locale": "ko",
         "name": "둥근 조각"
+      },
+      {
+        "locale": "da",
+        "name": "rund skive"
+      },
+      {
+        "locale": "it",
+        "name": "rondella"
+      },
+      {
+        "locale": "es",
+        "name": "rodaja"
+      },
+      {
+        "locale": "ru",
+        "name": "кружок"
+      },
+      {
+        "locale": "pl",
+        "name": "plaster"
+      },
+      {
+        "locale": "no",
+        "name": "rund skive"
+      },
+      {
+        "locale": "pt",
+        "name": "rodela"
+      },
+      {
+        "locale": "bg",
+        "name": "кръгче"
+      },
+      {
+        "locale": "fr",
+        "name": "rondelle"
+      },
+      {
+        "locale": "fi",
+        "name": "kiekko"
+      },
+      {
+        "locale": "uk",
+        "name": "кружечок"
       }
     ],
     "plural": [
@@ -1349,7 +4514,7 @@
       },
       {
         "locale": "de",
-        "name": "Scheiben"
+        "name": "Rädchen"
       },
       {
         "locale": "nl",
@@ -1358,9 +4523,83 @@
       {
         "locale": "ko",
         "name": "둥근 조각"
+      },
+      {
+        "locale": "da",
+        "name": "runde skiver"
+      },
+      {
+        "locale": "it",
+        "name": "rondelle"
+      },
+      {
+        "locale": "es",
+        "name": "rodajas"
+      },
+      {
+        "locale": "ru",
+        "name": "кружки"
+      },
+      {
+        "locale": "pl",
+        "name": "plastry"
+      },
+      {
+        "locale": "no",
+        "name": "runde skiver"
+      },
+      {
+        "locale": "pt",
+        "name": "rodelas"
+      },
+      {
+        "locale": "bg",
+        "name": "кръгчета"
+      },
+      {
+        "locale": "fr",
+        "name": "rondelles"
+      },
+      {
+        "locale": "fi",
+        "name": "kiekkoa"
+      },
+      {
+        "locale": "uk",
+        "name": "кружечки"
       }
     ],
-    "alternates": ["schijfje", "schijfjes", "schijven", "둥근 조각", "동그랗게 썬 것"]
+    "alternates": [
+      "schijfje",
+      "schijfjes",
+      "schijven",
+      "둥근 조각",
+      "동그랗게 썬 것",
+      "rundskive",
+      "rundtenom",
+      "rondella",
+      "rondelle",
+      "rodaja",
+      "rodajas",
+      "кружок",
+      "кружки",
+      "кружка",
+      "plaster",
+      "plastry",
+      "rund skive",
+      "runde skiver",
+      "rodela",
+      "rodelas",
+      "кръгче",
+      "кръгчета",
+      "rondelles",
+      "kiekko",
+      "kiekkoa",
+      "кружечок",
+      "кружечки",
+      "кружечків",
+      "кружків"
+    ]
   },
   "ring": {
     "short": [
@@ -1379,6 +4618,50 @@
       {
         "locale": "ko",
         "name": "링"
+      },
+      {
+        "locale": "da",
+        "name": "ring"
+      },
+      {
+        "locale": "it",
+        "name": "anello"
+      },
+      {
+        "locale": "es",
+        "name": "aro"
+      },
+      {
+        "locale": "ru",
+        "name": "кольцо"
+      },
+      {
+        "locale": "pl",
+        "name": "krążek"
+      },
+      {
+        "locale": "no",
+        "name": "ring"
+      },
+      {
+        "locale": "pt",
+        "name": "anel"
+      },
+      {
+        "locale": "bg",
+        "name": "колело"
+      },
+      {
+        "locale": "fr",
+        "name": "anneau"
+      },
+      {
+        "locale": "fi",
+        "name": "rengas"
+      },
+      {
+        "locale": "uk",
+        "name": "кільце"
       }
     ],
     "plural": [
@@ -1397,9 +4680,82 @@
       {
         "locale": "ko",
         "name": "링"
+      },
+      {
+        "locale": "da",
+        "name": "ringe"
+      },
+      {
+        "locale": "it",
+        "name": "anelli"
+      },
+      {
+        "locale": "es",
+        "name": "aros"
+      },
+      {
+        "locale": "ru",
+        "name": "кольца"
+      },
+      {
+        "locale": "pl",
+        "name": "krążki"
+      },
+      {
+        "locale": "no",
+        "name": "ringer"
+      },
+      {
+        "locale": "pt",
+        "name": "anéis"
+      },
+      {
+        "locale": "bg",
+        "name": "колела"
+      },
+      {
+        "locale": "fr",
+        "name": "anneaux"
+      },
+      {
+        "locale": "fi",
+        "name": "rengasta"
+      },
+      {
+        "locale": "uk",
+        "name": "кільця"
       }
     ],
-    "alternates": ["ring", "ringen", "ringlein", "링", "고리 모양"]
+    "alternates": [
+      "ring",
+      "ringen",
+      "ringlein",
+      "링",
+      "고리 모양",
+      "ringe",
+      "anello",
+      "anelli",
+      "aro",
+      "aros",
+      "anilla",
+      "anillas",
+      "кольцо",
+      "кольца",
+      "krążek",
+      "krążki",
+      "ringer",
+      "anel",
+      "anéis",
+      "колело",
+      "колела",
+      "anneau",
+      "anneaux",
+      "rengas",
+      "rengasta",
+      "кільце",
+      "кільця",
+      "кілець"
+    ]
   },
   "ball": {
     "short": [
@@ -1418,6 +4774,50 @@
       {
         "locale": "ko",
         "name": "알"
+      },
+      {
+        "locale": "da",
+        "name": "kugle"
+      },
+      {
+        "locale": "it",
+        "name": "pallina"
+      },
+      {
+        "locale": "es",
+        "name": "bola"
+      },
+      {
+        "locale": "ru",
+        "name": "шарик"
+      },
+      {
+        "locale": "pl",
+        "name": "kulka"
+      },
+      {
+        "locale": "no",
+        "name": "kule"
+      },
+      {
+        "locale": "pt",
+        "name": "bola"
+      },
+      {
+        "locale": "bg",
+        "name": "топче"
+      },
+      {
+        "locale": "fr",
+        "name": "boule"
+      },
+      {
+        "locale": "fi",
+        "name": "pallo"
+      },
+      {
+        "locale": "uk",
+        "name": "кулька"
       }
     ],
     "plural": [
@@ -1436,9 +4836,80 @@
       {
         "locale": "ko",
         "name": "알"
+      },
+      {
+        "locale": "da",
+        "name": "kugler"
+      },
+      {
+        "locale": "it",
+        "name": "palline"
+      },
+      {
+        "locale": "es",
+        "name": "bolas"
+      },
+      {
+        "locale": "ru",
+        "name": "шарики"
+      },
+      {
+        "locale": "pl",
+        "name": "kulki"
+      },
+      {
+        "locale": "no",
+        "name": "kuler"
+      },
+      {
+        "locale": "pt",
+        "name": "bolas"
+      },
+      {
+        "locale": "bg",
+        "name": "топчета"
+      },
+      {
+        "locale": "fr",
+        "name": "boules"
+      },
+      {
+        "locale": "fi",
+        "name": "palloa"
+      },
+      {
+        "locale": "uk",
+        "name": "кульки"
       }
     ],
-    "alternates": ["bol", "bollen", "bolletje", "bolletjes", "kügelchen", "알", "경단", "볼"]
+    "alternates": [
+      "bol",
+      "bollen",
+      "kügelchen",
+      "알",
+      "경단",
+      "볼",
+      "pallina",
+      "palline",
+      "bola",
+      "bolas",
+      "шарик",
+      "шарики",
+      "шарика",
+      "kulka",
+      "kulki",
+      "kule",
+      "kuler",
+      "топче",
+      "топчета",
+      "boule",
+      "boules",
+      "pallo",
+      "palloa",
+      "кулька",
+      "кульки",
+      "кульок"
+    ]
   },
   "dash": {
     "short": [
@@ -1452,11 +4923,55 @@
       },
       {
         "locale": "nl",
-        "name": "scheutje"
+        "name": "spatje"
       },
       {
         "locale": "ko",
         "name": "약간"
+      },
+      {
+        "locale": "da",
+        "name": "stænk"
+      },
+      {
+        "locale": "it",
+        "name": "goccio"
+      },
+      {
+        "locale": "es",
+        "name": "chorrito"
+      },
+      {
+        "locale": "ru",
+        "name": "капелька"
+      },
+      {
+        "locale": "pl",
+        "name": "odrobina"
+      },
+      {
+        "locale": "no",
+        "name": "dæsj"
+      },
+      {
+        "locale": "pt",
+        "name": "respingo"
+      },
+      {
+        "locale": "bg",
+        "name": "капчица"
+      },
+      {
+        "locale": "fr",
+        "name": "soupçon"
+      },
+      {
+        "locale": "fi",
+        "name": "tilkka"
+      },
+      {
+        "locale": "uk",
+        "name": "крапелька"
       }
     ],
     "plural": [
@@ -1470,14 +4985,86 @@
       },
       {
         "locale": "nl",
-        "name": "scheutjes"
+        "name": "spatjes"
       },
       {
         "locale": "ko",
         "name": "약간"
+      },
+      {
+        "locale": "da",
+        "name": "stænk"
+      },
+      {
+        "locale": "it",
+        "name": "gocci"
+      },
+      {
+        "locale": "es",
+        "name": "chorritos"
+      },
+      {
+        "locale": "ru",
+        "name": "капельки"
+      },
+      {
+        "locale": "pl",
+        "name": "odrobiny"
+      },
+      {
+        "locale": "no",
+        "name": "dæsjer"
+      },
+      {
+        "locale": "pt",
+        "name": "respingos"
+      },
+      {
+        "locale": "bg",
+        "name": "капчици"
+      },
+      {
+        "locale": "fr",
+        "name": "soupçons"
+      },
+      {
+        "locale": "fi",
+        "name": "tilkkaa"
+      },
+      {
+        "locale": "uk",
+        "name": "крапельки"
       }
     ],
-    "alternates": ["a dash", "dash", "dashes", "약간", "소량"]
+    "alternates": [
+      "a dash",
+      "dash",
+      "dashes",
+      "약간",
+      "et stænk",
+      "goccio",
+      "gocci",
+      "un goccio",
+      "chorrito",
+      "chorritos",
+      "капелька",
+      "капельки",
+      "odrobina",
+      "odrobiny",
+      "dæsj",
+      "dæsjer",
+      "respingo",
+      "respingos",
+      "капчица",
+      "капчици",
+      "soupçon",
+      "soupçons",
+      "tilkka",
+      "tilkkaa",
+      "крапелька",
+      "крапельки",
+      "крапельок"
+    ]
   },
   "drizzle": {
     "short": [
@@ -1487,15 +5074,59 @@
       },
       {
         "locale": "de",
-        "name": "Spritzer"
+        "name": "Spritzerchen"
       },
       {
         "locale": "nl",
-        "name": "scheutje"
+        "name": "straaltje"
       },
       {
         "locale": "ko",
         "name": "살짝"
+      },
+      {
+        "locale": "da",
+        "name": "dryp"
+      },
+      {
+        "locale": "it",
+        "name": "filo"
+      },
+      {
+        "locale": "es",
+        "name": "hilo"
+      },
+      {
+        "locale": "ru",
+        "name": "струйка"
+      },
+      {
+        "locale": "pl",
+        "name": "strużka"
+      },
+      {
+        "locale": "no",
+        "name": "stråle"
+      },
+      {
+        "locale": "pt",
+        "name": "fio"
+      },
+      {
+        "locale": "bg",
+        "name": "струйка"
+      },
+      {
+        "locale": "fr",
+        "name": "trait"
+      },
+      {
+        "locale": "fi",
+        "name": "pirskaus"
+      },
+      {
+        "locale": "uk",
+        "name": "цівка"
       }
     ],
     "plural": [
@@ -1505,18 +5136,90 @@
       },
       {
         "locale": "de",
-        "name": "Spritzer"
+        "name": "Spritzerchen"
       },
       {
         "locale": "nl",
-        "name": "scheutjes"
+        "name": "straaltjes"
       },
       {
         "locale": "ko",
         "name": "살짝"
+      },
+      {
+        "locale": "da",
+        "name": "dryp"
+      },
+      {
+        "locale": "it",
+        "name": "fili"
+      },
+      {
+        "locale": "es",
+        "name": "hilos"
+      },
+      {
+        "locale": "ru",
+        "name": "струйки"
+      },
+      {
+        "locale": "pl",
+        "name": "strużki"
+      },
+      {
+        "locale": "no",
+        "name": "stråler"
+      },
+      {
+        "locale": "pt",
+        "name": "fios"
+      },
+      {
+        "locale": "bg",
+        "name": "струйки"
+      },
+      {
+        "locale": "fr",
+        "name": "traits"
+      },
+      {
+        "locale": "fi",
+        "name": "pirskausta"
+      },
+      {
+        "locale": "uk",
+        "name": "цівки"
       }
     ],
-    "alternates": ["a drizzle", "drizzle", "drizzles", "spritzerchen", "살짝", "뿌림"]
+    "alternates": [
+      "a drizzle",
+      "drizzle",
+      "drizzles",
+      "spritzerchen",
+      "살짝",
+      "뿌림",
+      "filo",
+      "fili",
+      "un filo",
+      "hilo",
+      "hilos",
+      "струйка",
+      "струйки",
+      "strużka",
+      "strużki",
+      "stråle",
+      "stråler",
+      "fio",
+      "fios",
+      "trait",
+      "traits",
+      "pirskaus",
+      "pirskausta",
+      "pirskahdus",
+      "цівка",
+      "цівки",
+      "цівок"
+    ]
   },
   "scoop": {
     "short": [
@@ -1526,7 +5229,7 @@
       },
       {
         "locale": "de",
-        "name": "Kugel"
+        "name": "Kelle"
       },
       {
         "locale": "nl",
@@ -1535,6 +5238,50 @@
       {
         "locale": "ko",
         "name": "스쿱"
+      },
+      {
+        "locale": "da",
+        "name": "øse"
+      },
+      {
+        "locale": "it",
+        "name": "mestolo"
+      },
+      {
+        "locale": "es",
+        "name": "cazo"
+      },
+      {
+        "locale": "ru",
+        "name": "черпак"
+      },
+      {
+        "locale": "pl",
+        "name": "gałka"
+      },
+      {
+        "locale": "no",
+        "name": "øse"
+      },
+      {
+        "locale": "pt",
+        "name": "concha"
+      },
+      {
+        "locale": "bg",
+        "name": "черпак"
+      },
+      {
+        "locale": "fr",
+        "name": "louche"
+      },
+      {
+        "locale": "fi",
+        "name": "kauhallinen"
+      },
+      {
+        "locale": "uk",
+        "name": "черпак"
       }
     ],
     "plural": [
@@ -1544,7 +5291,7 @@
       },
       {
         "locale": "de",
-        "name": "Kugeln"
+        "name": "Kellen"
       },
       {
         "locale": "nl",
@@ -1553,9 +5300,79 @@
       {
         "locale": "ko",
         "name": "스쿱"
+      },
+      {
+        "locale": "da",
+        "name": "øser"
+      },
+      {
+        "locale": "it",
+        "name": "mestoli"
+      },
+      {
+        "locale": "es",
+        "name": "cazos"
+      },
+      {
+        "locale": "ru",
+        "name": "черпаки"
+      },
+      {
+        "locale": "pl",
+        "name": "gałki"
+      },
+      {
+        "locale": "no",
+        "name": "øser"
+      },
+      {
+        "locale": "pt",
+        "name": "conchas"
+      },
+      {
+        "locale": "bg",
+        "name": "черпаци"
+      },
+      {
+        "locale": "fr",
+        "name": "louches"
+      },
+      {
+        "locale": "fi",
+        "name": "kauhallista"
+      },
+      {
+        "locale": "uk",
+        "name": "черпаки"
       }
     ],
-    "alternates": ["scoop", "scoops", "스쿱", "국자"]
+    "alternates": [
+      "scoop",
+      "scoops",
+      "스쿱",
+      "국자",
+      "cazo",
+      "cazos",
+      "cucharón",
+      "cucharones",
+      "черпак",
+      "черпаки",
+      "gałka",
+      "gałki",
+      "øse",
+      "øser",
+      "concha",
+      "conchas",
+      "черпаци",
+      "louche",
+      "louches",
+      "kauhallinen",
+      "kauhallista",
+      "черпаків",
+      "ополоник",
+      "ополоники",
+      "ополоників"
+    ]
   },
   "stick": {
     "short": [
@@ -1574,6 +5391,50 @@
       {
         "locale": "ko",
         "name": "막대"
+      },
+      {
+        "locale": "da",
+        "name": "stang"
+      },
+      {
+        "locale": "it",
+        "name": "bastoncino"
+      },
+      {
+        "locale": "es",
+        "name": "barra"
+      },
+      {
+        "locale": "ru",
+        "name": "палочка"
+      },
+      {
+        "locale": "pl",
+        "name": "laska"
+      },
+      {
+        "locale": "no",
+        "name": "stang"
+      },
+      {
+        "locale": "pt",
+        "name": "barra"
+      },
+      {
+        "locale": "bg",
+        "name": "пръчка"
+      },
+      {
+        "locale": "fr",
+        "name": "bâton"
+      },
+      {
+        "locale": "fi",
+        "name": "tanko"
+      },
+      {
+        "locale": "uk",
+        "name": "паличка"
       }
     ],
     "plural": [
@@ -1592,9 +5453,81 @@
       {
         "locale": "ko",
         "name": "막대"
+      },
+      {
+        "locale": "da",
+        "name": "stænger"
+      },
+      {
+        "locale": "it",
+        "name": "bastoncini"
+      },
+      {
+        "locale": "es",
+        "name": "barras"
+      },
+      {
+        "locale": "ru",
+        "name": "палочки"
+      },
+      {
+        "locale": "pl",
+        "name": "laski"
+      },
+      {
+        "locale": "no",
+        "name": "stenger"
+      },
+      {
+        "locale": "pt",
+        "name": "barras"
+      },
+      {
+        "locale": "bg",
+        "name": "пръчки"
+      },
+      {
+        "locale": "fr",
+        "name": "bâtons"
+      },
+      {
+        "locale": "fi",
+        "name": "tankoa"
+      },
+      {
+        "locale": "uk",
+        "name": "палички"
       }
     ],
-    "alternates": ["stick", "stick(s)", "sticks", "stänglein", "막대", "스틱"]
+    "alternates": [
+      "stick",
+      "stick(s)",
+      "sticks",
+      "stänglein",
+      "막대",
+      "스틱",
+      "bastoncino",
+      "bastoncini",
+      "stecca",
+      "stecche",
+      "barra",
+      "barras",
+      "палочка",
+      "палочки",
+      "laska",
+      "laski",
+      "stang",
+      "stenger",
+      "пръчка",
+      "пръчки",
+      "bâton",
+      "bâtons",
+      "tanko",
+      "tankoa",
+      "паличка",
+      "палички",
+      "паличок"
+    ]
   },
   "tub": {
     "short": [
@@ -1612,7 +5545,51 @@
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "용기"
+      },
+      {
+        "locale": "da",
+        "name": "bæger"
+      },
+      {
+        "locale": "it",
+        "name": "vaschetta"
+      },
+      {
+        "locale": "es",
+        "name": "tarrina"
+      },
+      {
+        "locale": "ru",
+        "name": "контейнер"
+      },
+      {
+        "locale": "pl",
+        "name": "kubek"
+      },
+      {
+        "locale": "no",
+        "name": "beger"
+      },
+      {
+        "locale": "pt",
+        "name": "pote"
+      },
+      {
+        "locale": "bg",
+        "name": "кофичка"
+      },
+      {
+        "locale": "fr",
+        "name": "barquette"
+      },
+      {
+        "locale": "fi",
+        "name": "rasia"
+      },
+      {
+        "locale": "uk",
+        "name": "контейнер"
       }
     ],
     "plural": [
@@ -1630,10 +5607,81 @@
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "용기"
+      },
+      {
+        "locale": "da",
+        "name": "bægre"
+      },
+      {
+        "locale": "it",
+        "name": "vaschette"
+      },
+      {
+        "locale": "es",
+        "name": "tarrinas"
+      },
+      {
+        "locale": "ru",
+        "name": "контейнеры"
+      },
+      {
+        "locale": "pl",
+        "name": "kubki"
+      },
+      {
+        "locale": "no",
+        "name": "begre"
+      },
+      {
+        "locale": "pt",
+        "name": "potes"
+      },
+      {
+        "locale": "bg",
+        "name": "кофички"
+      },
+      {
+        "locale": "fr",
+        "name": "barquettes"
+      },
+      {
+        "locale": "fi",
+        "name": "rasiaa"
+      },
+      {
+        "locale": "uk",
+        "name": "контейнери"
       }
     ],
-    "alternates": ["container", "tub", "tubs", "통", "용기"]
+    "alternates": [
+      "container",
+      "tub",
+      "tubs",
+      "용기",
+      "vaschetta",
+      "vaschette",
+      "contenitore",
+      "contenitori",
+      "tarrina",
+      "tarrinas",
+      "контейнер",
+      "контейнеры",
+      "kubek",
+      "kubki",
+      "beger",
+      "begre",
+      "pote",
+      "potes",
+      "кофичка",
+      "кофички",
+      "barquette",
+      "barquettes",
+      "rasia",
+      "rasiaa",
+      "контейнери",
+      "контейнерів"
+    ]
   },
   "capful": {
     "short": [
@@ -1652,6 +5700,50 @@
       {
         "locale": "ko",
         "name": "뚜껑"
+      },
+      {
+        "locale": "da",
+        "name": "hætte"
+      },
+      {
+        "locale": "it",
+        "name": "tappo"
+      },
+      {
+        "locale": "es",
+        "name": "tapón"
+      },
+      {
+        "locale": "ru",
+        "name": "колпачок"
+      },
+      {
+        "locale": "pl",
+        "name": "nakrętka"
+      },
+      {
+        "locale": "no",
+        "name": "korkfull"
+      },
+      {
+        "locale": "pt",
+        "name": "tampa"
+      },
+      {
+        "locale": "bg",
+        "name": "капачка"
+      },
+      {
+        "locale": "fr",
+        "name": "bouchon"
+      },
+      {
+        "locale": "fi",
+        "name": "korkillinen"
+      },
+      {
+        "locale": "uk",
+        "name": "ковпачок"
       }
     ],
     "plural": [
@@ -1670,9 +5762,81 @@
       {
         "locale": "ko",
         "name": "뚜껑"
+      },
+      {
+        "locale": "da",
+        "name": "hætter"
+      },
+      {
+        "locale": "it",
+        "name": "tappi"
+      },
+      {
+        "locale": "es",
+        "name": "tapones"
+      },
+      {
+        "locale": "ru",
+        "name": "колпачки"
+      },
+      {
+        "locale": "pl",
+        "name": "nakrętki"
+      },
+      {
+        "locale": "no",
+        "name": "korkfuller"
+      },
+      {
+        "locale": "pt",
+        "name": "tampas"
+      },
+      {
+        "locale": "bg",
+        "name": "капачки"
+      },
+      {
+        "locale": "fr",
+        "name": "bouchons"
+      },
+      {
+        "locale": "fi",
+        "name": "korkillista"
+      },
+      {
+        "locale": "uk",
+        "name": "ковпачки"
       }
     ],
-    "alternates": ["cap full", "capful", "capfuls", "뚜껑", "캡"]
+    "alternates": [
+      "cap full",
+      "capful",
+      "capfuls",
+      "뚜껑",
+      "캡",
+      "tappo",
+      "tappi",
+      "un tappo",
+      "tapón",
+      "tapones",
+      "колпачок",
+      "колпачки",
+      "nakrętka",
+      "nakrętki",
+      "korkfull",
+      "korkfuller",
+      "tampa",
+      "tampas",
+      "капачка",
+      "капачки",
+      "bouchon",
+      "bouchons",
+      "korkillinen",
+      "korkillista",
+      "ковпачок",
+      "ковпачки",
+      "ковпачків"
+    ]
   },
   "pouch": {
     "short": [
@@ -1691,6 +5855,50 @@
       {
         "locale": "ko",
         "name": "파우치"
+      },
+      {
+        "locale": "da",
+        "name": "brev"
+      },
+      {
+        "locale": "it",
+        "name": "bustina"
+      },
+      {
+        "locale": "es",
+        "name": "sobre"
+      },
+      {
+        "locale": "ru",
+        "name": "пакетик"
+      },
+      {
+        "locale": "pl",
+        "name": "saszetka"
+      },
+      {
+        "locale": "no",
+        "name": "pakning"
+      },
+      {
+        "locale": "pt",
+        "name": "sachê"
+      },
+      {
+        "locale": "bg",
+        "name": "пликче"
+      },
+      {
+        "locale": "fr",
+        "name": "sachet"
+      },
+      {
+        "locale": "fi",
+        "name": "pussukka"
+      },
+      {
+        "locale": "uk",
+        "name": "пакетик"
       }
     ],
     "plural": [
@@ -1709,9 +5917,82 @@
       {
         "locale": "ko",
         "name": "파우치"
+      },
+      {
+        "locale": "da",
+        "name": "breve"
+      },
+      {
+        "locale": "it",
+        "name": "bustine"
+      },
+      {
+        "locale": "es",
+        "name": "sobres"
+      },
+      {
+        "locale": "ru",
+        "name": "пакетики"
+      },
+      {
+        "locale": "pl",
+        "name": "saszetki"
+      },
+      {
+        "locale": "no",
+        "name": "pakninger"
+      },
+      {
+        "locale": "pt",
+        "name": "sachês"
+      },
+      {
+        "locale": "bg",
+        "name": "пликчета"
+      },
+      {
+        "locale": "fr",
+        "name": "sachets"
+      },
+      {
+        "locale": "fi",
+        "name": "pussukkaa"
+      },
+      {
+        "locale": "uk",
+        "name": "пакетики"
       }
     ],
-    "alternates": ["pouch", "pouches", "파우치", "주머니"]
+    "alternates": [
+      "pouch",
+      "pouches",
+      "파우치",
+      "주머니",
+      "bustina",
+      "bustine",
+      "sobre",
+      "sobres",
+      "пакетик",
+      "пакетики",
+      "saszetka",
+      "saszetki",
+      "pakning",
+      "pakninger",
+      "sachê",
+      "sachês",
+      "saquinho",
+      "saquinhos",
+      "пликче",
+      "пликчета",
+      "sachet",
+      "sachets",
+      "pussukka",
+      "pussukkaa",
+      "annospussi",
+      "annospussia",
+      "пакетиків",
+      "саше"
+    ]
   },
   "sleeve": {
     "short": [
@@ -1721,7 +6002,7 @@
       },
       {
         "locale": "de",
-        "name": "Packung"
+        "name": "Tube"
       },
       {
         "locale": "nl",
@@ -1729,7 +6010,51 @@
       },
       {
         "locale": "ko",
-        "name": "봉지"
+        "name": "묶음"
+      },
+      {
+        "locale": "da",
+        "name": "omslag"
+      },
+      {
+        "locale": "it",
+        "name": "tubo"
+      },
+      {
+        "locale": "es",
+        "name": "funda"
+      },
+      {
+        "locale": "ru",
+        "name": "туба"
+      },
+      {
+        "locale": "pl",
+        "name": "tuba"
+      },
+      {
+        "locale": "no",
+        "name": "hylse"
+      },
+      {
+        "locale": "pt",
+        "name": "tubo"
+      },
+      {
+        "locale": "bg",
+        "name": "туба"
+      },
+      {
+        "locale": "fr",
+        "name": "étui"
+      },
+      {
+        "locale": "fi",
+        "name": "pakkaus"
+      },
+      {
+        "locale": "uk",
+        "name": "тюбик"
       }
     ],
     "plural": [
@@ -1739,7 +6064,7 @@
       },
       {
         "locale": "de",
-        "name": "Packungen"
+        "name": "Tuben"
       },
       {
         "locale": "nl",
@@ -1747,10 +6072,76 @@
       },
       {
         "locale": "ko",
-        "name": "봉지"
+        "name": "묶음"
+      },
+      {
+        "locale": "da",
+        "name": "omslag"
+      },
+      {
+        "locale": "it",
+        "name": "tubi"
+      },
+      {
+        "locale": "es",
+        "name": "fundas"
+      },
+      {
+        "locale": "ru",
+        "name": "тубы"
+      },
+      {
+        "locale": "pl",
+        "name": "tuby"
+      },
+      {
+        "locale": "no",
+        "name": "hylser"
+      },
+      {
+        "locale": "pt",
+        "name": "tubos"
+      },
+      {
+        "locale": "bg",
+        "name": "туби"
+      },
+      {
+        "locale": "fr",
+        "name": "étuis"
+      },
+      {
+        "locale": "fi",
+        "name": "pakkausta"
+      },
+      {
+        "locale": "uk",
+        "name": "тюбики"
       }
     ],
-    "alternates": ["sleeve", "sleeves", "봉지", "묶음"]
+    "alternates": [
+      "sleeve",
+      "sleeves",
+      "묶음",
+      "funda",
+      "fundas",
+      "туба",
+      "тубы",
+      "tuba",
+      "tuby",
+      "hylse",
+      "hylser",
+      "tubo",
+      "tubos",
+      "туби",
+      "étui",
+      "étuis",
+      "pakkaus",
+      "pakkausta",
+      "тюбик",
+      "тюбики",
+      "тюбиків"
+    ]
   },
   "roll": {
     "short": [
@@ -1769,6 +6160,50 @@
       {
         "locale": "ko",
         "name": "롤"
+      },
+      {
+        "locale": "da",
+        "name": "rulle"
+      },
+      {
+        "locale": "it",
+        "name": "rotolo"
+      },
+      {
+        "locale": "es",
+        "name": "rollo"
+      },
+      {
+        "locale": "ru",
+        "name": "рулон"
+      },
+      {
+        "locale": "pl",
+        "name": "rolka"
+      },
+      {
+        "locale": "no",
+        "name": "rull"
+      },
+      {
+        "locale": "pt",
+        "name": "rolo"
+      },
+      {
+        "locale": "bg",
+        "name": "руло"
+      },
+      {
+        "locale": "fr",
+        "name": "rouleau"
+      },
+      {
+        "locale": "fi",
+        "name": "rulla"
+      },
+      {
+        "locale": "uk",
+        "name": "рулон"
       }
     ],
     "plural": [
@@ -1787,9 +6222,82 @@
       {
         "locale": "ko",
         "name": "롤"
+      },
+      {
+        "locale": "da",
+        "name": "ruller"
+      },
+      {
+        "locale": "it",
+        "name": "rotoli"
+      },
+      {
+        "locale": "es",
+        "name": "rollos"
+      },
+      {
+        "locale": "ru",
+        "name": "рулоны"
+      },
+      {
+        "locale": "pl",
+        "name": "rolki"
+      },
+      {
+        "locale": "no",
+        "name": "ruller"
+      },
+      {
+        "locale": "pt",
+        "name": "rolos"
+      },
+      {
+        "locale": "bg",
+        "name": "рула"
+      },
+      {
+        "locale": "fr",
+        "name": "rouleaux"
+      },
+      {
+        "locale": "fi",
+        "name": "rullaa"
+      },
+      {
+        "locale": "uk",
+        "name": "рулони"
       }
     ],
-    "alternates": ["roll", "rolls", "röllchen", "롤", "말이"]
+    "alternates": [
+      "roll",
+      "rolls",
+      "röllchen",
+      "롤",
+      "말이",
+      "rotolo",
+      "rotoli",
+      "rotolino",
+      "rotolini",
+      "rollo",
+      "rollos",
+      "рулон",
+      "рулоны",
+      "рулона",
+      "rolka",
+      "rolki",
+      "rull",
+      "ruller",
+      "rolo",
+      "rolos",
+      "руло",
+      "рула",
+      "rouleau",
+      "rouleaux",
+      "rulla",
+      "rullaa",
+      "рулони",
+      "рулонів"
+    ]
   },
   "ear": {
     "short": [
@@ -1807,7 +6315,51 @@
       },
       {
         "locale": "ko",
-        "name": "개"
+        "name": "이삭"
+      },
+      {
+        "locale": "da",
+        "name": "kolbe"
+      },
+      {
+        "locale": "it",
+        "name": "pannocchia"
+      },
+      {
+        "locale": "es",
+        "name": "mazorca"
+      },
+      {
+        "locale": "ru",
+        "name": "початок"
+      },
+      {
+        "locale": "pl",
+        "name": "kolba"
+      },
+      {
+        "locale": "no",
+        "name": "maiskolbe"
+      },
+      {
+        "locale": "pt",
+        "name": "espiga"
+      },
+      {
+        "locale": "bg",
+        "name": "мамул"
+      },
+      {
+        "locale": "fr",
+        "name": "épi"
+      },
+      {
+        "locale": "fi",
+        "name": "tähkä"
+      },
+      {
+        "locale": "uk",
+        "name": "качан"
       }
     ],
     "plural": [
@@ -1825,10 +6377,83 @@
       },
       {
         "locale": "ko",
-        "name": "개"
+        "name": "이삭"
+      },
+      {
+        "locale": "da",
+        "name": "kolber"
+      },
+      {
+        "locale": "it",
+        "name": "pannocchie"
+      },
+      {
+        "locale": "es",
+        "name": "mazorcas"
+      },
+      {
+        "locale": "ru",
+        "name": "початки"
+      },
+      {
+        "locale": "pl",
+        "name": "kolby"
+      },
+      {
+        "locale": "no",
+        "name": "maiskolber"
+      },
+      {
+        "locale": "pt",
+        "name": "espigas"
+      },
+      {
+        "locale": "bg",
+        "name": "мамули"
+      },
+      {
+        "locale": "fr",
+        "name": "épis"
+      },
+      {
+        "locale": "fi",
+        "name": "tähkää"
+      },
+      {
+        "locale": "uk",
+        "name": "качани"
       }
     ],
-    "alternates": ["ear", "ear of corn", "ears", "ears of corn", "개", "이삭"]
+    "alternates": [
+      "ear",
+      "ear of corn",
+      "ears",
+      "ears of corn",
+      "이삭",
+      "majskolbe",
+      "pannocchia",
+      "pannocchie",
+      "mazorca",
+      "mazorcas",
+      "початок",
+      "початки",
+      "kolba",
+      "kolby",
+      "maiskolbe",
+      "maiskolber",
+      "espiga",
+      "espigas",
+      "мамул",
+      "мамули",
+      "épi",
+      "épis",
+      "tähkä",
+      "tähkää",
+      "качан",
+      "качани",
+      "качана",
+      "качанів"
+    ]
   },
   "wedge": {
     "short": [
@@ -1846,7 +6471,51 @@
       },
       {
         "locale": "ko",
-        "name": "쪽"
+        "name": "웨지"
+      },
+      {
+        "locale": "da",
+        "name": "båd"
+      },
+      {
+        "locale": "it",
+        "name": "fettina"
+      },
+      {
+        "locale": "es",
+        "name": "gajo"
+      },
+      {
+        "locale": "ru",
+        "name": "долька"
+      },
+      {
+        "locale": "pl",
+        "name": "cząstka"
+      },
+      {
+        "locale": "no",
+        "name": "båt"
+      },
+      {
+        "locale": "pt",
+        "name": "gomo"
+      },
+      {
+        "locale": "bg",
+        "name": "резен"
+      },
+      {
+        "locale": "fr",
+        "name": "quartier"
+      },
+      {
+        "locale": "fi",
+        "name": "lohko"
+      },
+      {
+        "locale": "uk",
+        "name": "часточка"
       }
     ],
     "plural": [
@@ -1864,10 +6533,78 @@
       },
       {
         "locale": "ko",
-        "name": "쪽"
+        "name": "웨지"
+      },
+      {
+        "locale": "da",
+        "name": "både"
+      },
+      {
+        "locale": "it",
+        "name": "fettine"
+      },
+      {
+        "locale": "es",
+        "name": "gajos"
+      },
+      {
+        "locale": "ru",
+        "name": "дольки"
+      },
+      {
+        "locale": "pl",
+        "name": "cząstki"
+      },
+      {
+        "locale": "no",
+        "name": "båter"
+      },
+      {
+        "locale": "pt",
+        "name": "gomos"
+      },
+      {
+        "locale": "bg",
+        "name": "резени"
+      },
+      {
+        "locale": "fr",
+        "name": "quartiers"
+      },
+      {
+        "locale": "fi",
+        "name": "lohkoa"
+      },
+      {
+        "locale": "uk",
+        "name": "часточки"
       }
     ],
-    "alternates": ["ecke", "keil", "wedge", "wedges", "쪽"]
+    "alternates": [
+      "ecke",
+      "keil",
+      "wedge",
+      "wedges",
+      "gajo",
+      "gajos",
+      "долька",
+      "дольки",
+      "cząstka",
+      "cząstki",
+      "båt",
+      "båter",
+      "gomo",
+      "gomos",
+      "резен",
+      "резени",
+      "quartier",
+      "quartiers",
+      "lohko",
+      "lohkoa",
+      "часточка",
+      "часточки",
+      "часточок"
+    ]
   },
   "chunk": {
     "short": [
@@ -1877,15 +6614,59 @@
       },
       {
         "locale": "de",
-        "name": "Stück"
+        "name": "Brocken"
       },
       {
         "locale": "nl",
-        "name": "stuk"
+        "name": "brok"
       },
       {
         "locale": "ko",
         "name": "덩어리"
+      },
+      {
+        "locale": "da",
+        "name": "klump"
+      },
+      {
+        "locale": "it",
+        "name": "tocco"
+      },
+      {
+        "locale": "es",
+        "name": "trozo"
+      },
+      {
+        "locale": "ru",
+        "name": "кусок"
+      },
+      {
+        "locale": "pl",
+        "name": "kawałek"
+      },
+      {
+        "locale": "no",
+        "name": "bit"
+      },
+      {
+        "locale": "pt",
+        "name": "pedaço"
+      },
+      {
+        "locale": "bg",
+        "name": "парче"
+      },
+      {
+        "locale": "fr",
+        "name": "morceau"
+      },
+      {
+        "locale": "fi",
+        "name": "pala"
+      },
+      {
+        "locale": "uk",
+        "name": "шматок"
       }
     ],
     "plural": [
@@ -1895,18 +6676,92 @@
       },
       {
         "locale": "de",
-        "name": "Stücke"
+        "name": "Brocken"
       },
       {
         "locale": "nl",
-        "name": "stukken"
+        "name": "brokken"
       },
       {
         "locale": "ko",
         "name": "덩어리"
+      },
+      {
+        "locale": "da",
+        "name": "klumper"
+      },
+      {
+        "locale": "it",
+        "name": "tocchi"
+      },
+      {
+        "locale": "es",
+        "name": "trozos"
+      },
+      {
+        "locale": "ru",
+        "name": "куски"
+      },
+      {
+        "locale": "pl",
+        "name": "kawałki"
+      },
+      {
+        "locale": "no",
+        "name": "biter"
+      },
+      {
+        "locale": "pt",
+        "name": "pedaços"
+      },
+      {
+        "locale": "bg",
+        "name": "парчета"
+      },
+      {
+        "locale": "fr",
+        "name": "morceaux"
+      },
+      {
+        "locale": "fi",
+        "name": "palaa"
+      },
+      {
+        "locale": "uk",
+        "name": "шматки"
       }
     ],
-    "alternates": ["chunk", "chunks", "덩어리", "토막"]
+    "alternates": [
+      "chunk",
+      "chunks",
+      "덩어리",
+      "tocco",
+      "tocchi",
+      "trozo",
+      "trozos",
+      "кусок",
+      "куски",
+      "куска",
+      "kawałek",
+      "kawałki",
+      "bit",
+      "biter",
+      "pedaço",
+      "pedaços",
+      "парче",
+      "парчета",
+      "morceau",
+      "morceaux",
+      "pala",
+      "palaa",
+      "stukken",
+      "шматок",
+      "шматки",
+      "шматків",
+      "шматочок",
+      "шматочки",
+      "шматочків"
+    ]
   },
   "cube": {
     "short": [
@@ -1925,6 +6780,50 @@
       {
         "locale": "ko",
         "name": "깍둑"
+      },
+      {
+        "locale": "da",
+        "name": "terning"
+      },
+      {
+        "locale": "it",
+        "name": "cubetto"
+      },
+      {
+        "locale": "es",
+        "name": "cubo"
+      },
+      {
+        "locale": "ru",
+        "name": "кубик"
+      },
+      {
+        "locale": "pl",
+        "name": "kostka"
+      },
+      {
+        "locale": "no",
+        "name": "terning"
+      },
+      {
+        "locale": "pt",
+        "name": "cubo"
+      },
+      {
+        "locale": "bg",
+        "name": "кубче"
+      },
+      {
+        "locale": "fr",
+        "name": "cube"
+      },
+      {
+        "locale": "fi",
+        "name": "kuutio"
+      },
+      {
+        "locale": "uk",
+        "name": "кубик"
       }
     ],
     "plural": [
@@ -1943,9 +6842,80 @@
       {
         "locale": "ko",
         "name": "깍둑"
+      },
+      {
+        "locale": "da",
+        "name": "terninger"
+      },
+      {
+        "locale": "it",
+        "name": "cubetti"
+      },
+      {
+        "locale": "es",
+        "name": "cubos"
+      },
+      {
+        "locale": "ru",
+        "name": "кубики"
+      },
+      {
+        "locale": "pl",
+        "name": "kostki"
+      },
+      {
+        "locale": "no",
+        "name": "terninger"
+      },
+      {
+        "locale": "pt",
+        "name": "cubos"
+      },
+      {
+        "locale": "bg",
+        "name": "кубчета"
+      },
+      {
+        "locale": "fr",
+        "name": "cubes"
+      },
+      {
+        "locale": "fi",
+        "name": "kuutiota"
+      },
+      {
+        "locale": "uk",
+        "name": "кубики"
       }
     ],
-    "alternates": ["cube", "cubes", "würfelchen", "깍둑썰기", "큐브"]
+    "alternates": [
+      "cube",
+      "cubes",
+      "würfelchen",
+      "깍둑썰기",
+      "큐브",
+      "cubetto",
+      "cubetti",
+      "dado",
+      "dadi",
+      "cubo",
+      "cubos",
+      "dados",
+      "кубик",
+      "кубики",
+      "кубика",
+      "kostka",
+      "kostki",
+      "terning",
+      "terninger",
+      "кубче",
+      "кубчета",
+      "dé",
+      "dés",
+      "kuutio",
+      "kuutiota",
+      "кубиків"
+    ]
   },
   "fillet": {
     "short": [
@@ -1964,6 +6934,50 @@
       {
         "locale": "ko",
         "name": "토막"
+      },
+      {
+        "locale": "da",
+        "name": "filet"
+      },
+      {
+        "locale": "it",
+        "name": "filetto"
+      },
+      {
+        "locale": "es",
+        "name": "filete"
+      },
+      {
+        "locale": "ru",
+        "name": "филе"
+      },
+      {
+        "locale": "pl",
+        "name": "filet"
+      },
+      {
+        "locale": "no",
+        "name": "filet"
+      },
+      {
+        "locale": "pt",
+        "name": "filé"
+      },
+      {
+        "locale": "bg",
+        "name": "филе"
+      },
+      {
+        "locale": "fr",
+        "name": "filet"
+      },
+      {
+        "locale": "fi",
+        "name": "filee"
+      },
+      {
+        "locale": "uk",
+        "name": "філе"
       }
     ],
     "plural": [
@@ -1982,9 +6996,74 @@
       {
         "locale": "ko",
         "name": "토막"
+      },
+      {
+        "locale": "da",
+        "name": "fileter"
+      },
+      {
+        "locale": "it",
+        "name": "filetti"
+      },
+      {
+        "locale": "es",
+        "name": "filetes"
+      },
+      {
+        "locale": "ru",
+        "name": "филе"
+      },
+      {
+        "locale": "pl",
+        "name": "filety"
+      },
+      {
+        "locale": "no",
+        "name": "fileter"
+      },
+      {
+        "locale": "pt",
+        "name": "filés"
+      },
+      {
+        "locale": "bg",
+        "name": "филета"
+      },
+      {
+        "locale": "fr",
+        "name": "filets"
+      },
+      {
+        "locale": "fi",
+        "name": "fileetä"
+      },
+      {
+        "locale": "uk",
+        "name": "філе"
       }
     ],
-    "alternates": ["filet", "filets", "fillet", "fillets", "토막", "필렛", "필레"]
+    "alternates": [
+      "filet",
+      "filets",
+      "fillet",
+      "fillets",
+      "토막",
+      "필렛",
+      "필레",
+      "filetto",
+      "filetti",
+      "filete",
+      "filetes",
+      "филе",
+      "filety",
+      "fileter",
+      "filé",
+      "filés",
+      "филета",
+      "filee",
+      "fileetä",
+      "філе"
+    ]
   },
   "heaping_tablespoon": {
     "short": [
@@ -1994,7 +7073,7 @@
       },
       {
         "locale": "de",
-        "name": "gehäufter EL"
+        "name": "geh. EL"
       },
       {
         "locale": "nl",
@@ -2003,6 +7082,50 @@
       {
         "locale": "ko",
         "name": "수북한 큰술"
+      },
+      {
+        "locale": "da",
+        "name": "toppet spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaio colmo"
+      },
+      {
+        "locale": "es",
+        "name": "cda colmada"
+      },
+      {
+        "locale": "ru",
+        "name": "ст. л. с горкой"
+      },
+      {
+        "locale": "pl",
+        "name": "czubata łyżka"
+      },
+      {
+        "locale": "no",
+        "name": "toppet ss"
+      },
+      {
+        "locale": "pt",
+        "name": "c. de sopa cheia"
+      },
+      {
+        "locale": "bg",
+        "name": "пълна с.л."
+      },
+      {
+        "locale": "fr",
+        "name": "càs bombée"
+      },
+      {
+        "locale": "fi",
+        "name": "kukkurainen rkl"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. з гіркою"
       }
     ],
     "plural": [
@@ -2012,7 +7135,7 @@
       },
       {
         "locale": "de",
-        "name": "gehäufte EL"
+        "name": "geh. EL"
       },
       {
         "locale": "nl",
@@ -2021,12 +7144,61 @@
       {
         "locale": "ko",
         "name": "수북한 큰술"
+      },
+      {
+        "locale": "da",
+        "name": "toppet spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiai colmi"
+      },
+      {
+        "locale": "es",
+        "name": "cucharadas colmadas"
+      },
+      {
+        "locale": "ru",
+        "name": "столовые ложки с горкой"
+      },
+      {
+        "locale": "pl",
+        "name": "czubate łyżki"
+      },
+      {
+        "locale": "no",
+        "name": "toppede spiseskjeer"
+      },
+      {
+        "locale": "pt",
+        "name": "colheres de sopa cheias"
+      },
+      {
+        "locale": "bg",
+        "name": "пълни супени лъжици"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à soupe bombées"
+      },
+      {
+        "locale": "fi",
+        "name": "kukkuraista ruokalusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. з гіркою"
       }
     ],
     "alternates": [
       "gehäufte esslöffel",
       "gehäufter esslöffel",
+      "gehäufte el",
+      "gehäufter el",
       "el, gehäuft",
+      "el, geh.",
+      "el gehäuft",
+      "el geh.",
       "großzügige el",
       "großzügige esslöffel",
       "großzügiger el",
@@ -2034,7 +7206,49 @@
       "heaping tablespoon",
       "heaping tablespoons",
       "수북한 큰술",
-      "수북이 큰술"
+      "수북이 큰술",
+      "toppet spsk.",
+      "toppet spiseskefuld",
+      "spiseskefuld med top",
+      "spiseske med top",
+      "spsk med top",
+      "spsk m. top",
+      "spsk. m. top",
+      "cucchiaio colmo",
+      "cucchiai colmi",
+      "cda colmada",
+      "cucharadas colmadas",
+      "cucharada colmada",
+      "ст. л. с горкой",
+      "столовые ложки с горкой",
+      "столовая ложка с горкой",
+      "czubata łyżka",
+      "czubate łyżki",
+      "toppet ss",
+      "toppede spiseskjeer",
+      "toppet spiseskje",
+      "c. de sopa cheia",
+      "colheres de sopa cheias",
+      "colher de sopa cheia",
+      "пълна с.л.",
+      "пълни супени лъжици",
+      "пълна супена лъжица",
+      "càs bombée",
+      "cuillères à soupe bombées",
+      "cuillère à soupe bombée",
+      "kukkurainen rkl",
+      "kukkurainen ruokalusikka",
+      "kukkurainen ruokalusikallinen",
+      "kukkuraista ruokalusikallista",
+      "heaped tbsp",
+      "heaped tablespoon",
+      "heaped tablespoons",
+      "ст. л. з гіркою",
+      "ст.л. з гіркою",
+      "столова ложка з гіркою",
+      "столові ложки з гіркою",
+      "столових ложок з гіркою",
+      "столової ложки з гіркою"
     ]
   },
   "scant_tablespoon": {
@@ -2054,6 +7268,50 @@
       {
         "locale": "ko",
         "name": "깎은 큰술"
+      },
+      {
+        "locale": "da",
+        "name": "strøget spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaio raso"
+      },
+      {
+        "locale": "es",
+        "name": "cda rasa"
+      },
+      {
+        "locale": "ru",
+        "name": "ст. л. без горки"
+      },
+      {
+        "locale": "pl",
+        "name": "płaska łyżka"
+      },
+      {
+        "locale": "no",
+        "name": "strøken ss"
+      },
+      {
+        "locale": "pt",
+        "name": "c. de sopa rasa"
+      },
+      {
+        "locale": "bg",
+        "name": "равна с.л."
+      },
+      {
+        "locale": "fr",
+        "name": "càs rase"
+      },
+      {
+        "locale": "fi",
+        "name": "niukka rkl"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. без гірки"
       }
     ],
     "plural": [
@@ -2072,10 +7330,57 @@
       {
         "locale": "ko",
         "name": "깎은 큰술"
+      },
+      {
+        "locale": "da",
+        "name": "strøget spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiai rasi"
+      },
+      {
+        "locale": "es",
+        "name": "cucharadas rasas"
+      },
+      {
+        "locale": "ru",
+        "name": "столовые ложки без горки"
+      },
+      {
+        "locale": "pl",
+        "name": "płaskie łyżki"
+      },
+      {
+        "locale": "no",
+        "name": "strøkne spiseskjeer"
+      },
+      {
+        "locale": "pt",
+        "name": "colheres de sopa rasas"
+      },
+      {
+        "locale": "bg",
+        "name": "равни супени лъжици"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à soupe rases"
+      },
+      {
+        "locale": "fi",
+        "name": "niukkaa ruokalusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ст. л. без гірки"
       }
     ],
     "alternates": [
       "el, gestr.",
+      "el, gestrichen",
+      "el gestr.",
+      "el gestrichen",
       "gestrichene el",
       "gestrichene esslöffel",
       "gestrichener el",
@@ -2086,7 +7391,40 @@
       "knapper esslöffel",
       "scant tablespoon",
       "scant tablespoons",
-      "깎은 큰술"
+      "깎은 큰술",
+      "strøget spsk.",
+      "strøget spiseskefuld",
+      "strøget spiseske",
+      "cucchiaio raso",
+      "cucchiai rasi",
+      "cda rasa",
+      "cucharadas rasas",
+      "cucharada rasa",
+      "ст. л. без горки",
+      "столовые ложки без горки",
+      "столовая ложка без горки",
+      "płaska łyżka",
+      "płaskie łyżki",
+      "strøken ss",
+      "strøkne spiseskjeer",
+      "strøken spiseskje",
+      "c. de sopa rasa",
+      "colheres de sopa rasas",
+      "colher de sopa rasa",
+      "равна с.л.",
+      "равни супени лъжици",
+      "равна супена лъжица",
+      "càs rase",
+      "cuillères à soupe rases",
+      "cuillère à soupe rase",
+      "niukka rkl",
+      "niukka ruokalusikallinen",
+      "ст. л. без гірки",
+      "ст.л. без гірки",
+      "столова ложка без гірки",
+      "столові ложки без гірки",
+      "столових ложок без гірки",
+      "столової ложки без гірки"
     ]
   },
   "generous_pinch": {
@@ -2106,6 +7444,50 @@
       {
         "locale": "ko",
         "name": "넉넉한 꼬집"
+      },
+      {
+        "locale": "da",
+        "name": "godt nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzico abbondante"
+      },
+      {
+        "locale": "es",
+        "name": "pizca generosa"
+      },
+      {
+        "locale": "ru",
+        "name": "большая щепотка"
+      },
+      {
+        "locale": "pl",
+        "name": "duża szczypta"
+      },
+      {
+        "locale": "no",
+        "name": "stor klype"
+      },
+      {
+        "locale": "pt",
+        "name": "pitada generosa"
+      },
+      {
+        "locale": "bg",
+        "name": "голяма щипка"
+      },
+      {
+        "locale": "fr",
+        "name": "grosse pincée"
+      },
+      {
+        "locale": "fi",
+        "name": "reilu ripaus"
+      },
+      {
+        "locale": "uk",
+        "name": "велика щіпка"
       }
     ],
     "plural": [
@@ -2124,6 +7506,50 @@
       {
         "locale": "ko",
         "name": "넉넉한 꼬집"
+      },
+      {
+        "locale": "da",
+        "name": "gode nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzichi abbondanti"
+      },
+      {
+        "locale": "es",
+        "name": "pizcas generosas"
+      },
+      {
+        "locale": "ru",
+        "name": "большие щепотки"
+      },
+      {
+        "locale": "pl",
+        "name": "duże szczypty"
+      },
+      {
+        "locale": "no",
+        "name": "store klyper"
+      },
+      {
+        "locale": "pt",
+        "name": "pitadas generosas"
+      },
+      {
+        "locale": "bg",
+        "name": "големи щипки"
+      },
+      {
+        "locale": "fr",
+        "name": "grosses pincées"
+      },
+      {
+        "locale": "fi",
+        "name": "reilua ripausta"
+      },
+      {
+        "locale": "uk",
+        "name": "великі щіпки"
       }
     ],
     "alternates": [
@@ -2135,7 +7561,32 @@
       "heaping pinch",
       "large pinch",
       "넉넉한 꼬집",
-      "큰 꼬집"
+      "큰 꼬집",
+      "god knivspids",
+      "stor knivspids",
+      "pizzico abbondante",
+      "pizzichi abbondanti",
+      "pizzicone",
+      "pizca generosa",
+      "pizcas generosas",
+      "большая щепотка",
+      "большие щепотки",
+      "duża szczypta",
+      "duże szczypty",
+      "stor klype",
+      "store klyper",
+      "pitada generosa",
+      "pitadas generosas",
+      "голяма щипка",
+      "големи щипки",
+      "grosse pincée",
+      "grosses pincées",
+      "reilu ripaus",
+      "reilua ripausta",
+      "велика щіпка",
+      "великі щіпки",
+      "великих щіпок",
+      "велику щіпку"
     ]
   },
   "large_splash": {
@@ -2155,6 +7606,50 @@
       {
         "locale": "ko",
         "name": "넉넉히"
+      },
+      {
+        "locale": "da",
+        "name": "stort skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzo abbondante"
+      },
+      {
+        "locale": "es",
+        "name": "chorro grande"
+      },
+      {
+        "locale": "ru",
+        "name": "большой всплеск"
+      },
+      {
+        "locale": "pl",
+        "name": "duży chlust"
+      },
+      {
+        "locale": "no",
+        "name": "stor skvett"
+      },
+      {
+        "locale": "pt",
+        "name": "jato grande"
+      },
+      {
+        "locale": "bg",
+        "name": "голям плисък"
+      },
+      {
+        "locale": "fr",
+        "name": "grande giclée"
+      },
+      {
+        "locale": "fi",
+        "name": "iso loraus"
+      },
+      {
+        "locale": "uk",
+        "name": "великий ковток"
       }
     ],
     "plural": [
@@ -2164,7 +7659,7 @@
       },
       {
         "locale": "de",
-        "name": "große Schuss"
+        "name": "große Schüsse"
       },
       {
         "locale": "nl",
@@ -2173,6 +7668,50 @@
       {
         "locale": "ko",
         "name": "넉넉히"
+      },
+      {
+        "locale": "da",
+        "name": "store skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzi abbondanti"
+      },
+      {
+        "locale": "es",
+        "name": "chorros grandes"
+      },
+      {
+        "locale": "ru",
+        "name": "большие всплески"
+      },
+      {
+        "locale": "pl",
+        "name": "duże chlusty"
+      },
+      {
+        "locale": "no",
+        "name": "store skvetter"
+      },
+      {
+        "locale": "pt",
+        "name": "jatos grandes"
+      },
+      {
+        "locale": "bg",
+        "name": "големи плисъци"
+      },
+      {
+        "locale": "fr",
+        "name": "grandes giclées"
+      },
+      {
+        "locale": "fi",
+        "name": "isoa lorausta"
+      },
+      {
+        "locale": "uk",
+        "name": "великі ковтки"
       }
     ],
     "alternates": [
@@ -2181,7 +7720,29 @@
       "grosser schuss",
       "großer schuß",
       "großzügiger schuss",
-      "넉넉히"
+      "넉넉히",
+      "godt skvæt",
+      "spruzzo abbondante",
+      "spruzzi abbondanti",
+      "chorro grande",
+      "chorros grandes",
+      "большой всплеск",
+      "большие всплески",
+      "duży chlust",
+      "duże chlusty",
+      "stor skvett",
+      "store skvetter",
+      "jato grande",
+      "jatos grandes",
+      "голям плисък",
+      "големи плисъци",
+      "grande giclée",
+      "grandes giclées",
+      "iso loraus",
+      "isoa lorausta",
+      "великий ковток",
+      "великі ковтки",
+      "великих ковтків"
     ]
   },
   "dozen": {
@@ -2201,6 +7762,50 @@
       {
         "locale": "ko",
         "name": "다스"
+      },
+      {
+        "locale": "da",
+        "name": "dusin"
+      },
+      {
+        "locale": "it",
+        "name": "dozzina"
+      },
+      {
+        "locale": "es",
+        "name": "docena"
+      },
+      {
+        "locale": "ru",
+        "name": "дюжина"
+      },
+      {
+        "locale": "pl",
+        "name": "tuzin"
+      },
+      {
+        "locale": "no",
+        "name": "dusin"
+      },
+      {
+        "locale": "pt",
+        "name": "dúzia"
+      },
+      {
+        "locale": "bg",
+        "name": "дузина"
+      },
+      {
+        "locale": "fr",
+        "name": "douzaine"
+      },
+      {
+        "locale": "fi",
+        "name": "tusina"
+      },
+      {
+        "locale": "uk",
+        "name": "дюжина"
       }
     ],
     "plural": [
@@ -2219,9 +7824,78 @@
       {
         "locale": "ko",
         "name": "다스"
+      },
+      {
+        "locale": "da",
+        "name": "dusin"
+      },
+      {
+        "locale": "it",
+        "name": "dozzine"
+      },
+      {
+        "locale": "es",
+        "name": "docenas"
+      },
+      {
+        "locale": "ru",
+        "name": "дюжины"
+      },
+      {
+        "locale": "pl",
+        "name": "tuziny"
+      },
+      {
+        "locale": "no",
+        "name": "dusin"
+      },
+      {
+        "locale": "pt",
+        "name": "dúzias"
+      },
+      {
+        "locale": "bg",
+        "name": "дузини"
+      },
+      {
+        "locale": "fr",
+        "name": "douzaines"
+      },
+      {
+        "locale": "fi",
+        "name": "tusinaa"
+      },
+      {
+        "locale": "uk",
+        "name": "дюжини"
       }
     ],
-    "alternates": ["dutzende", "dz", "dz.", "다스", "더즌"]
+    "alternates": [
+      "dutzende",
+      "dz",
+      "dz.",
+      "다스",
+      "더즌",
+      "dozzina",
+      "dozzine",
+      "docena",
+      "docenas",
+      "дюжина",
+      "дюжины",
+      "tuzin",
+      "tuziny",
+      "dusin",
+      "dúzia",
+      "dúzias",
+      "дузина",
+      "дузини",
+      "douzaine",
+      "douzaines",
+      "tusina",
+      "tusinaa",
+      "дюжини",
+      "дюжин"
+    ]
   },
   "small_splash": {
     "short": [
@@ -2239,7 +7913,51 @@
       },
       {
         "locale": "ko",
-        "name": "조금"
+        "name": "소량"
+      },
+      {
+        "locale": "da",
+        "name": "lille skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzino"
+      },
+      {
+        "locale": "es",
+        "name": "chorro pequeño"
+      },
+      {
+        "locale": "ru",
+        "name": "маленький всплеск"
+      },
+      {
+        "locale": "pl",
+        "name": "mały chlust"
+      },
+      {
+        "locale": "no",
+        "name": "liten skvett"
+      },
+      {
+        "locale": "pt",
+        "name": "jato pequeno"
+      },
+      {
+        "locale": "bg",
+        "name": "малък плисък"
+      },
+      {
+        "locale": "fr",
+        "name": "petite giclée"
+      },
+      {
+        "locale": "fi",
+        "name": "pieni loraus"
+      },
+      {
+        "locale": "uk",
+        "name": "невеликий ковток"
       }
     ],
     "plural": [
@@ -2249,7 +7967,7 @@
       },
       {
         "locale": "de",
-        "name": "kleine Schuss"
+        "name": "kleine Schüsse"
       },
       {
         "locale": "nl",
@@ -2257,10 +7975,82 @@
       },
       {
         "locale": "ko",
-        "name": "조금"
+        "name": "소량"
+      },
+      {
+        "locale": "da",
+        "name": "lille skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzini"
+      },
+      {
+        "locale": "es",
+        "name": "chorros pequeños"
+      },
+      {
+        "locale": "ru",
+        "name": "маленькие всплески"
+      },
+      {
+        "locale": "pl",
+        "name": "małe chlusty"
+      },
+      {
+        "locale": "no",
+        "name": "små skvetter"
+      },
+      {
+        "locale": "pt",
+        "name": "jatos pequenos"
+      },
+      {
+        "locale": "bg",
+        "name": "малки плисъци"
+      },
+      {
+        "locale": "fr",
+        "name": "petites giclées"
+      },
+      {
+        "locale": "fi",
+        "name": "pientä lorausta"
+      },
+      {
+        "locale": "uk",
+        "name": "невеликі ковтки"
       }
     ],
-    "alternates": ["kleiner schuß", "winziger schuss", "조금", "소량"]
+    "alternates": [
+      "kleiner schuß",
+      "winziger schuss",
+      "소량",
+      "en smule",
+      "spruzzino",
+      "spruzzini",
+      "piccolo spruzzo",
+      "chorro pequeño",
+      "chorros pequeños",
+      "маленький всплеск",
+      "маленькие всплески",
+      "mały chlust",
+      "małe chlusty",
+      "liten skvett",
+      "små skvetter",
+      "jato pequeno",
+      "jatos pequenos",
+      "малък плисък",
+      "малки плисъци",
+      "petite giclée",
+      "petites giclées",
+      "pieni loraus",
+      "pientä lorausta",
+      "невеликий ковток",
+      "невеликі ковтки",
+      "невеликих ковтків",
+      "маленький ковток"
+    ]
   },
   "bulb": {
     "short": [
@@ -2274,11 +8064,55 @@
       },
       {
         "locale": "nl",
-        "name": "bol"
+        "name": "knol"
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "뿌리"
+      },
+      {
+        "locale": "da",
+        "name": "knold"
+      },
+      {
+        "locale": "it",
+        "name": "bulbo"
+      },
+      {
+        "locale": "es",
+        "name": "bulbo"
+      },
+      {
+        "locale": "ru",
+        "name": "головка"
+      },
+      {
+        "locale": "pl",
+        "name": "główka"
+      },
+      {
+        "locale": "no",
+        "name": "løkhode"
+      },
+      {
+        "locale": "pt",
+        "name": "bulbo"
+      },
+      {
+        "locale": "bg",
+        "name": "главичка"
+      },
+      {
+        "locale": "fr",
+        "name": "bulbe"
+      },
+      {
+        "locale": "fi",
+        "name": "sipuli"
+      },
+      {
+        "locale": "uk",
+        "name": "головка"
       }
     ],
     "plural": [
@@ -2292,14 +8126,77 @@
       },
       {
         "locale": "nl",
-        "name": "bollen"
+        "name": "knollen"
       },
       {
         "locale": "ko",
-        "name": "통"
+        "name": "뿌리"
+      },
+      {
+        "locale": "da",
+        "name": "knolde"
+      },
+      {
+        "locale": "it",
+        "name": "bulbi"
+      },
+      {
+        "locale": "es",
+        "name": "bulbos"
+      },
+      {
+        "locale": "ru",
+        "name": "головки"
+      },
+      {
+        "locale": "pl",
+        "name": "główki"
+      },
+      {
+        "locale": "no",
+        "name": "løkhoder"
+      },
+      {
+        "locale": "pt",
+        "name": "bulbos"
+      },
+      {
+        "locale": "bg",
+        "name": "главички"
+      },
+      {
+        "locale": "fr",
+        "name": "bulbes"
+      },
+      {
+        "locale": "fi",
+        "name": "sipulia"
+      },
+      {
+        "locale": "uk",
+        "name": "головки"
       }
     ],
-    "alternates": ["knöllchen", "통", "뿌리"]
+    "alternates": [
+      "knöllchen",
+      "뿌리",
+      "bulbo",
+      "bulbi",
+      "bulbos",
+      "головка",
+      "головки",
+      "główka",
+      "główki",
+      "løkhode",
+      "løkhoder",
+      "главичка",
+      "главички",
+      "bulbe",
+      "bulbes",
+      "sipuli",
+      "sipulia",
+      "головок"
+    ]
   },
   "head": {
     "short": [
@@ -2318,6 +8215,50 @@
       {
         "locale": "ko",
         "name": "통"
+      },
+      {
+        "locale": "da",
+        "name": "hoved"
+      },
+      {
+        "locale": "it",
+        "name": "cespo"
+      },
+      {
+        "locale": "es",
+        "name": "cabeza"
+      },
+      {
+        "locale": "ru",
+        "name": "кочан"
+      },
+      {
+        "locale": "pl",
+        "name": "głowa"
+      },
+      {
+        "locale": "no",
+        "name": "hode"
+      },
+      {
+        "locale": "pt",
+        "name": "cabeça"
+      },
+      {
+        "locale": "bg",
+        "name": "глава"
+      },
+      {
+        "locale": "fr",
+        "name": "tête"
+      },
+      {
+        "locale": "fi",
+        "name": "kerä"
+      },
+      {
+        "locale": "uk",
+        "name": "голівка"
       }
     ],
     "plural": [
@@ -2336,9 +8277,80 @@
       {
         "locale": "ko",
         "name": "통"
+      },
+      {
+        "locale": "da",
+        "name": "hoveder"
+      },
+      {
+        "locale": "it",
+        "name": "cespi"
+      },
+      {
+        "locale": "es",
+        "name": "cabezas"
+      },
+      {
+        "locale": "ru",
+        "name": "кочаны"
+      },
+      {
+        "locale": "pl",
+        "name": "głowy"
+      },
+      {
+        "locale": "no",
+        "name": "hoder"
+      },
+      {
+        "locale": "pt",
+        "name": "cabeças"
+      },
+      {
+        "locale": "bg",
+        "name": "глави"
+      },
+      {
+        "locale": "fr",
+        "name": "têtes"
+      },
+      {
+        "locale": "fi",
+        "name": "kerää"
+      },
+      {
+        "locale": "uk",
+        "name": "голівки"
       }
     ],
-    "alternates": ["köpfchen", "통", "포기"]
+    "alternates": [
+      "köpfchen",
+      "통",
+      "포기",
+      "cespo",
+      "cespi",
+      "testa",
+      "teste",
+      "cabeza",
+      "cabezas",
+      "кочан",
+      "кочаны",
+      "głowa",
+      "głowy",
+      "hode",
+      "hoder",
+      "cabeça",
+      "cabeças",
+      "глава",
+      "глави",
+      "tête",
+      "têtes",
+      "kerä",
+      "kerää",
+      "голівка",
+      "голівки",
+      "голівок"
+    ]
   },
   "to_taste": {
     "short": [
@@ -2357,6 +8369,50 @@
       {
         "locale": "ko",
         "name": "기호에 맞게"
+      },
+      {
+        "locale": "da",
+        "name": "efter smag"
+      },
+      {
+        "locale": "it",
+        "name": "q.b."
+      },
+      {
+        "locale": "es",
+        "name": "al gusto"
+      },
+      {
+        "locale": "ru",
+        "name": "по вкусу"
+      },
+      {
+        "locale": "pl",
+        "name": "do smaku"
+      },
+      {
+        "locale": "no",
+        "name": "etter smak"
+      },
+      {
+        "locale": "pt",
+        "name": "a gosto"
+      },
+      {
+        "locale": "bg",
+        "name": "на вкус"
+      },
+      {
+        "locale": "fr",
+        "name": "selon le goût"
+      },
+      {
+        "locale": "fi",
+        "name": "maun mukaan"
+      },
+      {
+        "locale": "uk",
+        "name": "до смаку"
       }
     ],
     "plural": [
@@ -2375,9 +8431,78 @@
       {
         "locale": "ko",
         "name": "기호에 맞게"
+      },
+      {
+        "locale": "da",
+        "name": "efter smag"
+      },
+      {
+        "locale": "it",
+        "name": "q.b."
+      },
+      {
+        "locale": "es",
+        "name": "al gusto"
+      },
+      {
+        "locale": "ru",
+        "name": "по вкусу"
+      },
+      {
+        "locale": "pl",
+        "name": "do smaku"
+      },
+      {
+        "locale": "no",
+        "name": "etter smak"
+      },
+      {
+        "locale": "pt",
+        "name": "a gosto"
+      },
+      {
+        "locale": "bg",
+        "name": "на вкус"
+      },
+      {
+        "locale": "fr",
+        "name": "selon le goût"
+      },
+      {
+        "locale": "fi",
+        "name": "maun mukaan"
+      },
+      {
+        "locale": "uk",
+        "name": "до смаку"
       }
     ],
-    "alternates": ["nach bedarf", "nach belieben", "nach geschmack", "기호에 맞게", "취향껏"]
+    "alternates": [
+      "n.b.",
+      "nach bedarf",
+      "nach belieben",
+      "nach geschmack",
+      "기호에 맞게",
+      "취향껏",
+      "smages til",
+      "efter behag",
+      "efter behov",
+      "q.b.",
+      "quanto basta",
+      "a piacere",
+      "al gusto",
+      "по вкусу",
+      "do smaku",
+      "etter smak",
+      "a gosto",
+      "на вкус",
+      "selon le goût",
+      "à volonté",
+      "maun mukaan",
+      "oman maun mukaan",
+      "до смаку",
+      "за смаком"
+    ]
   },
   "pound": {
     "short": [
@@ -2396,6 +8521,50 @@
       {
         "locale": "ko",
         "name": "파운드"
+      },
+      {
+        "locale": "da",
+        "name": "pund"
+      },
+      {
+        "locale": "it",
+        "name": "libbra"
+      },
+      {
+        "locale": "es",
+        "name": "lb"
+      },
+      {
+        "locale": "ru",
+        "name": "фунт"
+      },
+      {
+        "locale": "pl",
+        "name": "funt"
+      },
+      {
+        "locale": "no",
+        "name": "pund"
+      },
+      {
+        "locale": "pt",
+        "name": "lb"
+      },
+      {
+        "locale": "bg",
+        "name": "фунт"
+      },
+      {
+        "locale": "fr",
+        "name": "lb"
+      },
+      {
+        "locale": "fi",
+        "name": "lb"
+      },
+      {
+        "locale": "uk",
+        "name": "фунт"
       }
     ],
     "plural": [
@@ -2414,9 +8583,74 @@
       {
         "locale": "ko",
         "name": "파운드"
+      },
+      {
+        "locale": "da",
+        "name": "pund"
+      },
+      {
+        "locale": "it",
+        "name": "libbre"
+      },
+      {
+        "locale": "es",
+        "name": "libras"
+      },
+      {
+        "locale": "ru",
+        "name": "фунты"
+      },
+      {
+        "locale": "pl",
+        "name": "funty"
+      },
+      {
+        "locale": "no",
+        "name": "pund"
+      },
+      {
+        "locale": "pt",
+        "name": "libras"
+      },
+      {
+        "locale": "bg",
+        "name": "фунта"
+      },
+      {
+        "locale": "fr",
+        "name": "livres"
+      },
+      {
+        "locale": "fi",
+        "name": "naulaa"
+      },
+      {
+        "locale": "uk",
+        "name": "фунти"
       }
     ],
-    "alternates": ["pfd", "pfd.", "파운드", "lb"]
+    "alternates": [
+      "pfd",
+      "pfd.",
+      "파운드",
+      "lb",
+      "libbra",
+      "libbre",
+      "libras",
+      "libra",
+      "фунт",
+      "фунты",
+      "фунта",
+      "funt",
+      "funty",
+      "pund",
+      "livres",
+      "livre",
+      "naula",
+      "naulaa",
+      "фунти",
+      "фунтів"
+    ]
   },
   "bar": {
     "short": [
@@ -2435,6 +8669,50 @@
       {
         "locale": "ko",
         "name": "판"
+      },
+      {
+        "locale": "da",
+        "name": "plade"
+      },
+      {
+        "locale": "it",
+        "name": "tavoletta"
+      },
+      {
+        "locale": "es",
+        "name": "tableta"
+      },
+      {
+        "locale": "ru",
+        "name": "плитка"
+      },
+      {
+        "locale": "pl",
+        "name": "tabliczka"
+      },
+      {
+        "locale": "no",
+        "name": "sjokoladeplate"
+      },
+      {
+        "locale": "pt",
+        "name": "tablete"
+      },
+      {
+        "locale": "bg",
+        "name": "блокче"
+      },
+      {
+        "locale": "fr",
+        "name": "tablette"
+      },
+      {
+        "locale": "fi",
+        "name": "patukka"
+      },
+      {
+        "locale": "uk",
+        "name": "плитка"
       }
     ],
     "plural": [
@@ -2453,9 +8731,79 @@
       {
         "locale": "ko",
         "name": "판"
+      },
+      {
+        "locale": "da",
+        "name": "plader"
+      },
+      {
+        "locale": "it",
+        "name": "tavolette"
+      },
+      {
+        "locale": "es",
+        "name": "tabletas"
+      },
+      {
+        "locale": "ru",
+        "name": "плитки"
+      },
+      {
+        "locale": "pl",
+        "name": "tabliczki"
+      },
+      {
+        "locale": "no",
+        "name": "sjokoladeplater"
+      },
+      {
+        "locale": "pt",
+        "name": "tabletes"
+      },
+      {
+        "locale": "bg",
+        "name": "блокчета"
+      },
+      {
+        "locale": "fr",
+        "name": "tablettes"
+      },
+      {
+        "locale": "fi",
+        "name": "patukkaa"
+      },
+      {
+        "locale": "uk",
+        "name": "плитки"
       }
     ],
-    "alternates": ["reihen", "riegelchen", "판", "바"]
+    "alternates": [
+      "reihen",
+      "riegelchen",
+      "판",
+      "바",
+      "tavoletta",
+      "tavolette",
+      "barretta",
+      "barrette",
+      "tableta",
+      "tabletas",
+      "плитка",
+      "плитки",
+      "tabliczka",
+      "tabliczki",
+      "sjokoladeplate",
+      "sjokoladeplater",
+      "tablete",
+      "tabletes",
+      "блокче",
+      "блокчета",
+      "tablette",
+      "tablettes",
+      "patukka",
+      "patukkaa",
+      "плиток"
+    ]
   },
   "bowl": {
     "short": [
@@ -2474,6 +8822,50 @@
       {
         "locale": "ko",
         "name": "공기"
+      },
+      {
+        "locale": "da",
+        "name": "skål"
+      },
+      {
+        "locale": "it",
+        "name": "ciotola"
+      },
+      {
+        "locale": "es",
+        "name": "cuenco"
+      },
+      {
+        "locale": "ru",
+        "name": "миска"
+      },
+      {
+        "locale": "pl",
+        "name": "miska"
+      },
+      {
+        "locale": "no",
+        "name": "bolle"
+      },
+      {
+        "locale": "pt",
+        "name": "tigela"
+      },
+      {
+        "locale": "bg",
+        "name": "купа"
+      },
+      {
+        "locale": "fr",
+        "name": "bolée"
+      },
+      {
+        "locale": "fi",
+        "name": "kulho"
+      },
+      {
+        "locale": "uk",
+        "name": "миска"
       }
     ],
     "plural": [
@@ -2492,9 +8884,79 @@
       {
         "locale": "ko",
         "name": "공기"
+      },
+      {
+        "locale": "da",
+        "name": "skåle"
+      },
+      {
+        "locale": "it",
+        "name": "ciotole"
+      },
+      {
+        "locale": "es",
+        "name": "cuencos"
+      },
+      {
+        "locale": "ru",
+        "name": "миски"
+      },
+      {
+        "locale": "pl",
+        "name": "miski"
+      },
+      {
+        "locale": "no",
+        "name": "boller"
+      },
+      {
+        "locale": "pt",
+        "name": "tigelas"
+      },
+      {
+        "locale": "bg",
+        "name": "купи"
+      },
+      {
+        "locale": "fr",
+        "name": "bolées"
+      },
+      {
+        "locale": "fi",
+        "name": "kulhoa"
+      },
+      {
+        "locale": "uk",
+        "name": "миски"
       }
     ],
-    "alternates": ["schälchen", "공기", "그릇"]
+    "alternates": [
+      "schälchen",
+      "공기",
+      "그릇",
+      "ciotola",
+      "ciotole",
+      "scodella",
+      "scodelle",
+      "boles",
+      "cuenco",
+      "cuencos",
+      "миска",
+      "миски",
+      "miska",
+      "miski",
+      "bolle",
+      "boller",
+      "tigela",
+      "tigelas",
+      "купа",
+      "купи",
+      "bols",
+      "kulho",
+      "kulhoa",
+      "kulhollinen",
+      "мисок"
+    ]
   },
   "heaping_teaspoon": {
     "short": [
@@ -2504,7 +8966,7 @@
       },
       {
         "locale": "de",
-        "name": "gehäufter TL"
+        "name": "geh. TL"
       },
       {
         "locale": "nl",
@@ -2513,6 +8975,50 @@
       {
         "locale": "ko",
         "name": "수북한 작은술"
+      },
+      {
+        "locale": "da",
+        "name": "toppet tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaino colmo"
+      },
+      {
+        "locale": "es",
+        "name": "cdta colmada"
+      },
+      {
+        "locale": "ru",
+        "name": "ч. л. с горкой"
+      },
+      {
+        "locale": "pl",
+        "name": "czubata łyżeczka"
+      },
+      {
+        "locale": "no",
+        "name": "toppet ts"
+      },
+      {
+        "locale": "pt",
+        "name": "c. de chá cheia"
+      },
+      {
+        "locale": "bg",
+        "name": "пълна ч.л."
+      },
+      {
+        "locale": "fr",
+        "name": "càc bombée"
+      },
+      {
+        "locale": "fi",
+        "name": "kukkurainen tl"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. з гіркою"
       }
     ],
     "plural": [
@@ -2522,7 +9028,7 @@
       },
       {
         "locale": "de",
-        "name": "gehäufte TL"
+        "name": "geh. TL"
       },
       {
         "locale": "nl",
@@ -2531,10 +9037,57 @@
       {
         "locale": "ko",
         "name": "수북한 작은술"
+      },
+      {
+        "locale": "da",
+        "name": "toppede tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaini colmi"
+      },
+      {
+        "locale": "es",
+        "name": "cucharaditas colmadas"
+      },
+      {
+        "locale": "ru",
+        "name": "чайные ложки с горкой"
+      },
+      {
+        "locale": "pl",
+        "name": "czubate łyżeczki"
+      },
+      {
+        "locale": "no",
+        "name": "toppede teskjeer"
+      },
+      {
+        "locale": "pt",
+        "name": "colheres de chá cheias"
+      },
+      {
+        "locale": "bg",
+        "name": "пълни чаени лъжици"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à café bombées"
+      },
+      {
+        "locale": "fi",
+        "name": "kukkuraista teelusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. з гіркою"
       }
     ],
     "alternates": [
       "tl, gehäuft",
+      "tl, geh.",
+      "tl gehäuft",
+      "tl geh.",
       "gehäufte teelöffel",
       "gehäufter teelöffel",
       "großzügige teelöffel",
@@ -2542,7 +9095,51 @@
       "großzügiger teelöffel",
       "großzügiger tl",
       "수북한 작은술",
-      "수북이 작은술"
+      "수북이 작은술",
+      "toppet tsk.",
+      "toppet teskefuld",
+      "teskefuld med top",
+      "teskefuld m. top",
+      "teske med top",
+      "tsk med top",
+      "tsk m. top",
+      "tsk. m. top",
+      "cucchiaino colmo",
+      "cucchiaini colmi",
+      "cdta colmada",
+      "cucharaditas colmadas",
+      "cucharadita colmada",
+      "ч. л. с горкой",
+      "чайные ложки с горкой",
+      "чайная ложка с горкой",
+      "czubata łyżeczka",
+      "czubate łyżeczki",
+      "toppet ts",
+      "toppede teskjeer",
+      "toppet teskje",
+      "c. de chá cheia",
+      "colheres de chá cheias",
+      "colher de chá cheia",
+      "пълна ч.л.",
+      "пълни чаени лъжици",
+      "пълна чаена лъжица",
+      "càc bombée",
+      "cuillères à café bombées",
+      "cuillère à café bombée",
+      "kukkurainen tl",
+      "kukkurallinen teelusikka",
+      "kukkurainen teelusikka",
+      "kukkurainen teelusikallinen",
+      "kukkuraista teelusikallista",
+      "heaped tsp",
+      "heaped teaspoon",
+      "heaped teaspoons",
+      "ч. л. з гіркою",
+      "ч.л. з гіркою",
+      "чайна ложка з гіркою",
+      "чайні ложки з гіркою",
+      "чайних ложок з гіркою",
+      "чайної ложки з гіркою"
     ]
   },
   "scant_teaspoon": {
@@ -2562,6 +9159,50 @@
       {
         "locale": "ko",
         "name": "깎은 작은술"
+      },
+      {
+        "locale": "da",
+        "name": "strøget tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaino raso"
+      },
+      {
+        "locale": "es",
+        "name": "cdta rasa"
+      },
+      {
+        "locale": "ru",
+        "name": "ч. л. без горки"
+      },
+      {
+        "locale": "pl",
+        "name": "płaska łyżeczka"
+      },
+      {
+        "locale": "no",
+        "name": "strøken ts"
+      },
+      {
+        "locale": "pt",
+        "name": "c. de chá rasa"
+      },
+      {
+        "locale": "bg",
+        "name": "равна ч.л."
+      },
+      {
+        "locale": "fr",
+        "name": "càc rase"
+      },
+      {
+        "locale": "fi",
+        "name": "niukka tl"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. без гірки"
       }
     ],
     "plural": [
@@ -2580,19 +9221,99 @@
       {
         "locale": "ko",
         "name": "깎은 작은술"
+      },
+      {
+        "locale": "da",
+        "name": "strøget tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaini rasi"
+      },
+      {
+        "locale": "es",
+        "name": "cucharaditas rasas"
+      },
+      {
+        "locale": "ru",
+        "name": "чайные ложки без горки"
+      },
+      {
+        "locale": "pl",
+        "name": "płaskie łyżeczki"
+      },
+      {
+        "locale": "no",
+        "name": "strøkne teskjeer"
+      },
+      {
+        "locale": "pt",
+        "name": "colheres de chá rasas"
+      },
+      {
+        "locale": "bg",
+        "name": "равни чаени лъжици"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à café rases"
+      },
+      {
+        "locale": "fi",
+        "name": "niukkaa teelusikallista"
+      },
+      {
+        "locale": "uk",
+        "name": "ч. л. без гірки"
       }
     ],
     "alternates": [
       "tl, gestr.",
+      "tl, gestrichen",
+      "tl gestr.",
+      "tl gestrichen",
       "gestrichene teelöffel",
       "gestrichene tl",
       "gestrichener teelöffel",
       "gestrichener tl",
-      "kanpper tl",
+      "knapper tl",
       "knappe teelöffel",
       "knappe tl",
       "knapper teelöffel",
-      "깎은 작은술"
+      "깎은 작은술",
+      "strøget tsk.",
+      "strøget teskefuld",
+      "strøget teske",
+      "cucchiaino raso",
+      "cucchiaini rasi",
+      "cdta rasa",
+      "cucharaditas rasas",
+      "cucharadita rasa",
+      "ч. л. без горки",
+      "чайные ложки без горки",
+      "чайная ложка без горки",
+      "płaska łyżeczka",
+      "płaskie łyżeczki",
+      "strøken ts",
+      "strøkne teskjeer",
+      "strøken teskje",
+      "c. de chá rasa",
+      "colheres de chá rasas",
+      "colher de chá rasa",
+      "равна ч.л.",
+      "равни чаени лъжици",
+      "равна чаена лъжица",
+      "càc rase",
+      "cuillères à café rases",
+      "cuillère à café rase",
+      "niukka tl",
+      "niukka teelusikallinen",
+      "ч. л. без гірки",
+      "ч.л. без гірки",
+      "чайна ложка без гірки",
+      "чайні ложки без гірки",
+      "чайних ложок без гірки",
+      "чайної ложки без гірки"
     ]
   },
   "pot": {
@@ -2612,6 +9333,50 @@
       {
         "locale": "ko",
         "name": "냄비"
+      },
+      {
+        "locale": "da",
+        "name": "gryde"
+      },
+      {
+        "locale": "it",
+        "name": "pentola"
+      },
+      {
+        "locale": "es",
+        "name": "olla"
+      },
+      {
+        "locale": "ru",
+        "name": "кастрюля"
+      },
+      {
+        "locale": "pl",
+        "name": "garnek"
+      },
+      {
+        "locale": "no",
+        "name": "gryte"
+      },
+      {
+        "locale": "pt",
+        "name": "panela"
+      },
+      {
+        "locale": "bg",
+        "name": "тенджера"
+      },
+      {
+        "locale": "fr",
+        "name": "casserole"
+      },
+      {
+        "locale": "fi",
+        "name": "pata"
+      },
+      {
+        "locale": "uk",
+        "name": "каструля"
       }
     ],
     "plural": [
@@ -2630,9 +9395,77 @@
       {
         "locale": "ko",
         "name": "냄비"
+      },
+      {
+        "locale": "da",
+        "name": "gryder"
+      },
+      {
+        "locale": "it",
+        "name": "pentole"
+      },
+      {
+        "locale": "es",
+        "name": "ollas"
+      },
+      {
+        "locale": "ru",
+        "name": "кастрюли"
+      },
+      {
+        "locale": "pl",
+        "name": "garnki"
+      },
+      {
+        "locale": "no",
+        "name": "gryter"
+      },
+      {
+        "locale": "pt",
+        "name": "panelas"
+      },
+      {
+        "locale": "bg",
+        "name": "тенджери"
+      },
+      {
+        "locale": "fr",
+        "name": "casseroles"
+      },
+      {
+        "locale": "fi",
+        "name": "pataa"
+      },
+      {
+        "locale": "uk",
+        "name": "каструлі"
       }
     ],
-    "alternates": ["냄비", "솥"]
+    "alternates": [
+      "냄비",
+      "솥",
+      "pentola",
+      "pentole",
+      "olla",
+      "ollas",
+      "кастрюля",
+      "кастрюли",
+      "garnek",
+      "garnki",
+      "gryte",
+      "gryter",
+      "panela",
+      "panelas",
+      "тенджера",
+      "тенджери",
+      "casserole",
+      "casseroles",
+      "pata",
+      "pataa",
+      "каструля",
+      "каструлі",
+      "каструль"
+    ]
   },
   "drop": {
     "short": [
@@ -2651,6 +9484,50 @@
       {
         "locale": "ko",
         "name": "방울"
+      },
+      {
+        "locale": "da",
+        "name": "dråbe"
+      },
+      {
+        "locale": "it",
+        "name": "goccia"
+      },
+      {
+        "locale": "es",
+        "name": "gota"
+      },
+      {
+        "locale": "ru",
+        "name": "капля"
+      },
+      {
+        "locale": "pl",
+        "name": "kropla"
+      },
+      {
+        "locale": "no",
+        "name": "dråpe"
+      },
+      {
+        "locale": "pt",
+        "name": "gota"
+      },
+      {
+        "locale": "bg",
+        "name": "капка"
+      },
+      {
+        "locale": "fr",
+        "name": "goutte"
+      },
+      {
+        "locale": "fi",
+        "name": "tippa"
+      },
+      {
+        "locale": "uk",
+        "name": "крапля"
       }
     ],
     "plural": [
@@ -2669,9 +9546,88 @@
       {
         "locale": "ko",
         "name": "방울"
+      },
+      {
+        "locale": "da",
+        "name": "dråber"
+      },
+      {
+        "locale": "it",
+        "name": "gocce"
+      },
+      {
+        "locale": "es",
+        "name": "gotas"
+      },
+      {
+        "locale": "ru",
+        "name": "капли"
+      },
+      {
+        "locale": "pl",
+        "name": "krople"
+      },
+      {
+        "locale": "no",
+        "name": "dråper"
+      },
+      {
+        "locale": "pt",
+        "name": "gotas"
+      },
+      {
+        "locale": "bg",
+        "name": "капки"
+      },
+      {
+        "locale": "fr",
+        "name": "gouttes"
+      },
+      {
+        "locale": "fi",
+        "name": "tippaa"
+      },
+      {
+        "locale": "uk",
+        "name": "краплі"
       }
     ],
-    "alternates": ["tr", "tr.", "trpf", "trpf.", "tröpfchen", "방울", "한방울"]
+    "alternates": [
+      "tropfen",
+      "tropf",
+      "tr",
+      "tr.",
+      "trpf",
+      "trpf.",
+      "tröpfchen",
+      "방울",
+      "한방울",
+      "goccia",
+      "gocce",
+      "goccina",
+      "gota",
+      "gotas",
+      "капля",
+      "капли",
+      "капель",
+      "kropla",
+      "krople",
+      "kropli",
+      "dråpe",
+      "dråper",
+      "капка",
+      "капки",
+      "goutte",
+      "gouttes",
+      "tippa",
+      "tippaa",
+      "pisara",
+      "pisaraa",
+      "крапля",
+      "краплі",
+      "крапель",
+      "краплю"
+    ]
   },
   "ounce": {
     "short": [
@@ -2690,6 +9646,50 @@
       {
         "locale": "ko",
         "name": "온스"
+      },
+      {
+        "locale": "da",
+        "name": "oz"
+      },
+      {
+        "locale": "it",
+        "name": "oncia"
+      },
+      {
+        "locale": "es",
+        "name": "oz"
+      },
+      {
+        "locale": "ru",
+        "name": "унция"
+      },
+      {
+        "locale": "pl",
+        "name": "uncja"
+      },
+      {
+        "locale": "no",
+        "name": "unse"
+      },
+      {
+        "locale": "pt",
+        "name": "oz"
+      },
+      {
+        "locale": "bg",
+        "name": "унция"
+      },
+      {
+        "locale": "fr",
+        "name": "oz"
+      },
+      {
+        "locale": "fi",
+        "name": "oz"
+      },
+      {
+        "locale": "uk",
+        "name": "унц."
       }
     ],
     "plural": [
@@ -2708,9 +9708,76 @@
       {
         "locale": "ko",
         "name": "온스"
+      },
+      {
+        "locale": "da",
+        "name": "oz"
+      },
+      {
+        "locale": "it",
+        "name": "once"
+      },
+      {
+        "locale": "es",
+        "name": "onzas"
+      },
+      {
+        "locale": "ru",
+        "name": "унции"
+      },
+      {
+        "locale": "pl",
+        "name": "uncje"
+      },
+      {
+        "locale": "no",
+        "name": "unser"
+      },
+      {
+        "locale": "pt",
+        "name": "onças"
+      },
+      {
+        "locale": "bg",
+        "name": "унции"
+      },
+      {
+        "locale": "fr",
+        "name": "onces"
+      },
+      {
+        "locale": "fi",
+        "name": "unssia"
+      },
+      {
+        "locale": "uk",
+        "name": "унц."
       }
     ],
-    "alternates": ["oz", "oz.", "온스"]
+    "alternates": [
+      "oz",
+      "oz.",
+      "온스",
+      "oncia",
+      "once",
+      "onzas",
+      "onza",
+      "унция",
+      "унции",
+      "uncja",
+      "uncje",
+      "unse",
+      "unser",
+      "onças",
+      "onça",
+      "onces",
+      "unssi",
+      "unssia",
+      "унц.",
+      "унція",
+      "унції",
+      "унцій"
+    ]
   },
   "milliliter": {
     "short": [
@@ -2729,6 +9796,50 @@
       {
         "locale": "ko",
         "name": "ml"
+      },
+      {
+        "locale": "da",
+        "name": "ml"
+      },
+      {
+        "locale": "it",
+        "name": "ml"
+      },
+      {
+        "locale": "fr",
+        "name": "ml"
+      },
+      {
+        "locale": "es",
+        "name": "ml"
+      },
+      {
+        "locale": "ru",
+        "name": "мл"
+      },
+      {
+        "locale": "pl",
+        "name": "ml"
+      },
+      {
+        "locale": "no",
+        "name": "ml"
+      },
+      {
+        "locale": "pt",
+        "name": "ml"
+      },
+      {
+        "locale": "bg",
+        "name": "мл"
+      },
+      {
+        "locale": "fi",
+        "name": "ml"
+      },
+      {
+        "locale": "uk",
+        "name": "мл"
       }
     ],
     "plural": [
@@ -2747,6 +9858,50 @@
       {
         "locale": "ko",
         "name": "밀리리터"
+      },
+      {
+        "locale": "da",
+        "name": "milliliter"
+      },
+      {
+        "locale": "it",
+        "name": "ml"
+      },
+      {
+        "locale": "fr",
+        "name": "millilitres"
+      },
+      {
+        "locale": "es",
+        "name": "mililitros"
+      },
+      {
+        "locale": "ru",
+        "name": "миллилитры"
+      },
+      {
+        "locale": "pl",
+        "name": "mililitry"
+      },
+      {
+        "locale": "no",
+        "name": "milliliter"
+      },
+      {
+        "locale": "pt",
+        "name": "mililitros"
+      },
+      {
+        "locale": "bg",
+        "name": "милилитра"
+      },
+      {
+        "locale": "fi",
+        "name": "millilitraa"
+      },
+      {
+        "locale": "uk",
+        "name": "мл"
       }
     ],
     "alternates": [
@@ -2758,7 +9913,24 @@
       "ml.",
       "밀리리터",
       "밀리",
-      "mL"
+      "millilitro",
+      "millilitri",
+      "mililitros",
+      "mililitro",
+      "мл",
+      "миллилитры",
+      "миллилитр",
+      "миллилитра",
+      "mililitry",
+      "mililitr",
+      "милилитра",
+      "милилитър",
+      "millilitra",
+      "millilitraa",
+      "мілілітр",
+      "мілілітри",
+      "мілілітра",
+      "мілілітрів"
     ]
   },
   "liter": {
@@ -2778,6 +9950,50 @@
       {
         "locale": "ko",
         "name": "L"
+      },
+      {
+        "locale": "da",
+        "name": "l"
+      },
+      {
+        "locale": "it",
+        "name": "l"
+      },
+      {
+        "locale": "fr",
+        "name": "l"
+      },
+      {
+        "locale": "es",
+        "name": "l"
+      },
+      {
+        "locale": "ru",
+        "name": "л"
+      },
+      {
+        "locale": "pl",
+        "name": "l"
+      },
+      {
+        "locale": "no",
+        "name": "l"
+      },
+      {
+        "locale": "pt",
+        "name": "l"
+      },
+      {
+        "locale": "bg",
+        "name": "л"
+      },
+      {
+        "locale": "fi",
+        "name": "l"
+      },
+      {
+        "locale": "uk",
+        "name": "л"
       }
     ],
     "plural": [
@@ -2796,8 +10012,663 @@
       {
         "locale": "ko",
         "name": "리터"
+      },
+      {
+        "locale": "da",
+        "name": "liter"
+      },
+      {
+        "locale": "it",
+        "name": "l"
+      },
+      {
+        "locale": "fr",
+        "name": "litres"
+      },
+      {
+        "locale": "es",
+        "name": "litros"
+      },
+      {
+        "locale": "ru",
+        "name": "литры"
+      },
+      {
+        "locale": "pl",
+        "name": "litry"
+      },
+      {
+        "locale": "no",
+        "name": "liter"
+      },
+      {
+        "locale": "pt",
+        "name": "litros"
+      },
+      {
+        "locale": "bg",
+        "name": "литра"
+      },
+      {
+        "locale": "fi",
+        "name": "litraa"
+      },
+      {
+        "locale": "uk",
+        "name": "л"
       }
     ],
-    "alternates": ["liter", "liters", "litre", "litres", "l", "l.", "L", "리터"]
+    "alternates": [
+      "liter",
+      "liters",
+      "litre",
+      "litres",
+      "l",
+      "l.",
+      "L",
+      "리터",
+      "litro",
+      "litri",
+      "litros",
+      "л",
+      "литры",
+      "литр",
+      "литра",
+      "litry",
+      "litr",
+      "литър",
+      "litra",
+      "litraa",
+      "літр",
+      "літри",
+      "літра",
+      "літрів"
+    ]
+  },
+  "centimeter": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "cm"
+      },
+      {
+        "locale": "de",
+        "name": "cm"
+      },
+      {
+        "locale": "nl",
+        "name": "cm"
+      },
+      {
+        "locale": "ko",
+        "name": "cm"
+      },
+      {
+        "locale": "da",
+        "name": "cm"
+      },
+      {
+        "locale": "it",
+        "name": "cm"
+      },
+      {
+        "locale": "fr",
+        "name": "cm"
+      },
+      {
+        "locale": "es",
+        "name": "cm"
+      },
+      {
+        "locale": "ru",
+        "name": "см"
+      },
+      {
+        "locale": "pl",
+        "name": "cm"
+      },
+      {
+        "locale": "no",
+        "name": "cm"
+      },
+      {
+        "locale": "pt",
+        "name": "cm"
+      },
+      {
+        "locale": "bg",
+        "name": "см"
+      },
+      {
+        "locale": "fi",
+        "name": "cm"
+      },
+      {
+        "locale": "uk",
+        "name": "см"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "centimeters"
+      },
+      {
+        "locale": "de",
+        "name": "cm"
+      },
+      {
+        "locale": "nl",
+        "name": "centimeter"
+      },
+      {
+        "locale": "ko",
+        "name": "센티미터"
+      },
+      {
+        "locale": "da",
+        "name": "cm"
+      },
+      {
+        "locale": "it",
+        "name": "cm"
+      },
+      {
+        "locale": "fr",
+        "name": "centimètres"
+      },
+      {
+        "locale": "es",
+        "name": "centímetros"
+      },
+      {
+        "locale": "ru",
+        "name": "сантиметры"
+      },
+      {
+        "locale": "pl",
+        "name": "centymetry"
+      },
+      {
+        "locale": "no",
+        "name": "centimeter"
+      },
+      {
+        "locale": "pt",
+        "name": "centímetros"
+      },
+      {
+        "locale": "bg",
+        "name": "сантиметра"
+      },
+      {
+        "locale": "fi",
+        "name": "senttimetriä"
+      },
+      {
+        "locale": "uk",
+        "name": "см"
+      }
+    ],
+    "alternates": [
+      "centimeter",
+      "centimeters",
+      "zentimeter",
+      "cm.",
+      "센치",
+      "센치미터",
+      "centimetro",
+      "centimetri",
+      "centimètre",
+      "centimètres",
+      "cm",
+      "centímetros",
+      "centímetro",
+      "см",
+      "сантиметры",
+      "сантиметр",
+      "сантиметра",
+      "centymetry",
+      "centymetr",
+      "сантиметър",
+      "senttimetri",
+      "senttimetriä",
+      "сантиметри",
+      "сантиметрів"
+    ]
+  },
+  "to_serve": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "to serve"
+      },
+      {
+        "locale": "de",
+        "name": "zum Servieren"
+      },
+      {
+        "locale": "nl",
+        "name": "om te serveren"
+      },
+      {
+        "locale": "ko",
+        "name": "곁들임용"
+      },
+      {
+        "locale": "da",
+        "name": "til servering"
+      },
+      {
+        "locale": "it",
+        "name": "per servire"
+      },
+      {
+        "locale": "es",
+        "name": "para servir"
+      },
+      {
+        "locale": "ru",
+        "name": "для подачи"
+      },
+      {
+        "locale": "pl",
+        "name": "do podania"
+      },
+      {
+        "locale": "no",
+        "name": "til servering"
+      },
+      {
+        "locale": "pt",
+        "name": "para servir"
+      },
+      {
+        "locale": "bg",
+        "name": "за сервиране"
+      },
+      {
+        "locale": "fr",
+        "name": "pour servir"
+      },
+      {
+        "locale": "fi",
+        "name": "tarjoiluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для подачі"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "to serve"
+      },
+      {
+        "locale": "de",
+        "name": "zum Servieren"
+      },
+      {
+        "locale": "nl",
+        "name": "om te serveren"
+      },
+      {
+        "locale": "ko",
+        "name": "곁들임용"
+      },
+      {
+        "locale": "da",
+        "name": "til servering"
+      },
+      {
+        "locale": "it",
+        "name": "per servire"
+      },
+      {
+        "locale": "es",
+        "name": "para servir"
+      },
+      {
+        "locale": "ru",
+        "name": "для подачи"
+      },
+      {
+        "locale": "pl",
+        "name": "do podania"
+      },
+      {
+        "locale": "no",
+        "name": "til servering"
+      },
+      {
+        "locale": "pt",
+        "name": "para servir"
+      },
+      {
+        "locale": "bg",
+        "name": "за сервиране"
+      },
+      {
+        "locale": "fr",
+        "name": "pour servir"
+      },
+      {
+        "locale": "fi",
+        "name": "tarjoiluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для подачі"
+      }
+    ],
+    "alternates": [
+      "for serving",
+      "to serve with",
+      "zum Servieren",
+      "om te serveren",
+      "ter serving",
+      "bij het serveren",
+      "til servering",
+      "per servire",
+      "para servir",
+      "для подачи",
+      "do podania",
+      "за сервиране",
+      "pour servir",
+      "tarjoiluun",
+      "для подачі",
+      "для сервірування"
+    ]
+  },
+  "for_garnish": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "for garnish"
+      },
+      {
+        "locale": "de",
+        "name": "zum Garnieren"
+      },
+      {
+        "locale": "nl",
+        "name": "ter garnering"
+      },
+      {
+        "locale": "ko",
+        "name": "장식용"
+      },
+      {
+        "locale": "da",
+        "name": "til pynt"
+      },
+      {
+        "locale": "it",
+        "name": "per guarnire"
+      },
+      {
+        "locale": "es",
+        "name": "para decorar"
+      },
+      {
+        "locale": "ru",
+        "name": "для украшения"
+      },
+      {
+        "locale": "pl",
+        "name": "do dekoracji"
+      },
+      {
+        "locale": "no",
+        "name": "til pynt"
+      },
+      {
+        "locale": "pt",
+        "name": "para decorar"
+      },
+      {
+        "locale": "bg",
+        "name": "за украса"
+      },
+      {
+        "locale": "fr",
+        "name": "pour décorer"
+      },
+      {
+        "locale": "fi",
+        "name": "koristeluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для прикраси"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "for garnish"
+      },
+      {
+        "locale": "de",
+        "name": "zum Garnieren"
+      },
+      {
+        "locale": "nl",
+        "name": "ter garnering"
+      },
+      {
+        "locale": "ko",
+        "name": "장식용"
+      },
+      {
+        "locale": "da",
+        "name": "til pynt"
+      },
+      {
+        "locale": "it",
+        "name": "per guarnire"
+      },
+      {
+        "locale": "es",
+        "name": "para decorar"
+      },
+      {
+        "locale": "ru",
+        "name": "для украшения"
+      },
+      {
+        "locale": "pl",
+        "name": "do dekoracji"
+      },
+      {
+        "locale": "no",
+        "name": "til pynt"
+      },
+      {
+        "locale": "pt",
+        "name": "para decorar"
+      },
+      {
+        "locale": "bg",
+        "name": "за украса"
+      },
+      {
+        "locale": "fr",
+        "name": "pour décorer"
+      },
+      {
+        "locale": "fi",
+        "name": "koristeluun"
+      },
+      {
+        "locale": "uk",
+        "name": "для прикраси"
+      }
+    ],
+    "alternates": [
+      "to garnish",
+      "for garnishing",
+      "for decoration",
+      "zur Garnitur",
+      "zum Dekorieren",
+      "ter decoratie",
+      "om te garneren",
+      "til pynt",
+      "per decorare",
+      "para adornar",
+      "для украшения",
+      "do dekoracji",
+      "para enfeitar",
+      "за украса",
+      "pour la décoration",
+      "koristeluun",
+      "для прикраси",
+      "для декору"
+    ]
+  },
+  "optional": {
+    "short": [
+      {
+        "locale": "en",
+        "name": "optional"
+      },
+      {
+        "locale": "de",
+        "name": "optional"
+      },
+      {
+        "locale": "nl",
+        "name": "optioneel"
+      },
+      {
+        "locale": "ko",
+        "name": "선택"
+      },
+      {
+        "locale": "da",
+        "name": "valgfri"
+      },
+      {
+        "locale": "it",
+        "name": "facoltativo"
+      },
+      {
+        "locale": "es",
+        "name": "opcional"
+      },
+      {
+        "locale": "ru",
+        "name": "по желанию"
+      },
+      {
+        "locale": "pl",
+        "name": "opcjonalnie"
+      },
+      {
+        "locale": "no",
+        "name": "valgfritt"
+      },
+      {
+        "locale": "pt",
+        "name": "opcional"
+      },
+      {
+        "locale": "bg",
+        "name": "по желание"
+      },
+      {
+        "locale": "fr",
+        "name": "facultatif"
+      },
+      {
+        "locale": "fi",
+        "name": "valinnainen"
+      },
+      {
+        "locale": "uk",
+        "name": "за бажанням"
+      }
+    ],
+    "plural": [
+      {
+        "locale": "en",
+        "name": "optional"
+      },
+      {
+        "locale": "de",
+        "name": "optional"
+      },
+      {
+        "locale": "nl",
+        "name": "optioneel"
+      },
+      {
+        "locale": "ko",
+        "name": "선택"
+      },
+      {
+        "locale": "da",
+        "name": "valgfri"
+      },
+      {
+        "locale": "it",
+        "name": "facoltativo"
+      },
+      {
+        "locale": "es",
+        "name": "opcional"
+      },
+      {
+        "locale": "ru",
+        "name": "по желанию"
+      },
+      {
+        "locale": "pl",
+        "name": "opcjonalnie"
+      },
+      {
+        "locale": "no",
+        "name": "valgfritt"
+      },
+      {
+        "locale": "pt",
+        "name": "opcional"
+      },
+      {
+        "locale": "bg",
+        "name": "по желание"
+      },
+      {
+        "locale": "fr",
+        "name": "facultatif"
+      },
+      {
+        "locale": "fi",
+        "name": "valinnainen"
+      },
+      {
+        "locale": "uk",
+        "name": "за бажанням"
+      }
+    ],
+    "alternates": [
+      "optionally",
+      "if desired",
+      "if you like",
+      "nach Wunsch",
+      "naar wens",
+      "indien gewenst",
+      "valgfrit",
+      "si se desea",
+      "по желанию",
+      "opcjonalnie",
+      "valgfritt",
+      "se desejar",
+      "по желание",
+      "au choix",
+      "halutessa",
+      "за бажанням"
+    ]
   }
 }

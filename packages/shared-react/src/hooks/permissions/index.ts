@@ -1,5 +1,4 @@
 import type { CreatePermissionsHooksOptions } from "./types";
-
 import { createUsePermissionsQuery } from "./use-permissions-query";
 import { createUseServerSettingsQuery } from "./use-server-settings-query";
 
@@ -16,7 +15,6 @@ export {
   selectCanDeleteRecipe,
   selectCanEditRecipe,
   selectCanViewRecipe,
-  selectIsAutoTaggingEnabled,
 } from "./selectors";
 export { createUsePermissionsQuery } from "./use-permissions-query";
 export { createUseServerSettingsQuery } from "./use-server-settings-query";

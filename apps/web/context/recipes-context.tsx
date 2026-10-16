@@ -1,23 +1,24 @@
 "use client";
 
+import { createContext, useContext, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
+import { useLibraryRecipesQuery } from "@/hooks/library";
+import { useRecipesMutations } from "@/hooks/recipes";
+import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
+import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
+import { showActionToast } from "@/lib/ui/action-toast";
+import { toast } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
 import type {
   FullRecipeInsertDTO,
   FullRecipeUpdateDTO,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
-
-import { createContext, useContext, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { addToast } from "@heroui/react";
+import { createScopedMessageTranslator } from "@norish/i18n";
 import { createRecipesContext } from "@norish/shared-react/contexts";
-
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
-import { useRatingsSubscription } from "@/hooks/ratings";
-import { useRecipesMutations, useRecipesQuery } from "@/hooks/recipes";
-import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
-
 
 type Ctx = {
   recipes: RecipeDashboardDTO[];
@@ -26,7 +27,6 @@ type Ctx = {
   isFetchingMore: boolean;
   hasMore: boolean;
   pendingRecipeIds: Set<string>;
-  autoTaggingRecipeIds: Set<string>;
   favoriteIds: string[];
   isFavorite: (recipeId: string) => boolean;
   toggleFavorite: (recipeId: string) => void;
@@ -39,31 +39,49 @@ type Ctx = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string) => void;
+  deleteRecipe: (id: string, version: number) => void;
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };
 
 const sharedRecipesContext = createRecipesContext({
   useRecipesFiltersContext,
-  useRecipesQuery,
+  // The Library is one interleaved list, so the context's list comes from the
+  // union rather than from `recipes.list` beside it (ADR-0026). `total` there
+  // counts both kinds.
+  useRecipesQuery: useLibraryRecipesQuery,
   useRecipesMutations,
   useFavoritesQuery,
   useFavoritesMutation,
   useUserAllergiesQuery,
   useRecipesSubscription: sharedDashboardRecipeHooks.useRecipesSubscription,
-  useToastAdapter: () => ({
-    show: ({ severity, title, description, actionLabel, onActionPress }) =>
-      addToast({
-        severity,
-        title,
-        description,
-        shouldShowTimeoutProgress: true,
-        radius: "full",
-        actionLabel,
-        onActionPress,
+  useRatingsSubscription: sharedDashboardRecipeHooks.useRatingsSubscription,
+  useToastAdapter: () => {
+    const tCommon = useTranslations("common");
+    const tRecipes = useTranslations("recipes");
+
+    return {
+      show: ({ severity, title, description, actionLabel, onActionPress }) => {
+        const variant = severity === "primary" || severity === "secondary" ? "accent" : severity;
+
+        if (actionLabel) {
+          showActionToast(title, {
+            description,
+            variant,
+            action: { label: actionLabel, onPress: () => onActionPress?.() },
+          });
+
+          return;
+        }
+
+        toast(title, { description, variant });
+      },
+      translate: createScopedMessageTranslator({
+        common: (messageKey) => tCommon(messageKey as Parameters<typeof tCommon>[0]),
+        recipes: (messageKey) => tRecipes(messageKey as Parameters<typeof tRecipes>[0]),
       }),
-  }),
+    };
+  },
   useNavigationAdapter: () => {
     const router = useRouter();
 
@@ -86,31 +104,17 @@ export function RecipesContextProvider({ children }: { children: React.ReactNode
 
 function RecipesContextAdapter({ children }: { children: React.ReactNode }) {
   const base = sharedRecipesContext.useRecipesContext();
-  const { filters } = useRecipesFiltersContext();
-
   const { allergies } = useActiveAllergies();
 
-  useRatingsSubscription();
-
-  const { recipes, total } = useMemo(() => {
-    if (!filters.showFavoritesOnly) {
-      return { recipes: base.recipes, total: base.total };
-    }
-
-    const favoriteSet = new Set(base.favoriteIds);
-    const filtered = base.recipes.filter((recipe) => favoriteSet.has(recipe.id));
-
-    return { recipes: filtered, total: filtered.length };
-  }, [base.recipes, base.total, base.favoriteIds, filters.showFavoritesOnly]);
-
+  // Favourites are narrowed by the Library query itself now, so there is no
+  // client-side slice left here — one that recomputed `total` from the current
+  // page would make paging lie.
   const value = useMemo<Ctx>(
     () => ({
       ...base,
-      recipes,
-      total,
       allergies,
     }),
-    [base, recipes, total, allergies]
+    [base, allergies]
   );
 
   return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;

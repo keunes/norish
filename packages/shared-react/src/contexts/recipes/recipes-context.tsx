@@ -1,23 +1,27 @@
+import { createContext, useCallback, useContext, useMemo } from "react";
 
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
+
 import type {
   FavoritesMutationResult,
   FavoritesQueryResult,
+  RatingsSubscriptionCallbacks,
   RecipeFilters,
   RecipesMutationsResult,
   RecipesQueryResult,
   RecipesSubscriptionCallbacks,
 } from "../../hooks/recipes/dashboard";
 import type { RecipeToastAdapter } from "./recipe-toast-adapter";
-
-import { createContext, useCallback, useContext, useMemo } from "react";
-
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
   toRecipesQueryFilters,
 } from "./filter-contract";
-import { createRecipeImportToasts, createRecipeSubscriptionToasts } from "./recipe-toast-adapter";
+import {
+  createRatingsSubscriptionToasts,
+  createRecipeImportToasts,
+  createRecipeSubscriptionToasts,
+} from "./recipe-toast-adapter";
 
 export type SharedRecipesContextValue = {
   recipes: RecipesQueryResult["recipes"];
@@ -28,7 +32,6 @@ export type SharedRecipesContextValue = {
   isFetchingMore: boolean;
   hasMore: boolean;
   pendingRecipeIds: Set<string>;
-  autoTaggingRecipeIds: Set<string>;
   favoriteIds: string[];
   isFavorite: (recipeId: string) => boolean;
   toggleFavorite: (recipeId: string) => void;
@@ -41,7 +44,7 @@ export type SharedRecipesContextValue = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string) => void;
+  deleteRecipe: (id: string, version: number) => void;
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };
@@ -54,11 +57,12 @@ type RecipesNavigationAdapter = {
 type RecipesFiltersContextShape = {
   filters: Parameters<typeof toRecipesQueryFilters>[0];
   clearFilters: () => void;
+  isHydrated: boolean;
 };
 
 type CreateRecipesContextOptions = {
   useRecipesFiltersContext: () => RecipesFiltersContextShape;
-  useRecipesQuery: (filters: RecipeFilters) => RecipesQueryResult;
+  useRecipesQuery: (filters: RecipeFilters, options?: { enabled?: boolean }) => RecipesQueryResult;
   useRecipesMutations: () => Pick<
     RecipesMutationsResult,
     "importRecipe" | "importRecipeWithAI" | "createRecipe" | "updateRecipe" | "deleteRecipe"
@@ -67,6 +71,7 @@ type CreateRecipesContextOptions = {
   useFavoritesMutation: () => Pick<FavoritesMutationResult, "toggleFavorite">;
   useUserAllergiesQuery: () => { allergies: string[] };
   useRecipesSubscription: (callbacks?: RecipesSubscriptionCallbacks) => void;
+  useRatingsSubscription?: (callbacks?: RatingsSubscriptionCallbacks) => void;
   useToastAdapter: () => RecipeToastAdapter;
   useNavigationAdapter: () => RecipesNavigationAdapter;
   queryDefaults?: Partial<RecipeFilters>;
@@ -80,6 +85,7 @@ export function createRecipesContext({
   useFavoritesMutation,
   useUserAllergiesQuery,
   useRecipesSubscription,
+  useRatingsSubscription,
   useToastAdapter,
   useNavigationAdapter,
   queryDefaults,
@@ -87,7 +93,7 @@ export function createRecipesContext({
   const RecipesContext = createContext<SharedRecipesContextValue | null>(null);
 
   function RecipesProvider({ children }: { children: React.ReactNode }) {
-    const { filters, clearFilters } = useRecipesFiltersContext();
+    const { filters, clearFilters, isHydrated } = useRecipesFiltersContext();
     const navigation = useNavigationAdapter();
     const toastAdapter = useToastAdapter();
 
@@ -97,6 +103,11 @@ export function createRecipesContext({
     );
     const filterKey = useMemo(() => serializeRecipeFilters(filters), [filters]);
 
+    // Until the persisted filters are applied, the default filters are a
+    // guess: fetching or painting with them briefly shows recipes the reader
+    // had filtered away. Hold the loading presentation instead (a persisted
+    // query cache can answer the default-filters key instantly, so gating
+    // only the fetch would not be enough).
     const {
       recipes,
       total,
@@ -105,10 +116,9 @@ export function createRecipesContext({
       error,
       hasMore,
       pendingRecipeIds,
-      autoTaggingRecipeIds,
       loadMore,
       invalidate,
-    } = useRecipesQuery(queryFilters);
+    } = useRecipesQuery(queryFilters, { enabled: isHydrated });
 
     const {
       importRecipe: importRecipeMutation,
@@ -126,8 +136,13 @@ export function createRecipesContext({
       () => createRecipeSubscriptionToasts(toastAdapter, { onOpenRecipe: navigation.toRecipe }),
       [navigation.toRecipe, toastAdapter]
     );
+    const ratingsToasts = useMemo(
+      () => createRatingsSubscriptionToasts(toastAdapter),
+      [toastAdapter]
+    );
 
     useRecipesSubscription(subscriptionToasts);
+    useRatingsSubscription?.(ratingsToasts);
 
     const openRecipe = useCallback(
       (id: string) => {
@@ -157,7 +172,7 @@ export function createRecipesContext({
     const wrappedCreateRecipe = useCallback(
       (input: FullRecipeInsertDTO) => {
         createRecipe(input);
-        navigation.toHome();
+        input.id ? navigation.toRecipe(input.id) : navigation.toHome();
       },
       [createRecipe, navigation]
     );
@@ -176,7 +191,7 @@ export function createRecipesContext({
       () => ({
         recipes,
         total,
-        isLoading: isLoading || isFavoritesLoading,
+        isLoading: isLoading || isFavoritesLoading || !isHydrated,
         isValidating,
         error,
         favoriteIds,
@@ -186,7 +201,6 @@ export function createRecipesContext({
         isFetchingMore: isValidating && !isLoading,
         hasMore,
         pendingRecipeIds,
-        autoTaggingRecipeIds,
         hasAppliedFilters,
         clearFilters,
         filterKey,
@@ -204,6 +218,7 @@ export function createRecipesContext({
         total,
         isLoading,
         isFavoritesLoading,
+        isHydrated,
         favoriteIds,
         isFavorite,
         toggleFavorite,
@@ -212,7 +227,6 @@ export function createRecipesContext({
         error,
         hasMore,
         pendingRecipeIds,
-        autoTaggingRecipeIds,
         hasAppliedFilters,
         clearFilters,
         filterKey,

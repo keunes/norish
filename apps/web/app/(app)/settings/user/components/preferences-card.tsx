@@ -1,69 +1,74 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { InfoHint } from "@/components/shared/info-hint";
+import { useDeviceKind, useDevicePreference } from "@/context/device-preferences-context";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
+import { HIDDEN_ITEMS, partitionHiddenItems } from "@/lib/hidden-items";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
-import { Card, CardBody, CardHeader, Select, SelectItem, Switch } from "@heroui/react";
+import { Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import {
+  RECIPE_PAGE_COLORS,
+  TODAY_SECTION_VISIBILITIES,
+} from "@norish/shared/contracts/zod/device-preferences";
+import {
+  AFTER_PLANNING_CHOICES,
+  MEASUREMENT_SYSTEM_CHOICES,
+} from "@norish/shared/contracts/zod/user";
+import {
+  getAfterPlanningPreference,
   getLocalePreference,
-  getShowConversionButtonPreference,
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-  getTimersEnabledPreference,
+  getMeasurementSystemPreference,
+  measurementSystemTarget,
 } from "@norish/shared/lib/user-preferences";
 
 import { useUserSettingsContext } from "../context";
-
-import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
-import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
 
 export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");
   const { user, updatePreferences, isUpdatingPreferences } = useUserSettingsContext();
   const { globalEnabled } = useTimersEnabledQuery();
+  const { isAIEnabled } = usePermissionsContext();
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
   const router = useRouter();
-
-  const effective = getTimersEnabledPreference(user);
-
-  const disabled = !globalEnabled;
+  const [todaySectionVisibility, setTodaySectionVisibility] =
+    useDevicePreference("todaySectionVisibility");
+  const [hiddenItems, setHiddenItems] = useDevicePreference("hiddenItems");
+  const [recipePageColor, setRecipePageColor] = useDevicePreference("recipePageColor");
+  const deviceKind = useDeviceKind();
 
   const currentLocale = getLocalePreference(user) ?? defaultLocale;
+  const selectedLocale = enabledLocales.some((locale) => locale.code === currentLocale)
+    ? currentLocale
+    : undefined;
 
-  const handleToggle = useCallback(
-    async (value: boolean) => {
-      // If globally disabled, prevent changes
-      if (disabled) return;
-
-      await updatePreferences({ timersEnabled: value });
-    },
-    [updatePreferences, disabled]
+  // Timers are a capability an administrator can switch off for the whole
+  // deployment; when they have, there is nothing to offer the reader.
+  const offeredHidden = useMemo(
+    () => (globalEnabled ? HIDDEN_ITEMS : HIDDEN_ITEMS.filter((item) => item !== "timers")),
+    [globalEnabled]
   );
 
-  const conversionEffective = getShowConversionButtonPreference(user);
-  const ratingsEffective = getShowRatingsPreference(user);
-  const favoritesEffective = getShowFavoritesPreference(user);
+  // Converting with AI is on offer only where an administrator has AI on; a
+  // choice of it made before reads as the same system without.
+  const measurementChoices = isAIEnabled
+    ? MEASUREMENT_SYSTEM_CHOICES
+    : MEASUREMENT_SYSTEM_CHOICES.filter((choice) => !choice.endsWith("WithAI"));
+  const measurementSystem = getMeasurementSystemPreference(user);
 
-  const handleConversionToggle = useCallback(
-    async (value: boolean) => {
-      await updatePreferences({ showConversionButton: value });
-    },
-    [updatePreferences]
-  );
+  const { selected: selectedHidden, carried } = partitionHiddenItems(hiddenItems, offeredHidden);
 
-  const handleRatingsToggle = useCallback(
-    async (value: boolean) => {
-      await updatePreferences({ showRatings: value });
+  const handleHiddenChange = useCallback(
+    (chosen: string[]) => {
+      setHiddenItems([...chosen, ...carried]);
     },
-    [updatePreferences]
-  );
-
-  const handleFavoritesToggle = useCallback(
-    async (value: boolean) => {
-      await updatePreferences({ showFavorites: value });
-    },
-    [updatePreferences]
+    [setHiddenItems, carried]
   );
 
   const handleLocaleChange = useCallback(
@@ -77,101 +82,177 @@ export default function PreferencesCard() {
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <AdjustmentsHorizontalIcon className="h-5 w-5" />
-          {t("title")}
-          <NewFeatureChip />
-        </h2>
-      </CardHeader>
-      <CardBody className="gap-4">
-        <p className="text-default-500 text-base">{t("description")}</p>
+    <SettingsCard
+      // Which rows follow the account and which are Device Preferences.
+      badges={
+        <InfoHint label={t("deviceKind.help")}>
+          {t(`deviceKind.${deviceKind}`, {
+            language: t("language.title"),
+            afterPlanning: t("afterPlanning.title"),
+            measurements: t("measurements.title"),
+          })}
+        </InfoHint>
+      }
+      description={t("description")}
+      icon={AdjustmentsHorizontalIcon}
+      title={t("title")}
+    >
+      <SettingRow description={t("language.description")} title={t("language.title")}>
+        <Select
+          aria-label={t("language.title")}
+          className="w-full"
+          isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
+          placeholder={t("language.title")}
+          value={selectedLocale ?? null}
+          variant="secondary"
+          onChange={(selected) => {
+            if (typeof selected === "string") handleLocaleChange(selected);
+          }}
+        >
+          <Label className="sr-only">{t("language.title")}</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {enabledLocales.map((locale) => (
+                <ListBox.Item key={locale.code} id={locale.code} textValue={locale.name}>
+                  {locale.name}
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("language.title")}</div>
-            <div className="text-default-500 text-sm">{t("language.description")}</div>
-          </div>
+      {/* Stored with the user, on every device: it is about how they plan. */}
+      <SettingRow description={t("afterPlanning.description")} title={t("afterPlanning.title")}>
+        <ChoiceSelect
+          isDisabled={isUpdatingPreferences}
+          label={t("afterPlanning.title")}
+          optionLabel={(option) => t(`afterPlanning.options.${option}`)}
+          options={AFTER_PLANNING_CHOICES}
+          value={getAfterPlanningPreference(user)}
+          onChange={(afterPlanning) => void updatePreferences({ afterPlanning })}
+        />
+      </SettingRow>
+      <SettingRow description={t("measurements.description")} title={t("measurements.title")}>
+        <ChoiceSelect
+          isDisabled={isUpdatingPreferences}
+          label={t("measurements.title")}
+          optionLabel={(option) => t(`measurements.options.${option}`)}
+          options={measurementChoices}
+          value={
+            isAIEnabled
+              ? measurementSystem
+              : (measurementSystemTarget(measurementSystem)?.system ?? "off")
+          }
+          onChange={(choice) => void updatePreferences({ measurementSystem: choice })}
+        />
+      </SettingRow>
+      {/* The rows below are Device Preferences: they change the kind in use. */}
+      <SettingRow description={t("hidden.description")} title={t("hidden.title")}>
+        <Select
+          aria-label={t("hidden.title")}
+          className="w-full"
+          placeholder={t("hidden.placeholder")}
+          selectionMode="multiple"
+          value={selectedHidden}
+          variant="secondary"
+          onChange={(selected) => handleHiddenChange(selected.map(String))}
+        >
+          <Label className="sr-only">{t("hidden.title")}</Label>
+          <Select.Trigger>
+            <Select.Value>
+              {({ defaultChildren, isPlaceholder }) =>
+                isPlaceholder
+                  ? defaultChildren
+                  : selectedHidden.map((item) => t(`hidden.options.${item}`)).join(", ")
+              }
+            </Select.Value>
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox selectionMode="multiple">
+              {offeredHidden.map((item) => (
+                <ListBox.Item key={item} id={item} textValue={t(`hidden.options.${item}`)}>
+                  {t(`hidden.options.${item}`)}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
+      <SettingRow description={t("todaySection.description")} title={t("todaySection.title")}>
+        <ChoiceSelect
+          label={t("todaySection.title")}
+          optionLabel={(option) => t(`todaySection.options.${option}`)}
+          options={TODAY_SECTION_VISIBILITIES}
+          value={todaySectionVisibility}
+          onChange={setTodaySectionVisibility}
+        />
+      </SettingRow>
 
-          <Select
-            aria-label={t("language.title")}
-            className="max-w-[200px]"
-            isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
-            selectedKeys={currentLocale ? [currentLocale] : []}
-            onSelectionChange={(keys) => {
-              const selected = Array.from(keys)[0] as string;
+      {/* A choice between two colourings, not a Hidden Item: nothing is
+            hidden and the page is no slimmer for it (ADR-0023). */}
+      <SettingRow description={t("recipePageColor.description")} title={t("recipePageColor.title")}>
+        <ChoiceSelect
+          label={t("recipePageColor.title")}
+          optionLabel={(option) => t(`recipePageColor.options.${option}`)}
+          options={RECIPE_PAGE_COLORS}
+          value={recipePageColor}
+          onChange={setRecipePageColor}
+        />
+      </SettingRow>
+    </SettingsCard>
+  );
+}
 
-              if (selected) handleLocaleChange(selected);
-            }}
-          >
-            {enabledLocales.map((locale) => (
-              <SelectItem key={locale.code} id={locale.code}>
-                {locale.name}
-              </SelectItem>
-            ))}
-          </Select>
-        </div>
+/** A Select over a fixed set of choices; only a choice from the set reaches `onChange`. */
+function ChoiceSelect<T extends string>({
+  label,
+  options,
+  value,
+  optionLabel,
+  onChange,
+  isDisabled,
+}: {
+  label: string;
+  options: readonly T[];
+  value: T;
+  optionLabel: (option: T) => string;
+  onChange: (choice: T) => void;
+  isDisabled?: boolean;
+}) {
+  return (
+    <Select
+      aria-label={label}
+      className="w-full"
+      isDisabled={isDisabled}
+      value={value}
+      variant="secondary"
+      onChange={(selected) => {
+        const choice = options.find((option) => option === selected);
 
-        {globalEnabled && (
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-foreground font-medium">{t("timers.title")}</div>
-              <div className="text-default-500 text-sm">{t("timers.description")}</div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Switch
-                isDisabled={isUpdatingPreferences || disabled}
-                isSelected={effective}
-                onValueChange={(v) => handleToggle(v)}
-              />
-            </div>
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("conversion.title")}</div>
-            <div className="text-default-500 text-sm">{t("conversion.description")}</div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Switch
-              isDisabled={isUpdatingPreferences}
-              isSelected={conversionEffective}
-              onValueChange={(v) => handleConversionToggle(v)}
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("ratings.title")}</div>
-            <div className="text-default-500 text-sm">{t("ratings.description")}</div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Switch
-              isDisabled={isUpdatingPreferences}
-              isSelected={ratingsEffective}
-              onValueChange={(v) => handleRatingsToggle(v)}
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-foreground font-medium">{t("favorites.title")}</div>
-            <div className="text-default-500 text-sm">{t("favorites.description")}</div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Switch
-              isDisabled={isUpdatingPreferences}
-              isSelected={favoritesEffective}
-              onValueChange={(v) => handleFavoritesToggle(v)}
-            />
-          </div>
-        </div>
-      </CardBody>
-    </Card>
+        if (choice) onChange(choice);
+      }}
+    >
+      <Label className="sr-only">{label}</Label>
+      <Select.Trigger>
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover>
+        <ListBox>
+          {options.map((option) => (
+            <ListBox.Item key={option} id={option} textValue={optionLabel(option)}>
+              {optionLabel(option)}
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
+    </Select>
   );
 }

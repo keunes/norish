@@ -1,7 +1,10 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { z } from "zod";
-import { measurementSystemEnum, recipes } from "@norish/db/schema";
 
+import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
+
+import { primaryRecipeImage } from "../../lib/recipe-media";
+import { CuisineSummarySchema } from "./cuisine";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
   RecipeIngredientInputBaseSchema,
@@ -9,8 +12,8 @@ import {
   RecipeIngredientsWithIdSchema,
 } from "./recipe-ingredients";
 import { RecipeVideosArraySchema, RecipeVideoSchema } from "./recipe-videos";
-import { StepStepSchema } from "./steps";
-import { TagNameSchema } from "./tag";
+import { StepOutputSchema, StepStepSchema } from "./steps";
+import { TagNameSchema, TagSummarySchema } from "./tag";
 
 export const recipeCategorySchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 
@@ -30,36 +33,114 @@ export const AuthorSchema = z
     id: z.string(),
     name: z.string().nullable().optional(),
     image: z.string().nullable().optional(),
+    version: z.number().int().positive(),
   })
   .optional();
 
 export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   systemUsed: true,
+  originalSystem: true,
   fat: true,
   carbs: true,
   protein: true,
+  // The dashboard carries the origin country code, and only that: it flies
+  // the flag beside each recipe's name. The written name, the region, and
+  // the note have nothing to show at that size, so they stay behind the
+  // full recipe.
+  originCountryName: true,
+  originRegion: true,
+  provenanceNote: true,
+  // The Dish Colour tints recipe pages only (ADR-0023); the library never
+  // tints, so the dashboard has no use for it.
+  dishColor: true,
 }).extend({
-  tags: z.array(TagNameSchema).default([]),
+  tags: z.array(TagSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   author: AuthorSchema,
   averageRating: z.number().nullable().optional(),
   ratingCount: z.number().optional(),
 });
 
+/**
+ * Every key the dashboard projection carries, straight from the schema. The
+ * realtime echo merge and the dashboard card's memo comparator both walk this
+ * list, so a field added to RecipeDashboardSchema reaches cached lists and
+ * re-renders automatically — the hand-copied allowlists this replaces drifted
+ * (originCountry never made it in).
+ */
+export const RECIPE_DASHBOARD_KEYS = Object.keys(RecipeDashboardSchema.shape) as ReadonlyArray<
+  keyof z.output<typeof RecipeDashboardSchema>
+>;
+
+/**
+ * Patch a cached dashboard recipe from a full-recipe realtime echo. Only keys
+ * the echo actually carries are copied: the full recipe does not compute the
+ * dashboard-only aggregates (averageRating, ratingCount), and overwriting
+ * them with undefined would wipe live values off the cards.
+ *
+ * The dashboard's `image` is the resolved primary (gallery first, legacy
+ * scalar as fallback), so it is derived rather than copied — a raw scalar
+ * copy would blank a gallery-only recipe's thumbnail on every echo.
+ */
+export function patchDashboardRecipeFromFull(
+  dashboardRecipe: z.output<typeof RecipeDashboardSchema>,
+  fullRecipe: z.output<typeof FullRecipeSchema>
+): z.output<typeof RecipeDashboardSchema> {
+  const patched: Record<string, unknown> = { ...dashboardRecipe };
+  const echo = fullRecipe as Record<string, unknown>;
+
+  for (const key of RECIPE_DASHBOARD_KEYS) {
+    if (key in echo) {
+      patched[key] = echo[key];
+    }
+  }
+
+  if ("image" in echo || "images" in echo) {
+    patched.image = primaryRecipeImage(fullRecipe);
+  }
+
+  return patched as z.output<typeof RecipeDashboardSchema>;
+}
+
+/**
+ * The language model's per-serving estimate of the lines a worked-out total
+ * could not count, one share per line under its key (ADR-0039). Derived, not
+ * supplied: a reader's worked-out total adds the share of each line still
+ * left out for them, and it never travels in an archive.
+ */
+export const RecipeNutritionEstimateSchema = z.object({
+  lines: z.array(
+    z.object({
+      key: z.string(),
+      calories: z.number(),
+      fat: z.number(),
+      carbs: z.number(),
+      protein: z.number(),
+    })
+  ),
+});
+
 export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),
-  steps: z.array(StepStepSchema).default([]),
-  tags: z.array(TagNameSchema).default([]),
+  steps: z.array(StepOutputSchema).default([]),
+  tags: z.array(TagSummarySchema).default([]),
+  // Recipe Provenance travels with the recipe, which is why an Offline reader
+  // sees exactly what a Live one does and no separate warming is needed.
+  cuisines: z.array(CuisineSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),
   videos: RecipeVideosArraySchema.default([]),
+  nutritionEstimate: RecipeNutritionEstimateSchema.nullable().optional(),
 });
 
 export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
   id: z.uuid().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
+  // Vocabulary row ids, as the recipe form sends them. Names would reintroduce
+  // the create-on-write behaviour the vocabulary exists to prevent.
+  cuisines: z.array(z.uuid()).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   steps: z.array(StepStepSchema).default([]),
   images: z.array(RecipeImageSchema).max(10).default([]),
@@ -69,6 +150,9 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
 export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientInputBaseSchema.partial()).optional(),
   tags: z.array(TagNameSchema).optional(),
+  // Cuisines are picked from the vocabulary rather than typed, so an editor
+  // sends ids. Passing an empty array clears them; omitting leaves them alone.
+  cuisines: z.array(z.uuid()).optional(),
   steps: z.array(StepStepSchema).optional(),
   images: z.array(RecipeImageSchema).max(10).optional(),
   videos: z.array(RecipeVideoSchema).optional(),
@@ -78,18 +162,50 @@ export const measurementSystems = measurementSystemEnum.enumValues;
 
 // tRPC input schemas
 export const RecipeListInputSchema = z.object({
-  cursor: z.number().int().nonnegative().default(0),
-  limit: z.number().int().min(1).max(200).default(50),
-  search: z.string().optional(),
+  cursor: z
+    .number()
+    .int()
+    .nonnegative()
+    .default(0)
+    .describe("Zero-based pagination offset. Defaults to 0."),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(200)
+    .default(50)
+    .describe("Maximum number of recipes to return. Defaults to 50."),
+  search: z.string().optional().describe("Optional free-text search term."),
   searchFields: z
     .array(z.enum(["title", "description", "ingredients", "steps", "tags"]))
-    .default(["title", "ingredients"]),
-  tags: z.array(z.string()).optional(),
-  categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])).optional(),
-  filterMode: z.enum(["AND", "OR"]).default("OR"),
-  sortMode: z.enum(["titleAsc", "titleDesc", "dateAsc", "dateDesc", "none"]).default("dateDesc"),
-  minRating: z.number().min(1).max(5).optional(),
-  maxCookingTime: z.number().int().min(1).optional(),
+    .default(["title", "ingredients"])
+    .describe("Fields searched when `search` is provided. Defaults to `title` and `ingredients`."),
+  tags: z.array(z.string()).optional().describe("Optional tag filter."),
+  categories: z
+    .array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]))
+    .optional()
+    .describe("Optional meal category filter."),
+  filterMode: z
+    .enum(["AND", "OR"])
+    .default("OR")
+    .describe("How multi-value filters are combined. Defaults to `OR`."),
+  sortMode: z
+    .enum(["titleAsc", "titleDesc", "dateAsc", "dateDesc", "none"])
+    .default("dateDesc")
+    .describe("Sort order for the returned recipes. Defaults to `dateDesc`."),
+  minRating: z.number().min(1).max(5).optional().describe("Optional minimum recipe rating."),
+  maxCookingTime: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe("Optional maximum cooking time in minutes."),
+});
+
+export const RecipeListResultSchema = z.object({
+  recipes: z.array(RecipeDashboardSchema),
+  total: z.number().int().nonnegative(),
+  nextCursor: z.number().int().nonnegative().nullable(),
 });
 
 export const RecipeGetInputSchema = z.object({
@@ -98,19 +214,32 @@ export const RecipeGetInputSchema = z.object({
 
 export const RecipeDeleteInputSchema = z.object({
   id: z.uuid(),
+  version: z.number().int().positive(),
 });
 
 export const RecipeImportInputSchema = z.object({
-  url: z.url(),
+  // "www.site.com/recipe" names a page as well as a full link does, so a
+  // missing scheme is filled in rather than refused.
+  url: z
+    .string()
+    .trim()
+    .transform((url) => (/^[a-z][a-z\d+.-]*:\/\//i.test(url) ? url : `https://${url}`))
+    .pipe(z.url()),
 });
 
 export const RecipeConvertInputSchema = z.object({
   recipeId: z.uuid(),
   targetSystem: z.enum(["metric", "us"]),
+  version: z.number().int().positive(),
+  // With AI, the copy in the target system is written again by the language
+  // model; without, an existing copy is switched to and a missing one worked
+  // out from the unit table and the ingredient catalogue.
+  withAI: z.boolean().default(false),
 });
 
 export const RecipeUpdateInputSchema = z.object({
   id: z.uuid(),
+  version: z.number().int().positive(),
   data: FullRecipeUpdateSchema,
 });
 
@@ -123,4 +252,18 @@ export const OcrImportFileSchema = z.object({
 
 export const RecipeImageImportInputSchema = z.object({
   files: z.array(OcrImportFileSchema).min(1).max(10),
+});
+
+/**
+ * The outcome of asking to import a URL.
+ *
+ * A URL you already hold is not a failure — it is the answer "you have this
+ * one already", and `exists` carries the recipe's own id, so the caller can
+ * offer to open it rather than report a conflict. `queued` carries the id the
+ * job it just enqueued will fill in.
+ */
+export const RecipeImportResultSchema = z.object({
+  recipeId: z.uuid(),
+  status: z.enum(["queued", "exists"]),
+  recipe: RecipeDashboardSchema.nullable().optional(),
 });

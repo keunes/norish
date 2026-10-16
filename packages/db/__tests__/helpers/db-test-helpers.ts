@@ -7,12 +7,12 @@
  */
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
-import { encrypt } from "@norish/auth/crypto";
+import { encrypt, hashToken } from "@norish/config/crypto";
 import { getRecipeFull } from "@norish/db";
 import * as schema from "@norish/db/schema";
 
@@ -75,13 +75,20 @@ export async function cleanDatabase() {
   await db.delete(schema.recipeIngredients);
   await db.delete(schema.recipeTags);
   await db.delete(schema.tags);
+  // The cuisines themselves survive: they are a migration-seeded vocabulary,
+  // not per-test fixture data.
+  await db.delete(schema.recipeCuisines);
   await db.delete(schema.recipeRatings);
   await db.delete(schema.recipeFavorites);
+  await db.delete(schema.recipeShares);
+  await db.delete(schema.cookbookRecipes);
+  await db.delete(schema.cookbooks);
   await db.delete(schema.recipes);
-  await db.delete(schema.ingredients);
-  await db.delete(schema.plannedItems);
+  // Groceries point at Ingredient Aliases, which go with their Ingredients.
   await db.delete(schema.groceries);
   await db.delete(schema.recurringGroceries);
+  await db.delete(schema.ingredients);
+  await db.delete(schema.plannedItems);
   await db.delete(schema.householdUsers);
   await db.delete(schema.households);
   await db.delete(schema.users);
@@ -148,6 +155,13 @@ export async function createTestIngredient(
     })
     .returning();
 
+  // Its own name as its first alias, as every Ingredient has.
+  await db.insert(schema.ingredientAliases).values({
+    text: ingredient!.name,
+    fold: ingredient!.name.toLowerCase(),
+    ingredientId: ingredient!.id,
+  });
+
   return ingredient;
 }
 
@@ -183,6 +197,32 @@ export async function createTestRecipe(
   return (await getRecipeFull(recipe.id))!;
 }
 
+export async function createTestRecipeShare(
+  userId: string,
+  recipeId: string,
+  overrides: Partial<typeof schema.recipeShares.$inferInsert> & { token?: string } = {}
+) {
+  const db = getTestDb();
+  const token = overrides.token ?? `share-token-${Date.now()}`;
+
+  const [share] = await db
+    .insert(schema.recipeShares)
+    .values({
+      userId,
+      recipeId,
+      tokenHash: overrides.tokenHash ?? hashToken(token),
+      expiresAt: overrides.expiresAt ?? null,
+      revokedAt: overrides.revokedAt ?? null,
+      lastAccessedAt: overrides.lastAccessedAt ?? null,
+      createdAt: overrides.createdAt ?? new Date(),
+      updatedAt: overrides.updatedAt ?? new Date(),
+      version: overrides.version ?? 1,
+    })
+    .returning();
+
+  return { share, token };
+}
+
 /**
  * Create test recipe ingredients
  */
@@ -193,12 +233,18 @@ export async function createTestRecipeIngredients(
   overrides: Partial<typeof schema.recipeIngredients.$inferInsert> = {}
 ) {
   const db = getTestDb();
+  const [alias] = await db
+    .select({ id: schema.ingredientAliases.id })
+    .from(schema.ingredientAliases)
+    .where(eq(schema.ingredientAliases.ingredientId, ingredientId))
+    .limit(1);
 
   const [recipeIngredient] = await db
     .insert(schema.recipeIngredients)
     .values({
       recipeId,
-      ingredientId,
+      ingredientAliasId: alias?.id ?? null,
+      name: overrides.name ?? "Test ingredient",
       amount: overrides.amount ?? "1",
       unit: overrides.unit ?? "cup",
       order: overrides.order ?? "0",
@@ -242,10 +288,20 @@ export async function createTestRecipeStep(
 export async function getRecipeIngredients(recipeId: string) {
   const db = getTestDb();
 
-  return await db
-    .select()
+  // A line reaches its Ingredient through its alias.
+  const rows = await db
+    .select({
+      line: schema.recipeIngredients,
+      ingredientId: schema.ingredientAliases.ingredientId,
+    })
     .from(schema.recipeIngredients)
+    .leftJoin(
+      schema.ingredientAliases,
+      eq(schema.ingredientAliases.id, schema.recipeIngredients.ingredientAliasId)
+    )
     .where(sql`${schema.recipeIngredients.recipeId} = ${recipeId}`);
+
+  return rows.map(({ line, ingredientId }) => ({ ...line, ingredientId }));
 }
 
 /**

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { Button, Card, CardBody, CardHeader, Input, useDisclosure } from "@heroui/react";
+import { SettingRow } from "@/app/(app)/settings/components/setting-row";
+import { SettingsCard } from "@/app/(app)/settings/components/settings-card";
+import { ArrowPathIcon } from "@heroicons/react/16/solid";
+import { WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
+import { Button, Input, Separator, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
-
 import RestartConfirmationModal from "./restart-confirmation-modal";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
@@ -16,10 +17,9 @@ export default function SystemCard() {
   const tActions = useTranslations("common.actions");
   const { schedulerCleanupMonths, updateSchedulerMonths, restartServer } =
     useAdminSettingsContext();
-
   const [months, setMonths] = useState(schedulerCleanupMonths ?? 3);
   const [saving, setSaving] = useState(false);
-  const restartModal = useDisclosure();
+  const restartModal = useOverlayState();
   const hasSchedulerChanges =
     schedulerCleanupMonths !== undefined && months !== schedulerCleanupMonths;
 
@@ -28,7 +28,6 @@ export default function SystemCard() {
       setMonths(schedulerCleanupMonths);
     }
   }, [schedulerCleanupMonths]);
-
   const handleSaveScheduler = async () => {
     setSaving(true);
     try {
@@ -37,75 +36,53 @@ export default function SystemCard() {
       setSaving(false);
     }
   };
-
   const handleRestart = async () => {
     await restartServer();
-    restartModal.onClose();
+    restartModal.close();
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Cog6ToothIcon className="h-5 w-5" />
-          {t("title")}
-        </h2>
-      </CardHeader>
-      <CardBody className="gap-6">
-        {/* Scheduler Settings */}
-        <div className="flex flex-col gap-4">
-          <h3 className="flex items-center gap-2 font-medium">
-            {t("cleanup.title")}
-            {hasSchedulerChanges && <UnsavedChangesChip />}
-          </h3>
-          <Input
-            className="max-w-xs"
-            label={t("cleanup.label")}
-            max={24}
-            min={1}
-            type="number"
-            value={months.toString()}
-            onValueChange={(v) => setMonths(parseInt(v) || 3)}
-          />
-          <p className="text-default-500 text-xs">{t("cleanup.description")}</p>
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              isDisabled={!hasSchedulerChanges}
-              isLoading={saving}
-              startContent={<CheckIcon className="h-5 w-5" />}
-              onPress={handleSaveScheduler}
-            >
-              {tActions("save")}
-            </Button>
-          </div>
-        </div>
+    <SettingsCard contentClassName="gap-6" icon={WrenchScrewdriverIcon} title={t("title")}>
+      <SettingRow
+        badges={hasSchedulerChanges ? <UnsavedChangesChip /> : null}
+        description={t("cleanup.description")}
+        title={t("cleanup.label")}
+      >
+        <TextField
+          aria-label={t("cleanup.label")}
+          className="w-full"
+          type="number"
+          value={months.toString()}
+          onChange={(value) => setMonths(parseInt(value) || 3)}
+        >
+          <Input max={24} min={1} variant="secondary" />
+        </TextField>
+      </SettingRow>
+      <div className="flex justify-end">
+        <Button
+          isDisabled={!hasSchedulerChanges}
+          isPending={saving}
+          variant="primary"
+          onPress={handleSaveScheduler}
+        >
+          {tActions("save")}
+        </Button>
+      </div>
 
-        {/* Server Restart */}
-        <div className="border-divider flex flex-col gap-4 border-t pt-4">
-          <h3 className="font-medium">{t("server.title")}</h3>
-          <div className="flex flex-col gap-2">
-            <span className="text-base">{t("server.restartLabel")}</span>
-            <p className="text-default-500 text-xs">{t("server.restartDescription")}</p>
-            <div className="flex justify-end">
-              <Button
-                color="warning"
-                startContent={<ArrowPathIcon className="h-5 w-5" />}
-                variant="flat"
-                onPress={restartModal.onOpen}
-              >
-                {t("server.restartButton")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </CardBody>
+      <Separator />
+
+      <SettingRow description={t("server.restartDescription")} title={t("server.restartLabel")}>
+        <Button variant="tertiary" onPress={restartModal.open}>
+          <ArrowPathIcon className="h-5 w-5" />
+          {t("server.restartButton")}
+        </Button>
+      </SettingRow>
 
       <RestartConfirmationModal
         isOpen={restartModal.isOpen}
-        onClose={restartModal.onClose}
+        onClose={restartModal.close}
         onConfirm={handleRestart}
       />
-    </Card>
+    </SettingsCard>
   );
 }

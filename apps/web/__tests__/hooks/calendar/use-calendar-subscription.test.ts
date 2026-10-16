@@ -3,6 +3,7 @@ import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscript
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackedEvent } from "../realtime-test-utils";
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
 type SubscriptionCallback = (data: unknown) => void;
@@ -16,7 +17,12 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     calendar: {
       listItems: {
-        queryKey: (input: { startISO: string; endISO: string }) => ["calendar", "listItems", input],
+        // The shape @trpc/tanstack-react-query mints: the path, then the
+        // input under `input` — what the cross-range merge reads back.
+        queryKey: (input?: { startISO: string; endISO: string }) =>
+          input
+            ? [["calendar", "listItems"], { input, type: "query" }]
+            : [["calendar", "listItems"]],
       },
       onItemCreated: {
         subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
@@ -70,6 +76,7 @@ type PlannedItemFromQuery = {
   recipeImage: string | null;
   servings: number | null;
   calories: number | null;
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -90,6 +97,7 @@ function createMockPlannedItem(
     recipeImage: null,
     servings: 4,
     calories: 500,
+    version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -114,7 +122,7 @@ describe("useCalendarSubscription", () => {
   }
 
   function getQueryKey() {
-    return ["calendar", "listItems", { startISO, endISO }];
+    return [["calendar", "listItems"], { input: { startISO, endISO }, type: "query" }];
   }
 
   describe("onItemCreated subscription", () => {
@@ -126,22 +134,25 @@ describe("useCalendarSubscription", () => {
 
       expect(callback).toBeDefined();
 
-      callback({
-        item: {
-          id: "new-item-1",
-          userId: "user-1",
-          date: "2025-01-15",
-          slot: "Breakfast",
-          sortOrder: 0,
-          itemType: "recipe",
-          recipeId: "recipe-456",
-          title: null,
-          recipeName: "New Recipe",
-          recipeImage: "/img/recipe.jpg",
-          servings: 2,
-          calories: 300,
-        },
-      });
+      callback(
+        trackedEvent({
+          item: {
+            id: "new-item-1",
+            userId: "user-1",
+            date: "2025-01-15",
+            slot: "Breakfast",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-456",
+            title: null,
+            recipeName: "New Recipe",
+            recipeImage: "/img/recipe.jpg",
+            servings: 2,
+            calories: 300,
+            version: 3,
+          },
+        })
+      );
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
@@ -152,6 +163,7 @@ describe("useCalendarSubscription", () => {
         recipeImage: "/img/recipe.jpg",
         servings: 2,
         calories: 300,
+        version: 3,
       });
     });
 
@@ -163,22 +175,25 @@ describe("useCalendarSubscription", () => {
 
       const callback = subscriptionCallbacks["onItemCreated"];
 
-      callback({
-        item: {
-          id: "existing-1",
-          userId: "user-1",
-          date: "2025-01-15",
-          slot: "Breakfast",
-          sortOrder: 0,
-          itemType: "recipe",
-          recipeId: "recipe-123",
-          title: null,
-          recipeName: "Test Recipe",
-          recipeImage: null,
-          servings: 4,
-          calories: 500,
-        },
-      });
+      callback(
+        trackedEvent({
+          item: {
+            id: "existing-1",
+            userId: "user-1",
+            date: "2025-01-15",
+            slot: "Breakfast",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Test Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 2,
+          },
+        })
+      );
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
@@ -204,22 +219,25 @@ describe("useCalendarSubscription", () => {
 
       const callback = subscriptionCallbacks["onItemCreated"];
 
-      callback({
-        item: {
-          id: "item-3",
-          userId: "user-1",
-          date: "2025-01-14",
-          slot: "Dinner",
-          sortOrder: 0,
-          itemType: "note",
-          recipeId: null,
-          title: "Earlier Note",
-          recipeName: null,
-          recipeImage: null,
-          servings: null,
-          calories: null,
-        },
-      });
+      callback(
+        trackedEvent({
+          item: {
+            id: "item-3",
+            userId: "user-1",
+            date: "2025-01-14",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "note",
+            recipeId: null,
+            title: "Earlier Note",
+            recipeName: null,
+            recipeImage: null,
+            servings: null,
+            calories: null,
+            version: 4,
+          },
+        })
+      );
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
@@ -228,6 +246,37 @@ describe("useCalendarSubscription", () => {
       expect(data![1].date).toBe("2025-01-15");
       expect(data![1].slot).toBe("Breakfast");
       expect(data![2].slot).toBe("Lunch");
+    });
+
+    it("ignores created items outside the subscribed date range", () => {
+      queryClient.setQueryData(getQueryKey(), []);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemCreated"];
+
+      callback(
+        trackedEvent({
+          item: {
+            id: "tomorrow-item",
+            userId: "user-1",
+            date: "2025-02-01",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-456",
+            title: null,
+            recipeName: "Tomorrow Recipe",
+            recipeImage: null,
+            servings: 2,
+            calories: 300,
+            version: 1,
+          },
+        })
+      );
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toEqual([]);
     });
   });
 
@@ -243,7 +292,7 @@ describe("useCalendarSubscription", () => {
 
       expect(callback).toBeDefined();
 
-      callback({ itemId: "item-1", date: "2025-01-15", slot: "Breakfast" });
+      callback(trackedEvent({ itemId: "item-1", date: "2025-01-15", slot: "Breakfast" }));
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
@@ -268,27 +317,30 @@ describe("useCalendarSubscription", () => {
 
       expect(callback).toBeDefined();
 
-      callback({
-        item: {
-          id: "moved-item",
-          userId: "user-1",
-          date: "2025-01-16",
-          slot: "Dinner",
-          sortOrder: 2,
-          itemType: "recipe",
-          recipeId: "recipe-123",
-          title: null,
-          recipeName: "Test Recipe",
-          recipeImage: null,
-          servings: 4,
-          calories: 500,
-        },
-        targetSlotItems: [{ id: "moved-item", sortOrder: 2 }],
-        sourceSlotItems: null,
-        oldDate: "2025-01-15",
-        oldSlot: "Breakfast",
-        oldSortOrder: 0,
-      });
+      callback(
+        trackedEvent({
+          item: {
+            id: "moved-item",
+            userId: "user-1",
+            date: "2025-01-16",
+            slot: "Dinner",
+            sortOrder: 2,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Test Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 2,
+          },
+          targetSlotItems: [{ id: "moved-item", sortOrder: 2 }],
+          sourceSlotItems: null,
+          oldDate: "2025-01-15",
+          oldSlot: "Breakfast",
+          oldSortOrder: 0,
+        })
+      );
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
@@ -298,6 +350,7 @@ describe("useCalendarSubscription", () => {
         date: "2025-01-16",
         slot: "Dinner",
         sortOrder: 2,
+        version: 2,
       });
     });
 
@@ -311,31 +364,34 @@ describe("useCalendarSubscription", () => {
 
       const callback = subscriptionCallbacks["onItemMoved"];
 
-      callback({
-        item: {
-          id: "item-3",
-          userId: "user-1",
-          date: "2025-01-15",
-          slot: "Breakfast",
-          sortOrder: 0,
-          itemType: "recipe",
-          recipeId: "recipe-123",
-          title: null,
-          recipeName: "Test Recipe",
-          recipeImage: null,
-          servings: 4,
-          calories: 500,
-        },
-        targetSlotItems: [
-          { id: "item-3", sortOrder: 0 },
-          { id: "item-1", sortOrder: 1 },
-          { id: "item-2", sortOrder: 2 },
-        ],
-        sourceSlotItems: null,
-        oldDate: "2025-01-15",
-        oldSlot: "Breakfast",
-        oldSortOrder: 2,
-      });
+      callback(
+        trackedEvent({
+          item: {
+            id: "item-3",
+            userId: "user-1",
+            date: "2025-01-15",
+            slot: "Breakfast",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Test Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 5,
+          },
+          targetSlotItems: [
+            { id: "item-3", sortOrder: 0 },
+            { id: "item-1", sortOrder: 1 },
+            { id: "item-2", sortOrder: 2 },
+          ],
+          sourceSlotItems: null,
+          oldDate: "2025-01-15",
+          oldSlot: "Breakfast",
+          oldSortOrder: 2,
+        })
+      );
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
@@ -361,30 +417,33 @@ describe("useCalendarSubscription", () => {
 
       const callback = subscriptionCallbacks["onItemMoved"];
 
-      callback({
-        item: {
-          id: "b-1",
-          userId: "user-1",
-          date: "2025-01-15",
-          slot: "Lunch",
-          sortOrder: 1,
-          itemType: "recipe",
-          recipeId: "recipe-123",
-          title: null,
-          recipeName: "Test Recipe",
-          recipeImage: null,
-          servings: 4,
-          calories: 500,
-        },
-        targetSlotItems: [
-          { id: "l-1", sortOrder: 0 },
-          { id: "b-1", sortOrder: 1 },
-        ],
-        sourceSlotItems: [{ id: "b-2", sortOrder: 0 }],
-        oldDate: "2025-01-15",
-        oldSlot: "Breakfast",
-        oldSortOrder: 0,
-      });
+      callback(
+        trackedEvent({
+          item: {
+            id: "b-1",
+            userId: "user-1",
+            date: "2025-01-15",
+            slot: "Lunch",
+            sortOrder: 1,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Test Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 6,
+          },
+          targetSlotItems: [
+            { id: "l-1", sortOrder: 0 },
+            { id: "b-1", sortOrder: 1 },
+          ],
+          sourceSlotItems: [{ id: "b-2", sortOrder: 0 }],
+          oldDate: "2025-01-15",
+          oldSlot: "Breakfast",
+          oldSortOrder: 0,
+        })
+      );
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
@@ -395,6 +454,7 @@ describe("useCalendarSubscription", () => {
       expect(movedItem).toMatchObject({
         slot: "Lunch",
         sortOrder: 1,
+        version: 6,
       });
 
       const remainingBreakfast = data!.find((i) => i.id === "b-2");
@@ -415,36 +475,163 @@ describe("useCalendarSubscription", () => {
 
       const callback = subscriptionCallbacks["onItemMoved"];
 
-      callback({
-        item: {
-          id: "item-2",
-          userId: "user-1",
-          date: "2025-01-15",
-          slot: "Breakfast",
-          sortOrder: 0,
-          itemType: "recipe",
-          recipeId: "recipe-123",
-          title: null,
-          recipeName: "Test Recipe",
-          recipeImage: null,
-          servings: 4,
-          calories: 500,
-        },
-        targetSlotItems: [
-          { id: "item-2", sortOrder: 0 },
-          { id: "item-1", sortOrder: 1 },
-        ],
-        sourceSlotItems: null,
-        oldDate: "2025-01-15",
-        oldSlot: "Breakfast",
-        oldSortOrder: 1,
-      });
+      callback(
+        trackedEvent({
+          item: {
+            id: "item-2",
+            userId: "user-1",
+            date: "2025-01-15",
+            slot: "Breakfast",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Test Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 7,
+          },
+          targetSlotItems: [
+            { id: "item-2", sortOrder: 0 },
+            { id: "item-1", sortOrder: 1 },
+          ],
+          sourceSlotItems: null,
+          oldDate: "2025-01-15",
+          oldSlot: "Breakfast",
+          oldSortOrder: 1,
+        })
+      );
 
       const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
       const sorted = [...data!].sort((a, b) => a.sortOrder - b.sortOrder);
 
       expect(sorted[0].id).toBe("item-2");
       expect(sorted[1].id).toBe("item-1");
+    });
+
+    it("adds items moved into the subscribed date range", () => {
+      queryClient.setQueryData(getQueryKey(), []);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemMoved"];
+
+      callback(
+        trackedEvent({
+          item: {
+            id: "moved-into-range",
+            userId: "user-1",
+            date: "2025-01-20",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Moved Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 2,
+          },
+          targetSlotItems: [{ id: "moved-into-range", sortOrder: 0 }],
+          sourceSlotItems: null,
+          oldDate: "2025-02-01",
+          oldSlot: "Dinner",
+          oldSortOrder: 0,
+        })
+      );
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toHaveLength(1);
+      expect(data![0]).toMatchObject({
+        id: "moved-into-range",
+        date: "2025-01-20",
+        recipeName: "Moved Recipe",
+      });
+    });
+
+    it("removes items moved outside the subscribed date range", () => {
+      const item = createMockPlannedItem({
+        id: "moved-out-of-range",
+        date: "2025-01-20",
+      });
+
+      queryClient.setQueryData(getQueryKey(), [item]);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemMoved"];
+
+      callback(
+        trackedEvent({
+          item: {
+            id: "moved-out-of-range",
+            userId: "user-1",
+            date: "2025-02-01",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Moved Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 2,
+          },
+          targetSlotItems: [{ id: "moved-out-of-range", sortOrder: 0 }],
+          sourceSlotItems: null,
+          oldDate: "2025-01-20",
+          oldSlot: "Breakfast",
+          oldSortOrder: 0,
+        })
+      );
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toEqual([]);
+    });
+  });
+
+  describe("onItemUpdated subscription", () => {
+    it("updates item fields and version", () => {
+      const item = createMockPlannedItem({ id: "updated-item", title: "Old", version: 1 });
+
+      queryClient.setQueryData(getQueryKey(), [item]);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemUpdated"];
+
+      expect(callback).toBeDefined();
+
+      callback(
+        trackedEvent({
+          item: {
+            id: "updated-item",
+            userId: "user-1",
+            date: "2025-01-15",
+            slot: "Breakfast",
+            sortOrder: 0,
+            itemType: "note",
+            recipeId: null,
+            title: "Updated",
+            recipeName: null,
+            recipeImage: null,
+            servings: null,
+            calories: null,
+            version: 2,
+          },
+        })
+      );
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data?.[0]).toMatchObject({
+        id: "updated-item",
+        title: "Updated",
+        itemType: "note",
+        version: 2,
+      });
     });
   });
 
@@ -459,7 +646,7 @@ describe("useCalendarSubscription", () => {
 
       expect(callback).toBeDefined();
 
-      callback({ reason: "Something went wrong" });
+      callback(trackedEvent({ reason: "Something went wrong" }));
 
       expect(invalidateSpy).toHaveBeenCalledWith({
         queryKey: getQueryKey(),
