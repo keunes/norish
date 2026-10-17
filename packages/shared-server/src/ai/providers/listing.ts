@@ -15,7 +15,7 @@ import { normalizeOllamaEndpoint, normalizeOpenAICompatibleEndpoint } from "../r
 // ============================================================================
 
 /** Keywords for identifying audio/transcription models. */
-const AUDIO_MODEL_KEYWORDS = ["whisper", "audio", "speech", "transcri", "voice"];
+const AUDIO_MODEL_KEYWORDS = ["whisper", "audio", "speech", "transcri", "voice", "voxtral"];
 
 /** How each provider is named back to the administrator who configured it. */
 const PROVIDER_LABELS: Record<string, string> = {
@@ -74,6 +74,15 @@ function isAudioModel(modelId: string): boolean {
   const lower = modelId.toLowerCase();
 
   return AUDIO_MODEL_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+/**
+ * Whether a model only answers a realtime (streaming) session. Norish sends a
+ * whole audio file, which such a model refuses outright, so offering it in the
+ * transcription picker only invites a failed import.
+ */
+function isRealtimeModel(modelId: string): boolean {
+  return modelId.toLowerCase().includes("realtime");
 }
 
 // ============================================================================
@@ -462,7 +471,7 @@ export async function listOpenAITranscriptionModels(apiKey: string): Promise<Ava
   });
 
   return models
-    .filter((m) => isAudioModel(m.id))
+    .filter((m) => isAudioModel(m.id) && !isRealtimeModel(m.id))
     .map((m) => ({ id: m.id, name: m.id, supportsVision: false }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -478,7 +487,7 @@ export async function listGroqTranscriptionModels(apiKey: string): Promise<Avail
   });
 
   return models
-    .filter((m) => isAudioModel(m.id))
+    .filter((m) => isAudioModel(m.id) && !isRealtimeModel(m.id))
     .map((m) => ({ id: m.id, name: m.id, supportsVision: false }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -504,8 +513,9 @@ export async function listOpenAICompatibleTranscriptionModels(
   });
 
   // Prefer audio models, but return all if none found
-  const audioModels = models.filter((m) => isAudioModel(m.id));
-  const modelsToReturn = audioModels.length > 0 ? audioModels : models;
+  const fileModels = models.filter((m) => !isRealtimeModel(m.id));
+  const audioModels = fileModels.filter((m) => isAudioModel(m.id));
+  const modelsToReturn = audioModels.length > 0 ? audioModels : fileModels;
 
   return modelsToReturn.map((m) => ({ id: m.id, name: m.id, supportsVision: false }));
 }
@@ -522,6 +532,8 @@ export async function listOllamaTranscriptionModels(endpoint: string): Promise<A
   const otherModels: AvailableModel[] = [];
 
   for (const m of models) {
+    if (isRealtimeModel(m.name)) continue;
+
     if (isAudioModel(m.name)) {
       audioModels.push(m);
     } else {

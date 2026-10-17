@@ -54,6 +54,48 @@ describe("transcription model listing", () => {
     ]);
   });
 
+  it("offers Mistral's file transcription models but not its realtime-only one", async () => {
+    stubFetch(
+      new Response(
+        JSON.stringify({
+          object: "list",
+          data: [
+            "mistral-medium-latest",
+            "voxtral-mini-latest",
+            "voxtral-mini-2602",
+            "voxtral-mini-transcribe-realtime-2602",
+          ].map((id) => ({ id, object: "model" })),
+        }),
+        { status: 200 }
+      )
+    );
+
+    const models = await listTranscriptionModels("generic-openai", {
+      endpoint: "https://api.mistral.ai/v1",
+      apiKey: "mistral-test",
+    });
+
+    expect(models.map((m) => m.id)).toEqual(["voxtral-mini-latest", "voxtral-mini-2602"]);
+  });
+
+  it("leaves realtime models out even when the endpoint lists no audio models", async () => {
+    stubFetch(
+      new Response(
+        JSON.stringify({
+          object: "list",
+          data: ["local-model", "local-realtime"].map((id) => ({ id, object: "model" })),
+        }),
+        { status: 200 }
+      )
+    );
+
+    const models = await listTranscriptionModels("generic-openai", {
+      endpoint: "http://localhost:8000/v1",
+    });
+
+    expect(models.map((m) => m.id)).toEqual(["local-model"]);
+  });
+
   it("reports a rejected key rather than an empty list", async () => {
     stubFetch(new Response("{}", { status: 401, statusText: "Unauthorized" }));
 
